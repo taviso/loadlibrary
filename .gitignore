@@ -1,0 +1,5 @@
+*.o
+*.a
+*.sw?
+mpclient
+mpscript
