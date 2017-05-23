@@ -1,5 +1,8 @@
 *.o
 *.a
 *.sw?
+*.dll
+*.vdm
+*.exe
 mpclient
 mpscript
