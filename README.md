@@ -28,11 +28,11 @@ The intention is to allow scalable and efficient fuzzing of self-contained
 Windows libraries on Linux. Good candidates might be video codecs,
 decompression libraries, virus scanners, image decoders, and so on.
 
-    * C++ exception dispatch and unwinding.
-    * Loading additional symbols from IDA.
-    * Debugging with gdb (including symbols), breakpoints, stack traces, etc.
-    * Runtime hooking and patching.
-    * Support for ASAN and Valgrind to detect subtle memory corruption bugs.
+* C++ exception dispatch and unwinding.
+* Loading additional symbols from IDA.
+* Debugging with gdb (including symbols), breakpoints, stack traces, etc.
+* Runtime hooking and patching.
+* Support for ASAN and Valgrind to detect subtle memory corruption bugs.
 
 If you need to add support for any external imports, writing stubs is usually
 quick and easy.
@@ -75,11 +75,11 @@ $ make
 
 You will need to download the 32-bit antimalware update file from this page:
 
-    * https://www.microsoft.com/security/portal/definitions/adl.aspx#manual
+* https://www.microsoft.com/security/portal/definitions/adl.aspx#manual
 
 This should be a direct link to the right file:
 
-    * http://go.microsoft.com/fwlink/?LinkID=121721&arch=x86
+* http://go.microsoft.com/fwlink/?LinkID=121721&arch=x86
 
 This will download a file called `mpam-fe.exe`, which is a cabinet file that
 can be extracted with `cabextract`. Extract the files into the `engine`
