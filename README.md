@@ -1,5 +1,5 @@
-# Porting Windows Dynamic Link Libraries to Linux #
-## Introduction ##
+# Porting Windows Dynamic Link Libraries to Linux
+## Introduction
 
 This repository contains a library that allows native Linux programs to load
 and call functions from a Windows DLL.
@@ -13,7 +13,7 @@ EngineScanCallback(): Scanning input
 EngineScanCallback(): Threat Virus:DOS/EICAR_Test_File identified.
 ```
 
-### How does it work? ###
+### How does it work?
 
 The `peloader` directory contains a custom PE/COFF loader derived from
 ndiswrapper. The library will process the relocations and imports, then provide
@@ -22,7 +22,7 @@ basic block coverage collection, and runtime hooking and patching.
 
 ![Is such a thing even possible?](https://media.giphy.com/media/LwAjTGdSWNRYc/giphy.gif)
 
-### What works? ###
+### What works?
 
 The intention is to allow scalable and efficient fuzzing of self-contained
 Windows libraries on Linux. Good candidates might be video codecs,
@@ -37,7 +37,7 @@ decompression libraries, virus scanners, image decoders, and so on.
 If you need to add support for any external imports, writing stubs is usually
 quick and easy.
 
-### Why? ###
+### Why?
 
 Distributed, scalable fuzzing on Windows can be challenging and inefficient.
 This is especially true for endpoint security products, which use complex
@@ -52,7 +52,7 @@ easily scale up testing.
 
 This is just personal opinion, but I also think Linux has better tools. `¯\_(ツ)_/¯`
 
-## Windows Defender ##
+## Windows Defender
 
 MsMpEng is the Malware Protection service that is enabled by default on Windows
 8, 8.1, 10, Windows Server 2016, and so on. Additionally, Microsoft Security
@@ -65,7 +65,7 @@ for dozens of esoteric archive formats, executable packers, full system
 emulators for various architectures and interpreters for various languages. All
 of this code is accessible to remote attackers.
 
-### Building ###
+### Building
 
 To build the test client, simply type `make`.
 
@@ -105,7 +105,7 @@ $ exiftool mpengine.dll | grep 'Product Version Number'
 Product Version Number          : 1.1.13701.0
 ```
 
-### Running ###
+### Running
 
 The main mpengine loader is called `mpclient`, it accepts filenames to scan as
 a parameter.
@@ -119,7 +119,7 @@ EngineScanCallback(): Threat Worm:Win32/Netsky.P@mm identified.
 
 There are some other sample tools, `mpstreamfuzz` and `mpscript`.
 
-### Debugging ###
+### Debugging
 
 If you want to debug a crash, single step through a routine or set breakpoints,
 follow these examples. First, you need a map file from IDA.
@@ -212,7 +212,7 @@ Backtrace stopped: previous frame inner to this frame (corrupt stack?)
    0xf6feb8de <as3_parsemethodinfo_swf_vars_t+11>:	mov    edx,ebx
 ```
 
-## What about Wine and Winelib? ##
+## What about Wine and Winelib?
 
 This project does not replace Wine or Winelib.
 
@@ -220,10 +220,9 @@ Winelib is used to port Windows C++ projects to Linux, and Wine is
 intended to run full Windows applications. This project is intended to allow
 native Linux code to load simple Windows DLLs.
 
-The closest analogy would be ndiswrapper but for userspace, with a focus on
-security testing.
+The closest analogy would be ndiswrapper but for userspace.
 
-## License ##
+## License
 
 GPL2
 
