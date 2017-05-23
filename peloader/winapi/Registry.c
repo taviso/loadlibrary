@@ -171,7 +171,7 @@ STATIC NTSTATUS WINAPI NtQueryValueKey(
             *ResultLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + KeyValueInformation->DataLength;
             break;
         default:
-            DebugLog("NOT SUPPROTED KEY");
+            DebugLog("NOT SUPPORTED KEY");
             return -1;
     }
 
