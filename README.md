@@ -45,7 +45,7 @@ interconnected components that span across kernel and user space. This
 often requires spinning up an entire virtualized Windows environment to fuzz
 them or collect coverage data.
 
-This is less of a problem on Linux, but I've found that porting components of
+This is less of a problem on Linux, and I've found that porting components of
 Windows Antivirus products to Linux is often possible. This allows me to run
 the code I’m testing in minimal containers with very little overhead, and
 easily scale up testing.
