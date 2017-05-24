@@ -608,7 +608,7 @@ static char *get_insn_cpu_str( enum x86_insn_cpu cpu ) {
                 "Pentium 4"           	// 10
         };
 
-        if ( cpu <= sizeof(intel)/sizeof(intel[0]) ) {
+        if ( cpu < sizeof(intel)/sizeof(intel[0]) ) {
 		return intel[cpu];
 	} else if ( cpu == 16 ) {
 		return "K6";
