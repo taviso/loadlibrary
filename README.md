@@ -75,10 +75,12 @@ $ make
 
 ### Dependencies
 
-* `glibc-devel.i686` / `libc6-i386`
-* `libgcc.i686`
-* `readline-devel.i686` / `libreadline-dev:i386` (optional, for mpscript)
-* `cabextract` (to extract signatures)
+| Fedora / RedHat       | Ubuntu / Debian        | Comment                      |
+| --------------------- | ---------------------- |:---------------------------- |
+| `glibc-devel.i686`    | `libc6-dev:i386`       |                              |
+| `libgcc.i686`         | `gcc-multilib`         |                              |
+| `readline-devel.i686` | `libreadline-dev:i386` | Optional, used in mpscript.  |
+| `cabextract`          | `cabextract`           | Used to extract definitions. |
 
 You will need to download the 32-bit antimalware update file from this page:
 
