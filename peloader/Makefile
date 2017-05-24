@@ -1,4 +1,4 @@
-CFLAGS  = -O3 -march=native -ggdb3 -m32 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude
+CFLAGS  = -O3 -march=native -ggdb3 -m32 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -mstackrealign
 CPPFLAGS=-DNDEBUG -D_GNU_SOURCE -I.
 LDFLAGS = $(CFLAGS) -m32 -lm
 
