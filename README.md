@@ -75,6 +75,8 @@ $ make
 
 ### Dependencies
 
+*Note that the `.i686` or `:i386` suffixes are important, we need the 32bit libraries to use the 32bit dll.*
+
 | Fedora / RedHat       | Ubuntu / Debian        | Comment                      |
 | --------------------- | ---------------------- |:---------------------------- |
 | `glibc-devel.i686`    | `libc6-dev:i386`       |                              |
