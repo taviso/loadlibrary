@@ -73,6 +73,13 @@ To build the test client, simply type `make`.
 $ make
 ```
 
+### Dependencies
+
+* `glibc-devel.i686` / `libc6-i386`
+* `libgcc.i686`
+* `readline-devel.i686` / `libreadline-dev:i386` (optional, for mpscript)
+* `cabextract` (to extract signatures)
+
 You will need to download the 32-bit antimalware update file from this page:
 
 * https://www.microsoft.com/security/portal/definitions/adl.aspx#manual
