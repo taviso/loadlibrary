@@ -171,6 +171,8 @@ Program received signal SIGTRAP, Trace/breakpoint trap.
 
 If you enter the commands it shows into gdb, you will have symbols available.
 
+> *Note that `genmapsym.sh` assumes you're using GNU awk.*
+
 ```
 (gdb) add-symbol-file engine/mpengine.dll 0xf6af4008+0x1000
 add symbol table from file "engine/mpengine.dll" at
