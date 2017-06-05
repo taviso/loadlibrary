@@ -1,0 +1,6 @@
+pin
+*.idc
+coverage_parse_min
+deepcover.so
+pin-*-gcc-linux/
+pin-*-gcc-linux.tar.gz
