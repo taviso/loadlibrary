@@ -38,7 +38,7 @@ distilled corpus for fuzzing.
 Download the latest pintool for gcc from the pintool download page, and extract
 it in the `coverage` directory.
 
-    * https://software.intel.com/en-us/articles/pintool-downloads
+* https://software.intel.com/en-us/articles/pintool-downloads
 
 ```
 $ tar -zxvf pin-3.2-81205-gcc-linux.tar.gz
@@ -128,8 +128,6 @@ $ bash genidc.sh minimal.txt > coverage.idc
 ```
 
 Now you can load this file in IDA with `File->Script File...`.
-
-![Annotated IDB](https://raw.githubusercontent.com/taviso/loadlibrary/master/doc/annotatedidb.png)
 
 ## Notes
 
