@@ -79,9 +79,9 @@ $ make
 
 | Fedora / RedHat       | Ubuntu / Debian        | Comment                      |
 | --------------------- | ---------------------- |:---------------------------- |
-| `glibc-devel.i686`    | `libc6-dev:i386`       |                              |
+| `glibc-devel.i686`    | `libc6-dev-i386`       |                              |
 | `libgcc.i686`         | `gcc-multilib`         |                              |
-| `readline-devel.i686` | `libreadline-dev:i386` | Optional, used in mpscript.  |
+| `readline-devel.i686` | `lib32readline-dev`    | Optional, used in mpscript.  |
 | `cabextract`          | `cabextract`           | Used to extract definitions. |
 
 You will need to download the 32-bit antimalware update file from this page:
@@ -238,4 +238,3 @@ The closest analogy would be ndiswrapper but for userspace.
 ## License
 
 GPL2
-
