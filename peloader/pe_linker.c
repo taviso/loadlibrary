@@ -625,7 +625,9 @@ error:
 bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
 {
     static EXCEPTION_FRAME ExceptionFrame;
-    static NT_TIB ThreadInfo;
+    static NT_TIB ThreadInfo = {
+        .Self = &ThreadInfo,
+    };
     struct user_desc pebdescriptor = {
         .entry_number       = 0,
         .base_addr          = (uintptr_t) &ThreadInfo,
