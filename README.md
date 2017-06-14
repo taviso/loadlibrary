@@ -90,7 +90,7 @@ You will need to download the 32-bit antimalware update file from this page:
 
 This should be a direct link to the right file:
 
-* http://go.microsoft.com/fwlink/?LinkID=121721&arch=x86
+* https://go.microsoft.com/fwlink/?LinkID=121721&arch=x86
 
 This will download a file called `mpam-fe.exe`, which is a cabinet file that
 can be extracted with `cabextract`. Extract the files into the `engine`
