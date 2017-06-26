@@ -253,6 +253,28 @@ static BOOL SetEndOfFile(HANDLE hFile)
     return ftruncate(fileno(hFile), ftell(hFile)) != -1;
 }
 
+static DWORD WINAPI GetFileVersionInfoSizeExW(DWORD dwFlags, PWCHAR lptstrFilename, PDWORD lpdwHandle)
+{
+    DebugLog("%#x, %p, %p", dwFlags, lptstrFilename, lpdwHandle);
+    return 0;
+}
+
+static BOOL WINAPI GetFileVersionInfoExW(DWORD dwFlags, PWCHAR lptstrFilename, DWORD dwHandle, DWORD dwLen, PVOID lpData)
+{
+    DebugLog("");
+    return FALSE;
+}
+
+static BOOL WINAPI VerQueryValueW(PVOID pBlock, PWCHAR lpSubBlock, PVOID  *lplpBuffer, PDWORD puLen)
+{
+    DebugLog("");
+    return FALSE;
+}
+
+
+DECLARE_CRT_EXPORT("VerQueryValueW", VerQueryValueW);
+DECLARE_CRT_EXPORT("GetFileVersionInfoExW", GetFileVersionInfoExW);
+DECLARE_CRT_EXPORT("GetFileVersionInfoSizeExW", GetFileVersionInfoSizeExW);
 DECLARE_CRT_EXPORT("GetFileAttributesW", GetFileAttributesW);
 DECLARE_CRT_EXPORT("GetFileAttributesExW", GetFileAttributesExW);
 DECLARE_CRT_EXPORT("CreateFileW", CreateFileW);

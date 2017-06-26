@@ -50,6 +50,12 @@ static LONG InterlockedDecrement(PULONG Addend)
     return --*Addend;
 }
 
+static LONG InterlockedIncrement(PULONG Addend)
+{
+    DebugLog("%p", Addend);
+    return ++*Addend;
+}
+
 static LONG InterlockedCompareExchange(PULONG Destination, LONG Exchange, LONG Comparand)
 {
     DebugLog("%p", Destination);
@@ -170,6 +176,7 @@ DECLARE_CRT_EXPORT("GetCurrentProcess", GetCurrentProcess);
 DECLARE_CRT_EXPORT("LsaNtStatusToWinError", LsaNtStatusToWinError);
 DECLARE_CRT_EXPORT("SetThreadToken", SetThreadToken);
 DECLARE_CRT_EXPORT("InterlockedDecrement", InterlockedDecrement);
+DECLARE_CRT_EXPORT("InterlockedIncrement", InterlockedIncrement);
 DECLARE_CRT_EXPORT("InterlockedCompareExchange", InterlockedCompareExchange);
 DECLARE_CRT_EXPORT("CreateSemaphoreW", CreateSemaphoreW);
 DECLARE_CRT_EXPORT("AcquireSRWLockExclusive", AcquireSRWLockExclusive);

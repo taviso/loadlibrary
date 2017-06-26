@@ -34,4 +34,11 @@ STATIC ULONG RegisterTraceGuidsW(PVOID RequestAddress,
     return STATUS_SUCCESS;
 }
 
+STATIC ULONG UnregisterTraceGuids(HANDLE RegistrationHandle)
+{
+    DebugLog("%p", RegistrationHandle);
+    return STATUS_SUCCESS;
+}
+
 DECLARE_CRT_EXPORT("RegisterTraceGuidsW", RegisterTraceGuidsW);
+DECLARE_CRT_EXPORT("UnregisterTraceGuids", UnregisterTraceGuids);

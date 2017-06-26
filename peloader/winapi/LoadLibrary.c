@@ -37,7 +37,7 @@ static PVOID WINAPI GetProcAddress(HANDLE hModule, PCHAR lpProcName)
 {
     ENTRY key = { lpProcName }, *item;
 
-    assert(hModule == (HANDLE) NULL || hModule == (HANDLE) 'LOAD' || hModule == (HANDLE) 'MPEN');
+    assert(hModule == (HANDLE) NULL || hModule == (HANDLE) 'LOAD' || hModule == (HANDLE) 'MPEN' || hModule == (HANDLE) 'VERS');
 
     if (hsearch_r(key, FIND, &item, &crtexports)) {
         return item->data;
@@ -50,7 +50,11 @@ static PVOID WINAPI GetProcAddress(HANDLE hModule, PCHAR lpProcName)
 
 static HANDLE WINAPI GetModuleHandleW(PVOID lpModuleName)
 {
-    DebugLog("%p", lpModuleName);
+    char *name = CreateAnsiFromWide(lpModuleName);
+
+    DebugLog("%p [%s]", lpModuleName, name);
+
+    free(name);
 
     if (lpModuleName && memcmp(lpModuleName, L"mpengine.dll", sizeof(L"mpengine.dll")) == 0)
         return (HANDLE) 'MPEN';
@@ -58,6 +62,10 @@ static HANDLE WINAPI GetModuleHandleW(PVOID lpModuleName)
     if (lpModuleName && memcmp(lpModuleName, L"bcrypt.dll", sizeof(L"bcrypt.dll")) == 0)
         return (HANDLE) 'LOAD';
 
+    if (lpModuleName && memcmp(lpModuleName, L"KERNEL32.DLL", sizeof(L"KERNEL32.DLL")) == 0)
+        return (HANDLE) 'KERN';
+    if (lpModuleName && memcmp(lpModuleName, L"version.dll", sizeof(L"version.dll")) == 0)
+        return (HANDLE) 'VERS';
     return (HANDLE) NULL;
 }
 
