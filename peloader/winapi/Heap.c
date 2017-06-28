@@ -21,6 +21,12 @@ STATIC HANDLE WINAPI GetProcessHeap(void)
     return (HANDLE) 'HEAP';
 }
 
+STATIC HANDLE WINAPI HeapCreate(DWORD flOptions, SIZE_T dwInitialSize, SIZE_T dwMaximumSize)
+{
+    DebugLog("%#x, %u, %u", flOptions, dwInitialSize, dwMaximumSize);
+    return (HANDLE) 'HEAP';
+}
+
 STATIC PVOID WINAPI HeapAlloc(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes)
 {
     PVOID Buffer;
@@ -71,6 +77,8 @@ STATIC PVOID WINAPI LocalFree(PVOID hMem)
     free(hMem);
     return NULL;
 }
+
+DECLARE_CRT_EXPORT("HeapCreate", HeapCreate);
 DECLARE_CRT_EXPORT("GetProcessHeap", GetProcessHeap);
 DECLARE_CRT_EXPORT("HeapAlloc", HeapAlloc);
 DECLARE_CRT_EXPORT("HeapFree", HeapFree);

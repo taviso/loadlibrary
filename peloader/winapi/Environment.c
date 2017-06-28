@@ -103,7 +103,14 @@ finish:
     return Result;
 }
 
+static DWORD WINAPI GetEnvironmentVariableA(PCHAR lpName, PVOID lpBuffer, DWORD nSize)
+{
+    DebugLog("%s, %p, %u", lpName, lpBuffer, nSize);
+    return 0;
+}
+
 DECLARE_CRT_EXPORT("GetEnvironmentStringsW", GetEnvironmentStringsW);
 DECLARE_CRT_EXPORT("FreeEnvironmentStringsW", FreeEnvironmentStringsW);
 DECLARE_CRT_EXPORT("GetEnvironmentVariableW", GetEnvironmentVariableW);
 DECLARE_CRT_EXPORT("ExpandEnvironmentStringsW", ExpandEnvironmentStringsW);
+DECLARE_CRT_EXPORT("GetEnvironmentVariableA", GetEnvironmentVariableA);

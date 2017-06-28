@@ -101,6 +101,21 @@ static BOOL WINAPI GetProductInfo(DWORD dwOSMajorVersion,
     return TRUE;
 }
 
+static DWORD WINAPI GetVersion(void)
+{
+    DebugLog("");
+    return 0x80000000;
+}
+
+static DWORD WINAPI GetVersionExA(PRTL_OSVERSIONINFOEXW lpVersionInformation)
+{
+    DebugLog("");
+    return TRUE;
+}
+
+
+DECLARE_CRT_EXPORT("GetVersion", GetVersion);
+DECLARE_CRT_EXPORT("GetVersionExA", GetVersionExA);
 DECLARE_CRT_EXPORT("RtlGetVersion", RtlGetVersion);
 DECLARE_CRT_EXPORT("GetSystemInfo", GetSystemInfo);
 DECLARE_CRT_EXPORT("GetSystemDefaultLCID", GetSystemDefaultLCID);
