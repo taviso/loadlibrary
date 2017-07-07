@@ -629,7 +629,7 @@ bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
         .Self = &ThreadInfo,
     };
     struct user_desc pebdescriptor = {
-        .entry_number       = 0,
+        .entry_number       = -1,
         .base_addr          = (uintptr_t) &ThreadInfo,
         .limit              = sizeof ThreadInfo,
         .seg_32bit          = 1,
@@ -649,12 +649,12 @@ bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
         ThreadInfo.ExceptionList    = &ExceptionFrame;
     }
 
-    if (syscall(__NR_modify_ldt, LDT_WRITE, &pebdescriptor, sizeof pebdescriptor) != 0) {
+    if (syscall(__NR_set_thread_area, &pebdescriptor) != 0) {
         return false;
     }
 
     // Install descriptor
-    asm("mov %[segment], %%fs" :: [segment] "r"(7));
+    asm("mov %[segment], %%fs" :: [segment] "r"(pebdescriptor.entry_number*8+3));
 
     return true;
 }
