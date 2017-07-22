@@ -84,6 +84,10 @@ static DWORD EngineScanCallback(PSCANSTRUCT Scan)
     if (Scan->Flags & 0x08000022) {
         LogMessage("Threat %s identified.", Scan->VirusName);
     }
+    // This may indicate PUA.
+    if ((Scan->Flags & 0x40010000) == 0x40010000) {
+        LogMessage("Threat %s identified.", Scan->VirusName);
+    }
     return 0;
 }
 
