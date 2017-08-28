@@ -271,6 +271,12 @@ static BOOL WINAPI VerQueryValueW(PVOID pBlock, PWCHAR lpSubBlock, PVOID  *lplpB
     return FALSE;
 }
 
+static DWORD WINAPI QueryDosDevice(PVOID lpDeviceName, PVOID lpTargetPath, DWORD ucchMax)
+{
+    DebugLog("");
+    return 0;
+}
+
 
 DECLARE_CRT_EXPORT("VerQueryValueW", VerQueryValueW);
 DECLARE_CRT_EXPORT("GetFileVersionInfoExW", GetFileVersionInfoExW);
@@ -292,3 +298,4 @@ DECLARE_CRT_EXPORT("DeviceIoControl", DeviceIoControl);
 DECLARE_CRT_EXPORT("NtQueryVolumeInformationFile", NtQueryVolumeInformationFile);
 DECLARE_CRT_EXPORT("GetFullPathNameW", GetFullPathNameW);
 DECLARE_CRT_EXPORT("SetEndOfFile", SetEndOfFile);
+DECLARE_CRT_EXPORT("QueryDosDeviceW", QueryDosDevice);

@@ -37,7 +37,7 @@ static PVOID WINAPI GetProcAddress(HANDLE hModule, PCHAR lpProcName)
 {
     ENTRY key = { lpProcName }, *item;
 
-    assert(hModule == (HANDLE) NULL || hModule == (HANDLE) 'LOAD' || hModule == (HANDLE) 'MPEN' || hModule == (HANDLE) 'VERS');
+    assert(hModule == (HANDLE) NULL || hModule == (HANDLE) 'LOAD' || hModule == (HANDLE) 'MPEN' || hModule == (HANDLE) 'VERS' || hModule == (HANDLE) 'KERN');
 
     if (hsearch_r(key, FIND, &item, &crtexports)) {
         return item->data;
@@ -64,6 +64,10 @@ static HANDLE WINAPI GetModuleHandleW(PVOID lpModuleName)
 
     if (lpModuleName && memcmp(lpModuleName, L"KERNEL32.DLL", sizeof(L"KERNEL32.DLL")) == 0)
         return (HANDLE) 'KERN';
+
+    if (lpModuleName && memcmp(lpModuleName, L"kernel32.dll", sizeof(L"kernel32.dll")) == 0)
+        return (HANDLE) 'KERN';
+
     if (lpModuleName && memcmp(lpModuleName, L"version.dll", sizeof(L"version.dll")) == 0)
         return (HANDLE) 'VERS';
     return (HANDLE) NULL;

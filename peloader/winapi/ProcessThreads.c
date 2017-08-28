@@ -166,6 +166,12 @@ static BOOL WINAPI SetThreadToken(PHANDLE Thread, HANDLE Token)
     return FALSE;
 }
 
+static BOOL WINAPI ProcessIdToSessionId(DWORD dwProcessId, DWORD *pSessionId)
+{
+    DebugLog("");
+    return FALSE;
+}
+
 DECLARE_CRT_EXPORT("RtlNtStatusToDosError", RtlNtStatusToDosError);
 DECLARE_CRT_EXPORT("GetThreadTimes", GetThreadTimes);
 DECLARE_CRT_EXPORT("GetCurrentThread", GetCurrentThread);
@@ -186,3 +192,4 @@ DECLARE_CRT_EXPORT("SetThreadpoolTimer", SetThreadpoolTimer);
 DECLARE_CRT_EXPORT("WaitForThreadpoolTimerCallbacks", WaitForThreadpoolTimerCallbacks);
 DECLARE_CRT_EXPORT("GetCurrentThreadId", GetCurrentThreadId);
 DECLARE_CRT_EXPORT("GetCurrentProcessId", GetCurrentProcessId);
+DECLARE_CRT_EXPORT("ProcessIdToSessionId", ProcessIdToSessionId);
