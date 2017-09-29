@@ -28,14 +28,14 @@ STATIC UINT GetACP(void)
     return 65001;   // UTF-8
 }
 
-STATIC BOOL IsValidCodePage(UINT CodePage)
+STATIC WINAPI BOOL IsValidCodePage(UINT CodePage)
 {
     DebugLog("%u", CodePage);
 
     return TRUE;
 }
 
-STATIC BOOL GetCPInfo(UINT CodePage, LPCPINFO lpCPInfo)
+STATIC WINAPI BOOL GetCPInfo(UINT CodePage, LPCPINFO lpCPInfo)
 {
     DebugLog("%u, %p", CodePage, lpCPInfo);
 
@@ -53,7 +53,7 @@ STATIC DWORD LocaleNameToLCID(PVOID lpName, DWORD dwFlags)
     return 0;
 }
 
-STATIC int LCMapStringW(DWORD Locale, DWORD dwMapFlags, PVOID lpSrcStr, int cchSrc, PVOID lpDestStr, int cchDest)
+STATIC WINAPI int LCMapStringW(DWORD Locale, DWORD dwMapFlags, PVOID lpSrcStr, int cchSrc, PVOID lpDestStr, int cchDest)
 {
     DebugLog("%u, %#x, %p, %d, %p, %d", Locale, dwMapFlags, lpSrcStr, cchSrc, lpDestStr, cchDest);
     return 1;
@@ -62,7 +62,7 @@ STATIC int LCMapStringW(DWORD Locale, DWORD dwMapFlags, PVOID lpSrcStr, int cchS
 #define LOCALE_NAME_USER_DEFAULT NULL
 #define NORM_IGNORENONSPACE 1
 #define LCMAP_UPPERCASE 512
-STATIC int LCMapStringEx(PVOID lpLocaleName, DWORD dwMapFlags, PVOID lpSrcStr, int cchSrc, PVOID lpDestStr, int cchDest, PVOID lpVersionInformation, PVOID lpReserved, PVOID sortHandle)
+STATIC WINAPI int LCMapStringEx(PVOID lpLocaleName, DWORD dwMapFlags, PVOID lpSrcStr, int cchSrc, PVOID lpDestStr, int cchDest, PVOID lpVersionInformation, PVOID lpReserved, PVOID sortHandle)
 {
     DebugLog("%p, %#x, %p, %d, %p, %d, %p, %p, %p", lpLocaleName, dwMapFlags, lpSrcStr, cchSrc, lpDestStr, cchDest, lpVersionInformation, lpReserved, sortHandle);
 

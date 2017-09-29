@@ -16,6 +16,7 @@
 #include "winstrings.h"
 
 #define MB_ERR_INVALID_CHARS 8
+#define MB_PRECOMPOSED 1
 
 STATIC int WINAPI MultiByteToWideChar(UINT CodePage, DWORD  dwFlags, PCHAR lpMultiByteStr, int cbMultiByte, PUSHORT lpWideCharStr, int cchWideChar)
 {
@@ -23,7 +24,7 @@ STATIC int WINAPI MultiByteToWideChar(UINT CodePage, DWORD  dwFlags, PCHAR lpMul
 
     DebugLog("%u, %#x, %p, %u, %p, %u", CodePage, dwFlags, lpMultiByteStr, cbMultiByte, lpWideCharStr, cchWideChar);
 
-    if ((dwFlags & ~MB_ERR_INVALID_CHARS) != 0) {
+    if ((dwFlags & ~(MB_ERR_INVALID_CHARS | MB_PRECOMPOSED)) != 0) {
         LogMessage("Unsupported Conversion Flags %#x", dwFlags);
     }
 
@@ -60,27 +61,34 @@ STATIC int WINAPI MultiByteToWideChar(UINT CodePage, DWORD  dwFlags, PCHAR lpMul
 
 STATIC int WINAPI WideCharToMultiByte(UINT CodePage, DWORD dwFlags, PVOID lpWideCharStr, int cchWideChar, PVOID lpMultiByteStr, int cbMultiByte, PVOID lpDefaultChar, PVOID lpUsedDefaultChar)
 {
+    char *ansi = NULL;
+
     DebugLog("%u, %#x, %p, %d, %p, %d, %p, %p", CodePage, dwFlags, lpWideCharStr, cchWideChar, lpMultiByteStr, cbMultiByte, lpDefaultChar, lpUsedDefaultChar);
 
-    // Process NULL terminated string.
-    if (cchWideChar == -1) {
-        char *ansi = CreateAnsiFromWide(lpWideCharStr);
-        // This really can happen
-        if (ansi == NULL) {
-            return 0;
-        }
-        DebugLog("cchWideChar == -1, Ansi: [%s]", ansi);
-        if (lpMultiByteStr && strlen(ansi) < cbMultiByte) {
-            strcpy(lpMultiByteStr, ansi);
-            free(ansi);
-            return strlen(lpMultiByteStr) + 1;
-        }
-        free(ansi);
+    if (cchWideChar != -1) {
+        // Add a nul terminator.
+        PVOID tmpStr = calloc(cchWideChar + 1, sizeof(USHORT));
+        memcpy(tmpStr, lpWideCharStr, cchWideChar);
+        ansi = CreateAnsiFromWide(tmpStr);
+        free(tmpStr);
+    } else {
+        ansi = CreateAnsiFromWide(lpWideCharStr);
+    }
+
+    // This really can happen
+    if (ansi == NULL) {
         return 0;
     }
 
-    DebugLog("Don't Support This cchWideChar");
+    DebugLog("cchWideChar == %d, Ansi: [%s]", cchWideChar, ansi);
+    
+    if (lpMultiByteStr && strlen(ansi) < cbMultiByte) {
+        strcpy(lpMultiByteStr, ansi);
+        free(ansi);
+        return strlen(lpMultiByteStr) + 1;
+    }
 
+    free(ansi);
     return 0;
 }
 

@@ -7,6 +7,7 @@
 #include <assert.h>
 
 #include "winnt_types.h"
+#include "log.h"
 #include "winexports.h"
 #include "util.h"
 
@@ -63,6 +64,12 @@ STATIC BOOL WINAPI QueryPerformanceFrequency(PVOID lpFrequency)
     return FALSE;
 }
 
+STATIC BOOL WINAPI GetProcessTimes(HANDLE hProcess, PFILETIME lpCreationTime, PFILETIME lpExitTime, PFILETIME lpKernelTime, PFILETIME lpUserTime)
+{
+    DebugLog("");
+    return FALSE;
+}
+
 DECLARE_CRT_EXPORT("GetSystemTime", GetSystemTime);
 DECLARE_CRT_EXPORT("SystemTimeToFileTime", SystemTimeToFileTime);
 DECLARE_CRT_EXPORT("GetSystemTimePreciseAsFileTime", GetSystemTimePreciseAsFileTime);
@@ -70,3 +77,4 @@ DECLARE_CRT_EXPORT("GetSystemTimeAsFileTime", GetSystemTimeAsFileTime);
 DECLARE_CRT_EXPORT("QueryPerformanceCounter", QueryPerformanceCounter);
 DECLARE_CRT_EXPORT("QueryPerformanceFrequency", QueryPerformanceFrequency);
 DECLARE_CRT_EXPORT("GetTickCount", GetTickCount);
+DECLARE_CRT_EXPORT("GetProcessTimes", GetProcessTimes);
