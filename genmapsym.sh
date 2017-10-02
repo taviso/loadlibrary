@@ -24,7 +24,7 @@ awk 'BEGIN { printf ".macro symbol name, address\n.set \\name, \\address\n.func 
     /Publics by Value/,/Program entry point/ {
 
         if (gsub(/^ ....:/,"'${1}'+0x")) {
-            gsub(/[/^}{\[\]$?:@()><`\'\''|~,=!+&*-]/, "_",$2);
+            gsub(/[\"/^}{\[\]$?:@()><`\'\''|~,=!+&*-]/, "_",$2);
             printf "symbol %s,%s\n",$2,$1
         }
 }' | as -o ${2} -gstabs+ --32
