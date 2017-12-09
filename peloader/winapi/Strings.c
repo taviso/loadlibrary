@@ -81,7 +81,7 @@ STATIC int WINAPI WideCharToMultiByte(UINT CodePage, DWORD dwFlags, PVOID lpWide
     }
 
     DebugLog("cchWideChar == %d, Ansi: [%s]", cchWideChar, ansi);
-    
+
     if (lpMultiByteStr && strlen(ansi) < cbMultiByte) {
         strcpy(lpMultiByteStr, ansi);
         free(ansi);
@@ -108,7 +108,21 @@ STATIC VOID WINAPI RtlInitUnicodeString(PUNICODE_STRING DestinationString, PWCHA
     DestinationString->Buffer = SourceString;
 }
 
+STATIC PVOID WINAPI UuidFromStringW(PUSHORT StringUuid, PBYTE Uuid)
+{
+    int i;
+
+    DebugLog("%S, %p", StringUuid, Uuid);
+
+    for (i = 0; i < 16; i++) {
+        Uuid[i] = 0x41;
+    }
+
+    return 0;
+}
+
 DECLARE_CRT_EXPORT("MultiByteToWideChar", MultiByteToWideChar);
 DECLARE_CRT_EXPORT("WideCharToMultiByte", WideCharToMultiByte);
 DECLARE_CRT_EXPORT("GetStringTypeW", GetStringTypeW);
 DECLARE_CRT_EXPORT("RtlInitUnicodeString", RtlInitUnicodeString);
+DECLARE_CRT_EXPORT("UuidFromStringW", UuidFromStringW);
