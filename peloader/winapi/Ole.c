@@ -14,7 +14,7 @@
 #include "util.h"
 #include "strings.h"
 
-STATIC DWORD CoCreateGuid(PVOID pguid)
+STATIC DWORD WINAPI CoCreateGuid(PVOID pguid)
 {
     DebugLog("%p", pguid);
     memcpy(pguid, "GUIDGUIDGUIDGUIDGUIDGUIDGUIDGUID", 16);
