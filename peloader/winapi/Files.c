@@ -71,6 +71,48 @@ enum {
     TRUNCATE_EXISTING   = 5
 };
 
+static HANDLE WINAPI CreateFileA(PCHAR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, PVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
+{
+    FILE *FileHandle;
+
+    DebugLog("%p [%s], %#x, %#x, %p, %#x, %#x, %p", lpFileName, lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+
+    // Translate path seperator.
+    while (strchr(lpFileName, '\\'))
+        *strchr(lpFileName, '\\') = '/';
+
+    // I'm just going to tolower() everything.
+    for (char *t = lpFileName; *t; t++)
+        *t = tolower(*t);
+
+    switch (dwCreationDisposition) {
+        case OPEN_EXISTING:
+            FileHandle = fopen(lpFileName, "r");
+            break;
+        case CREATE_ALWAYS:
+            FileHandle = fopen("/dev/null", "w");
+            break;
+        // This is the disposition used by CreateTempFile().
+        case CREATE_NEW:
+            if (strstr(lpFileName, "/faketemp/")) {
+                FileHandle = fopen(lpFileName, "w");
+                // Unlink it immediately so it's cleaned up on exit.
+                unlink(lpFileName);
+            } else {
+                FileHandle = fopen("/dev/null", "w");
+            }
+            break;
+        default:
+            abort();
+    }
+
+    DebugLog("%s => %p", lpFileName, FileHandle);
+
+    SetLastError(ERROR_FILE_NOT_FOUND);
+    return FileHandle ? FileHandle : INVALID_HANDLE_VALUE;
+}
+
+
 static HANDLE WINAPI CreateFileW(PWCHAR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, PVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
 {
     FILE *FileHandle;
@@ -304,6 +346,7 @@ DECLARE_CRT_EXPORT("GetFileVersionInfoExW", GetFileVersionInfoExW);
 DECLARE_CRT_EXPORT("GetFileVersionInfoSizeExW", GetFileVersionInfoSizeExW);
 DECLARE_CRT_EXPORT("GetFileAttributesW", GetFileAttributesW);
 DECLARE_CRT_EXPORT("GetFileAttributesExW", GetFileAttributesExW);
+DECLARE_CRT_EXPORT("CreateFileA", CreateFileA);
 DECLARE_CRT_EXPORT("CreateFileW", CreateFileW);
 DECLARE_CRT_EXPORT("SetFilePointer", SetFilePointer);
 DECLARE_CRT_EXPORT("SetFilePointerEx", SetFilePointerEx);
