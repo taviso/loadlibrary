@@ -305,6 +305,7 @@ DECLARE_CRT_EXPORT("GetFileVersionInfoSizeExW", GetFileVersionInfoSizeExW);
 DECLARE_CRT_EXPORT("GetFileAttributesW", GetFileAttributesW);
 DECLARE_CRT_EXPORT("GetFileAttributesExW", GetFileAttributesExW);
 DECLARE_CRT_EXPORT("CreateFileW", CreateFileW);
+DECLARE_CRT_EXPORT("SetFilePointer", SetFilePointer);
 DECLARE_CRT_EXPORT("SetFilePointerEx", SetFilePointerEx);
 DECLARE_CRT_EXPORT("CloseHandle", CloseHandle);
 DECLARE_CRT_EXPORT("ReadFile", ReadFile);
