@@ -86,6 +86,8 @@ STATIC int WINAPI WideCharToMultiByte(UINT CodePage, DWORD dwFlags, PVOID lpWide
         strcpy(lpMultiByteStr, ansi);
         free(ansi);
         return strlen(lpMultiByteStr) + 1;
+    } else if (!lpMultiByteStr && cbMultiByte == 0) {
+        return strlen(ansi) + 1;
     }
 
     free(ansi);
