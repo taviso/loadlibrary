@@ -23,4 +23,12 @@ STATIC BOOL WINAPI DuplicateHandle(HANDLE hSourceProcessHandle, HANDLE hSourceHa
     return TRUE;
 }
 
+STATIC UINT WINAPI SetHandleCount(UINT handleCount)
+{
+    DebugLog("%u", handleCount);
+    return handleCount;
+}
+
+
 DECLARE_CRT_EXPORT("DuplicateHandle", DuplicateHandle);
+DECLARE_CRT_EXPORT("SetHandleCount", SetHandleCount);
