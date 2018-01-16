@@ -173,7 +173,7 @@ static DWORD WINAPI SetFilePointer(HANDLE hFile, LONG liDistanceToMove,  LONG *l
     DWORD pos = ftell(hFile);
 
     if (lpDistanceToMoveHigh) {
-        *lpDistanceToMoveHigh = (LONG *)NULL;
+        *lpDistanceToMoveHigh = 0;
     }
 
     return pos;
