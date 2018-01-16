@@ -117,6 +117,27 @@ static HANDLE WINAPI CreateFileW(PWCHAR lpFileName, DWORD dwDesiredAccess, DWORD
     return FileHandle ? FileHandle : INVALID_HANDLE_VALUE;
 }
 
+/**
+ * TODO: handle 64 bit 
+ */
+static DWORD WINAPI SetFilePointer(HANDLE hFile, LONG liDistanceToMove,  LONG *lpDistanceToMoveHigh, DWORD dwMoveMethod)
+{
+    int result;
+
+    DebugLog("%p, %llu, %p, %u", hFile, liDistanceToMove, lpDistanceToMoveHigh, dwMoveMethod);
+
+    result = fseek(hFile, liDistanceToMove, dwMoveMethod);
+
+    DWORD pos = ftell(hFile);
+
+    if (lpDistanceToMoveHigh) {
+        *lpDistanceToMoveHigh = (LONG *)NULL;
+    }
+
+    return pos;
+}
+
+
 static BOOL WINAPI SetFilePointerEx(HANDLE hFile, uint64_t liDistanceToMove,  uint64_t *lpNewFilePointer, DWORD dwMoveMethod)
 {
     int result;
