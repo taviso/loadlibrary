@@ -20,7 +20,7 @@ ndiswrapper. The library will process the relocations and imports, then provide
 a `dlopen`-like API. The code supports debugging with gdb (including symbols),
 basic block coverage collection, and runtime hooking and patching.
 
-![Is such a thing even possible?](https://media.giphy.com/media/LwAjTGdSWNRYc/giphy.gif)
+![Is such a thing even possible?](https://media.giphy.com/media/2pDSW8QQU6jRe/giphy.gif)
 
 ### What works?
 
