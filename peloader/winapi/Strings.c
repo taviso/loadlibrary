@@ -135,9 +135,24 @@ STATIC PVOID WINAPI UuidFromStringW(PUSHORT StringUuid, PBYTE Uuid)
     return 0;
 }
 
+STATIC INT WINAPI UuidCreate(PBYTE Uuid)
+{
+    int i;
+
+    DebugLog("%p", Uuid);
+
+    for (i = 0; i < 16; i++) {
+        Uuid[i] = 0x41;
+    }
+
+    return 0;
+}
+
 DECLARE_CRT_EXPORT("MultiByteToWideChar", MultiByteToWideChar);
 DECLARE_CRT_EXPORT("WideCharToMultiByte", WideCharToMultiByte);
 DECLARE_CRT_EXPORT("GetStringTypeA", GetStringTypeA);
 DECLARE_CRT_EXPORT("GetStringTypeW", GetStringTypeW);
 DECLARE_CRT_EXPORT("RtlInitUnicodeString", RtlInitUnicodeString);
 DECLARE_CRT_EXPORT("UuidFromStringW", UuidFromStringW);
+DECLARE_CRT_EXPORT("UuidCreate", UuidCreate);
+
