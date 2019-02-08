@@ -285,9 +285,9 @@ static int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
 static int read_exports(struct pe_image *pe)
 {
         IMAGE_EXPORT_DIRECTORY *export_dir_table;
-        uint32_t *export_addr_table;
         int i;
         uint32_t *name_table;
+        uint16_t *ordinal_table;
         PIMAGE_OPTIONAL_HEADER opt_hdr;
         IMAGE_DATA_DIRECTORY *export_data_dir;
 
@@ -306,31 +306,31 @@ static int read_exports(struct pe_image *pe)
 
         name_table = (unsigned int *)(pe->image +
                                       export_dir_table->AddressOfNames);
-        export_addr_table = (uint32_t *)
-                (pe->image + export_dir_table->AddressOfFunctions);
+        ordinal_table = (uint16_t *)(pe->image +
+                                      export_dir_table->AddressOfNameOrdinals);
 
         pe_exports = calloc(export_dir_table->NumberOfNames, sizeof(struct pe_exports));
 
         for (i = 0; i < export_dir_table->NumberOfNames; i++) {
+                uint32_t address = ((uint32_t *) (pe->image + export_dir_table->AddressOfFunctions))[*ordinal_table];
 
-                if (export_data_dir->VirtualAddress <= *export_addr_table ||
-                    *export_addr_table >= (export_data_dir->VirtualAddress +
+                if (export_data_dir->VirtualAddress <= address ||
+                    address >= (export_data_dir->VirtualAddress +
                                            export_data_dir->Size)) {
                         //DBGLINKER("forwarder rva");
                 }
 
                 //DBGLINKER("export symbol: %s, at %p",
                 //          (char *)(pe->image + *name_table),
-                //          pe->image + *export_addr_table);
+                //          pe->image + address);
 
                 pe_exports[num_pe_exports].dll = pe->name;
                 pe_exports[num_pe_exports].name = pe->image + *name_table;
-                pe_exports[num_pe_exports].addr =
-                        pe->image + *export_addr_table;
+                pe_exports[num_pe_exports].addr = pe->image + address;
 
                 num_pe_exports++;
                 name_table++;
-                export_addr_table++;
+                ordinal_table++;
         }
         return 0;
 }
