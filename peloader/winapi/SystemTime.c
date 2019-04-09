@@ -22,6 +22,8 @@ typedef struct _SYSTEMTIME {
   WORD wMilliseconds;
 } SYSTEMTIME, *PSYSTEMTIME;
 
+extern void WINAPI SetLastError(DWORD dwErrCode);
+
 // These routines are called to check if signing certificates have expired, so
 // should return similar values.
 
@@ -51,6 +53,7 @@ STATIC VOID WINAPI GetSystemTimeAsFileTime(PVOID lpSystemTimeAsFileTime)
 
 STATIC BOOL WINAPI QueryPerformanceCounter(PVOID lpPerformanceCount)
 {
+    SetLastError(0);
     return FALSE;
 }
 
@@ -61,11 +64,13 @@ STATIC DWORD WINAPI GetTickCount(VOID)
 
 STATIC BOOL WINAPI QueryPerformanceFrequency(PVOID lpFrequency)
 {
+    SetLastError(0);
     return FALSE;
 }
 
 STATIC BOOL WINAPI GetProcessTimes(HANDLE hProcess, PFILETIME lpCreationTime, PFILETIME lpExitTime, PFILETIME lpKernelTime, PFILETIME lpUserTime)
 {
+    SetLastError(0);
     DebugLog("");
     return FALSE;
 }

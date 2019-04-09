@@ -15,7 +15,7 @@ STATIC DWORD LastError;
 
 STATIC DWORD WINAPI GetLastError(void)
 {
-    //DebugLog("GetLastError() => %#x", LastError);
+    DebugLog("GetLastError() => %#x", LastError);
 
     return LastError;
 }

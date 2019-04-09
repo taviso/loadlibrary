@@ -12,7 +12,7 @@
 #include "winexports.h"
 #include "util.h"
 
-STATIC ULONG RegisterTraceGuidsW(PVOID RequestAddress,
+STATIC ULONG WINAPI RegisterTraceGuidsW(PVOID RequestAddress,
                                  PVOID RequestContext,
                                  PVOID ControlGuid,
                                  ULONG GuidCount,
@@ -34,7 +34,7 @@ STATIC ULONG RegisterTraceGuidsW(PVOID RequestAddress,
     return STATUS_SUCCESS;
 }
 
-STATIC ULONG UnregisterTraceGuids(HANDLE RegistrationHandle)
+STATIC ULONG WINAPI UnregisterTraceGuids(HANDLE RegistrationHandle)
 {
     DebugLog("%p", RegistrationHandle);
     return STATUS_SUCCESS;

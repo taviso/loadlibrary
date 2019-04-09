@@ -14,6 +14,10 @@
 #include "util.h"
 #include "winstrings.h"
 
+#define ERROR_ENVVAR_NOT_FOUND 203
+
+extern void WINAPI SetLastError(DWORD dwErrCode);
+
 WCHAR EnvironmentStrings[] =
     L"ALLUSERSPROFILE=AllUsersProfile\0"
     L"ALLUSERSAPPDATA=AllUsersAppdata\0"
@@ -49,6 +53,8 @@ STATIC DWORD WINAPI GetEnvironmentVariableW(PWCHAR lpName, PVOID lpBuffer, DWORD
         memcpy(lpBuffer, L"1", sizeof(L"1"));
     } else if (strcmp(AnsiName, "MP_METASTORE_DISABLE") == 0) {
         memcpy(lpBuffer, L"1", sizeof(L"1"));
+    } else {
+        SetLastError(ERROR_ENVVAR_NOT_FOUND);
     }
 
     free(AnsiName);
