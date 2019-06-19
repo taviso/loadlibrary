@@ -622,16 +622,19 @@ error:
     return false;
 }
 
+uintptr_t LocalStorage[1024] = {0};
+
 bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
 {
     static EXCEPTION_FRAME ExceptionFrame;
-    static NT_TIB ThreadInfo = {
-        .Self = &ThreadInfo,
+    static TEB ThreadEnvironment = {
+        .Tib.Self                   = &ThreadEnvironment.Tib,
+        .ThreadLocalStoragePointer  = LocalStorage, // https://github.com/taviso/loadlibrary/issues/65
     };
     struct user_desc pebdescriptor = {
         .entry_number       = -1,
-        .base_addr          = (uintptr_t) &ThreadInfo,
-        .limit              = sizeof ThreadInfo,
+        .base_addr          = (uintptr_t) &ThreadEnvironment,
+        .limit              = sizeof ThreadEnvironment,
         .seg_32bit          = 1,
         .contents           = 0,
         .read_exec_only     = 0,
@@ -641,12 +644,12 @@ bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
     };
 
     if (ExceptionHandler) {
-        if (ThreadInfo.ExceptionList) {
+        if (ThreadEnvironment.Tib.ExceptionList) {
             DebugLog("Resetting ThreadInfo.ExceptionList");
         }
-        ExceptionFrame.handler      = ExceptionHandler;
-        ExceptionFrame.prev         = NULL;
-        ThreadInfo.ExceptionList    = &ExceptionFrame;
+        ExceptionFrame.handler              = ExceptionHandler;
+        ExceptionFrame.prev                 = NULL;
+        ThreadEnvironment.Tib.ExceptionList = &ExceptionFrame;
     }
 
     if (syscall(__NR_set_thread_area, &pebdescriptor) != 0) {

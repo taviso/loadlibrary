@@ -981,6 +981,22 @@ typedef struct _NT_TIB {
     PVOID Self;
 } NT_TIB, *PNT_TIB;
 
+typedef struct _CLIENT_ID {
+    HANDLE UniqueProcess;
+    HANDLE UniqueThread;
+} CLIENT_ID;
+
+typedef struct _TEB {
+    NT_TIB	    Tib;
+	PVOID       EnvironmentPointer;
+	CLIENT_ID   Cid;
+	PVOID       ActiveRpcInfo;
+	PVOID       ThreadLocalStoragePointer;
+    // The fields below this are deliberately omitted so that access causes a
+    // crash (because of the segment limit). This lets me know I have to fix
+    // it, otherwise the error is very difficult to track down.
+} TEB, *PTEB;
+
 struct user_desc {
     unsigned int  entry_number;
     unsigned long base_addr;

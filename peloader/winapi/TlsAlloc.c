@@ -17,7 +17,7 @@
 #endif
 
 static int TlsIndex;
-uintptr_t LocalStorage[1024];
+extern uintptr_t LocalStorage[1024];
 
 STATIC DWORD WINAPI TlsAlloc(void)
 {
