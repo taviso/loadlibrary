@@ -75,6 +75,13 @@ STATIC BOOL WINAPI GetProcessTimes(HANDLE hProcess, PFILETIME lpCreationTime, PF
     return FALSE;
 }
 
+STATIC BOOL WINAPI DosDateTimeToFileTime(WORD wFatDate, WORD wFatTime, PFILETIME lpFileTime)
+{
+    DebugLog("");
+    return FALSE;
+}
+
+
 DECLARE_CRT_EXPORT("GetSystemTime", GetSystemTime);
 DECLARE_CRT_EXPORT("SystemTimeToFileTime", SystemTimeToFileTime);
 DECLARE_CRT_EXPORT("GetSystemTimePreciseAsFileTime", GetSystemTimePreciseAsFileTime);
@@ -83,3 +90,4 @@ DECLARE_CRT_EXPORT("QueryPerformanceCounter", QueryPerformanceCounter);
 DECLARE_CRT_EXPORT("QueryPerformanceFrequency", QueryPerformanceFrequency);
 DECLARE_CRT_EXPORT("GetTickCount", GetTickCount);
 DECLARE_CRT_EXPORT("GetProcessTimes", GetProcessTimes);
+DECLARE_CRT_EXPORT("DosDateTimeToFileTime", DosDateTimeToFileTime);
