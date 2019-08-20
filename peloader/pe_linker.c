@@ -454,13 +454,13 @@ static int fix_pe_image(struct pe_image *pe)
         }
 
         image_size = pe->opt_hdr->SizeOfImage;
-        image      = code_malloc(image_size + getpagesize());
+        image      = mmap((void *)pe->opt_hdr->ImageBase, image_size + getpagesize(), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_FIXED | MAP_SHARED, -1, 0);
 
         // Round to page size?
         //image      = (PVOID)(ROUND_UP((ULONG)(image), getpagesize()));
 
-        if (image == NULL) {
-                ERROR("failed to allocate enough space for new image: %d bytes, %m", image_size);
+        if (image == MAP_FAILED) {
+                ERROR("failed to mmap desired space for image: %d bytes, image base %p, %m", image_size, pe->opt_hdr->ImageBase);
                 return -ENOMEM;
         }
         memset(image, 0, image_size);
@@ -482,7 +482,7 @@ static int fix_pe_image(struct pe_image *pe)
                 if (sect_hdr->VirtualAddress+sect_hdr->SizeOfRawData >
                     image_size) {
                         ERROR("Invalid section %s in driver", sect_hdr->Name);
-                        code_free(image);
+                        munmap(image, image_size + getpagesize());
                         return -EINVAL;
                 }
 
