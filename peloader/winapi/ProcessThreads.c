@@ -30,8 +30,6 @@ static VOID WINAPI InitializeSRWLock(PVOID SRWLock)
 static VOID WINAPI SetThreadpoolTimer(PVOID pti, PVOID pftDueTime, DWORD msPeriod, DWORD msWindowLength)
 {
     DebugLog("%p, %p, %u, %u", pti, pftDueTime, msPeriod, msWindowLength);
-
-    assert(pftDueTime == NULL);
 }
 
 static VOID WINAPI WaitForThreadpoolTimerCallbacks(PVOID pti, BOOL fCancelPendingCallbacks)
