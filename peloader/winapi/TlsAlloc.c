@@ -16,7 +16,8 @@
 # define TLS_OUT_OF_INDEXES 0xFFFFFFFF
 #endif
 
-static int TlsIndex;
+// Index zero is reserved for .tls
+static int TlsIndex = 1;
 extern uintptr_t LocalStorage[1024];
 
 STATIC DWORD WINAPI TlsAlloc(void)

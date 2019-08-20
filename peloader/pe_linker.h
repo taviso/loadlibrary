@@ -987,15 +987,24 @@ typedef struct _CLIENT_ID {
 } CLIENT_ID;
 
 typedef struct _TEB {
-    NT_TIB	    Tib;
-	PVOID       EnvironmentPointer;
-	CLIENT_ID   Cid;
-	PVOID       ActiveRpcInfo;
-	PVOID       ThreadLocalStoragePointer;
+    NT_TIB      Tib;
+    PVOID       EnvironmentPointer;
+    CLIENT_ID   Cid;
+    PVOID       ActiveRpcInfo;
+    PVOID       ThreadLocalStoragePointer;
     // The fields below this are deliberately omitted so that access causes a
     // crash (because of the segment limit). This lets me know I have to fix
     // it, otherwise the error is very difficult to track down.
 } TEB, *PTEB;
+
+typedef struct _IMAGE_TLS_DIRECTORY {
+    PVOID RawDataStart;
+    PVOID RawDataEnd;
+    PDWORD AddressOfIndex;
+    PVOID AddressOfCallbacks;
+    DWORD SizeOfZeroFill;
+    DWORD Characteristics;
+} IMAGE_TLS_DIRECTORY, *PIMAGE_TLS_DIRECTORY;
 
 struct user_desc {
     unsigned int  entry_number;

@@ -88,6 +88,8 @@ static const char *image_directory_name[] = {
 
 extern struct wrap_export crt_exports[];
 
+uintptr_t LocalStorage[1024] = {0};
+
 struct hsearch_data extraexports;
 struct hsearch_data crtexports;
 
@@ -559,6 +561,26 @@ int link_pe_images(struct pe_image *pe_image, unsigned short n)
                                pe->opt_hdr->AddressOfEntryPoint, void *);
                 //TRACE1("entry is at %p, rva at %08X", pe->entry,
                 //       pe->opt_hdr->AddressOfEntryPoint);
+
+                // Check if there were enough data directories for a TLS section.
+                if (pe->opt_hdr->NumberOfRvaAndSizes >= IMAGE_DIRECTORY_ENTRY_TLS) {
+                    // Normally, we would be expected to allocate a TLS slot,
+                    // place the number into *TlsData->AddressOfIndex, and make
+                    // it a pointer to RawData, and then process the callbacks.
+                    //
+                    // We don't support threads, so it seems safe to just
+                    // pre-allocate a slot and point it straight to the
+                    // template data.
+                    //
+                    // FIXME: Verify callbacks list is empty and SizeOfZeroFill is zero.
+                    //
+                    PIMAGE_TLS_DIRECTORY TlsData = RVA2VA(pe->image,
+                                                          pe->opt_hdr->DataDirectory[IMAGE_DIRECTORY_ENTRY_TLS].VirtualAddress,
+                                                          IMAGE_TLS_DIRECTORY *);
+
+                    // This means that slot 0 is reserved.
+                    LocalStorage[0] = TlsData->RawDataStart;
+                }
         }
 
         return 0;
@@ -621,8 +643,6 @@ error:
 
     return false;
 }
-
-uintptr_t LocalStorage[1024] = {0};
 
 bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
 {
