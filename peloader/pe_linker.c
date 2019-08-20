@@ -30,12 +30,13 @@
 #include <errno.h>
 #include <string.h>
 #include <search.h>
+#include <stdlib.h>
+#include <assert.h>
 #include <err.h>
 
 #include "winnt_types.h"
 #include "pe_linker.h"
 #include "ntoskernel.h"
-#include "codealloc.h"
 #include "util.h"
 #include "log.h"
 
