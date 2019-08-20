@@ -455,15 +455,21 @@ static int fix_pe_image(struct pe_image *pe)
         }
 
         image_size = pe->opt_hdr->SizeOfImage;
-        image      = mmap((void *)pe->opt_hdr->ImageBase, image_size + getpagesize(), PROT_READ | PROT_WRITE | PROT_EXEC, MAP_ANONYMOUS | MAP_FIXED | MAP_SHARED, -1, 0);
 
-        // Round to page size?
-        //image      = (PVOID)(ROUND_UP((ULONG)(image), getpagesize()));
+        // TODO: If image does not have DYNAMIC_BASE, add MAP_FIXED.
+
+        image      = mmap((PVOID)(pe->opt_hdr->ImageBase),
+                          image_size + getpagesize(),
+                          PROT_READ | PROT_WRITE | PROT_EXEC,
+                          MAP_ANONYMOUS | MAP_PRIVATE,
+                          -1,
+                          0);
 
         if (image == MAP_FAILED) {
                 ERROR("failed to mmap desired space for image: %d bytes, image base %p, %m", image_size, pe->opt_hdr->ImageBase);
                 return -ENOMEM;
         }
+
         memset(image, 0, image_size);
 
         /* Copy all the headers, ie everything before the first section. */
