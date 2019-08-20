@@ -28,6 +28,8 @@ static HANDLE WINAPI CreateEventW(PVOID lpEventAttributes, BOOL bManualReset, BO
 
     free(AnsiName);
 
+    SetLastError(0);
+
     return (HANDLE) 'EVNT';
 }
 
