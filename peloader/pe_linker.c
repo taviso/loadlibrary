@@ -579,7 +579,7 @@ int link_pe_images(struct pe_image *pe_image, unsigned short n)
                                                           IMAGE_TLS_DIRECTORY *);
 
                     // This means that slot 0 is reserved.
-                    LocalStorage[0] = TlsData->RawDataStart;
+                    LocalStorage[0] = (uintptr_t) TlsData->RawDataStart;
                 }
         }
 

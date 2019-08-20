@@ -18,31 +18,30 @@
 static __stdcall PVOID CreateThreadPoolWait(PVOID pwa)
 {
     DebugLog("");
-    return 0x41414141;
+    return (PVOID) 0x41414141;
 }
 
 static __stdcall PVOID CreateThreadPool(PVOID reserved)
 {
     DebugLog("");
-    return 0x41414141;
+    return (PVOID) 0x41414141;
 }
 
 static __stdcall PVOID CreateThreadpoolTimer(PVOID pfnti, PVOID pv, PVOID pcbe)
 {
     DebugLog("");
-    return 0x41414141;
+    return (PVOID) 0x41414141;
 }
 
 static __stdcall PVOID CreateThreadpoolWork(PVOID pfnwk, PVOID pv, PVOID pcbe)
 {
     DebugLog("");
-    return 0x41414141;
+    return (PVOID) 0x41414141;
 }
 
-static __stdcall PVOID CloseThreadpoolTimer(PVOID pti)
+static __stdcall void CloseThreadpoolTimer(PVOID pti)
 {
-    DebugLog("");
-    return NULL;
+    DebugLog("%p", pti);
 }
 
 static __stdcall PVOID CreateThreadpoolWait() { DebugLog(""); return NULL; }
