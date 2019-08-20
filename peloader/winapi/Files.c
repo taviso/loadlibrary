@@ -340,6 +340,12 @@ static DWORD WINAPI QueryDosDevice(PVOID lpDeviceName, PVOID lpTargetPath, DWORD
     return 0;
 }
 
+static BOOL WINAPI GetDiskFreeSpaceExW(PWCHAR lpDirectoryName, PVOID lpFreeBytesAvailableToCaller, PVOID lpTotalNumberOfBytes, QWORD *lpTotalNumberOfFreeBytes)
+{
+    DebugLog("%S", lpDirectoryName);
+    *lpTotalNumberOfFreeBytes = 0x000000000ULL;
+    return FALSE;
+}
 
 DECLARE_CRT_EXPORT("VerQueryValueW", VerQueryValueW);
 DECLARE_CRT_EXPORT("GetFileVersionInfoExW", GetFileVersionInfoExW);
@@ -364,3 +370,4 @@ DECLARE_CRT_EXPORT("NtQueryVolumeInformationFile", NtQueryVolumeInformationFile)
 DECLARE_CRT_EXPORT("GetFullPathNameW", GetFullPathNameW);
 DECLARE_CRT_EXPORT("SetEndOfFile", SetEndOfFile);
 DECLARE_CRT_EXPORT("QueryDosDeviceW", QueryDosDevice);
+DECLARE_CRT_EXPORT("GetDiskFreeSpaceExW", GetDiskFreeSpaceExW);
