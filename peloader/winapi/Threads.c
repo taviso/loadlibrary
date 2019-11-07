@@ -51,7 +51,10 @@ static __stdcall PVOID CancelThreadpoolIo() { DebugLog(""); return NULL; }
 static __stdcall PVOID CloseThreadpool() { DebugLog(""); return NULL; }
 static __stdcall PVOID CloseThreadpoolIo() { DebugLog(""); return NULL; }
 static __stdcall PVOID CloseThreadpoolWait() { DebugLog(""); return NULL; }
-static __stdcall PVOID CloseThreadpoolWork() { DebugLog(""); return NULL; }
+static __stdcall void CloseThreadpoolWork(PVOID pwk)
+{
+    DebugLog("%p", pwk);
+}
 static __stdcall PVOID CreateThreadpool() { DebugLog(""); return NULL; }
 static __stdcall PVOID CreateThreadpoolIo() { DebugLog(""); return NULL; }
 static __stdcall PVOID SetThreadpoolThreadMaximum() { DebugLog(""); return NULL; }
@@ -59,7 +62,11 @@ static __stdcall PVOID SetThreadpoolThreadMinimum() { DebugLog(""); return NULL;
 static __stdcall PVOID StartThreadpoolIo() { DebugLog(""); return NULL; }
 static __stdcall PVOID WaitForThreadpoolIoCallbacks() { DebugLog(""); return NULL; }
 static __stdcall PVOID WaitForThreadpoolWaitCallbacks() { DebugLog(""); return NULL; }
-static __stdcall PVOID WaitForThreadpoolWorkCallbacks() { DebugLog(""); return NULL; }
+
+static __stdcall void WaitForThreadpoolWorkCallbacks(PVOID pwk, BOOL fCancelPendingCallbacks)
+{
+    DebugLog("%p %d", pwk, fCancelPendingCallbacks);
+}
 
 
 DECLARE_CRT_EXPORT("CreateThreadPoolWait", CreateThreadPoolWait);

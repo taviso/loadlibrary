@@ -135,12 +135,25 @@ static HANDLE WINAPI CertOpenStore(PCHAR lpszStoreProvider, DWORD dwMsgAndCertEn
     return (HANDLE) 'STOR';
 }
 
+enum {
+    CERT_FIND_SUBJECT_NAME = 131079,
+};
+
 static PVOID WINAPI CertFindCertificateInStore(HANDLE hCertStore, DWORD dwCertEncodingType, DWORD dwFindFlags, DWORD dwFindType, PVOID pvFindPara, PVOID pPrevCertContext)
 {
     static CERT_INFO FakeInfo = {0};
     static CERT_CONTEXT FakeCert = {0};
 
     DebugLog("%p, %u, %#x, %#x, %p, %p", hCertStore, dwCertEncodingType, dwFindFlags, dwFindType, pvFindPara, pPrevCertContext);
+
+    switch  (dwFindType) {
+        case CERT_FIND_SUBJECT_NAME: {
+            DebugLog("\tCERT_FIND_SUBJECT_NAME");
+            break;
+        }
+    }
+
+    DebugLog("FakeCert: %p", &FakeCert);
 
     FakeCert.pCertInfo = &FakeInfo;
     FakeCert.pCertInfo->SubjectPublicKeyInfo.Algorithm.pszObjId = "1.2.840.113549.1.1.1";
@@ -163,8 +176,26 @@ static BOOL WINAPI CertFreeCertificateContext(PVOID pCertContext)
     return TRUE;
 }
 
+enum {
+    CALG_SHA_256 = 0x800c,
+    CALG_SHA1 = 0x8004,
+};
+
 static BOOL WINAPI CryptCreateHash(PVOID hProv, DWORD Algid, HANDLE hKey, DWORD dwFlags, PDWORD phHash)
 {
+    DebugLog("%p, %#x, %p, %#x, %p", hProv, Algid, hKey, dwFlags, phHash);
+
+    switch (Algid) {
+        case CALG_SHA_256:
+            *phHash = 'SHA2';
+            break;
+        case CALG_SHA1:
+            *phHash = 'SHA1';
+            break;
+        default:
+            DebugLog("unexpected Algid value, code update might be required.");
+    }
+
     return TRUE;
 }
 
@@ -175,14 +206,20 @@ enum HashParameters
     HP_HASHSIZE = 0x0004 // Hash value size
 };
 
-static BOOL WINAPI CryptGetHashParam(PVOID hHash, DWORD dwParam, PDWORD pbData, PDWORD pdwDataLen, DWORD dwFlags)
+static BOOL WINAPI CryptGetHashParam(DWORD hHash, DWORD dwParam, PDWORD pbData, PDWORD pdwDataLen, DWORD dwFlags)
 {
-    DebugLog("%p, %u, %p, %p, %#x", hHash, dwParam, pbData, pdwDataLen, dwFlags);
+    DebugLog("%#x, %u, %p, %p, %#x", hHash, dwParam, pbData, pdwDataLen, dwFlags);
 
     switch (dwParam) {
         case HP_HASHSIZE:
             *pdwDataLen = sizeof(DWORD);
-            *pbData = 20;
+
+            switch (hHash) {
+                case 'SHA2': *pbData = 32; break;
+                case 'SHA1': *pbData = 20; break;
+                default:
+                    DebugLog("unknown hHash, this might fail.");
+            }
             break;
     }
 
@@ -199,8 +236,23 @@ static BOOL WINAPI CryptImportPublicKeyInfo(HANDLE hCryptProv, DWORD dwCertEncod
     return TRUE;
 }
 
-static BOOL WINAPI CryptVerifySignatureW(HANDLE hHash, PVOID pbSignature, DWORD dwSigLen, HANDLE hPubKey, PVOID sDescription, DWORD dwFlags)
+static BOOL WINAPI CryptVerifySignatureW(DWORD hHash, PVOID pbSignature, DWORD dwSigLen, HANDLE hPubKey, PVOID sDescription, DWORD dwFlags)
 {
+    switch (hHash) {
+        case 'SHA2': {
+            if (dwSigLen != 256) {
+                DebugLog("unexpected Signature Size");
+            }
+            break;
+        }
+        case 'SHA1': {
+            if (dwSigLen != 160) {
+                DebugLog("unexpected Signature Size");
+            }
+            break;
+        }
+        default: DebugLog("unrecognized hHash %#x, something went wrong", hHash);
+    }
     DebugLog("Signature verification is not implemented #YOLO");
     return TRUE;
 }
@@ -208,6 +260,15 @@ static BOOL WINAPI CryptVerifySignatureW(HANDLE hHash, PVOID pbSignature, DWORD 
 static BOOL WINAPI CertVerifyCertificateChainPolicy(PVOID pszPolicyOID, PVOID pChainContext, PVOID pPolicyPara, PVOID pPolicyStatus)
 {
     DebugLog("Certificate policy verification is not implemented #YOLO");
+    return TRUE;
+}
+
+static BOOL WINAPI CryptDestroyHash(DWORD hHash)
+{
+    DebugLog("%p", hHash);
+
+    assert(hHash == 'SHA2' || hHash == 'SHA1');
+
     return TRUE;
 }
 
@@ -226,4 +287,5 @@ DECLARE_CRT_EXPORT("CryptAcquireContextW", CryptAcquireContextW);
 DECLARE_CRT_EXPORT("CryptGetHashParam", CryptGetHashParam);
 DECLARE_CRT_EXPORT("CryptSetHashParam", CryptSetHashParam);
 DECLARE_CRT_EXPORT("CryptVerifySignatureW", CryptVerifySignatureW);
+DECLARE_CRT_EXPORT("CryptDestroyHash", CryptDestroyHash);
 
