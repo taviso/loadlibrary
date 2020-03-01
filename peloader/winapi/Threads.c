@@ -44,6 +44,25 @@ static __stdcall void CloseThreadpoolTimer(PVOID pti)
     DebugLog("%p", pti);
 }
 
+static __stdcall void InitializeConditionVariable(PVOID ConditionVariable)
+{
+    DebugLog("%p", ConditionVariable);
+}
+
+static __stdcall BOOL SleepConditionVariableCS(PVOID ConditionVariable,
+                                               PVOID CriticalSection,
+                                               DWORD dwMilliseconds)
+{
+    DebugLog("%p %p %u", ConditionVariable, CriticalSection, dwMilliseconds);
+    return TRUE;
+}
+
+static __stdcall void WakeAllConditionVariable(PVOID ConditionVariable)
+{
+    DebugLog("%p", ConditionVariable);
+}
+
+
 static __stdcall PVOID CreateThreadpoolWait() { DebugLog(""); return NULL; }
 static __stdcall PVOID SetThreadpoolWait() { DebugLog(""); return NULL; }
 static __stdcall PVOID SubmitThreadpoolWork() { DebugLog(""); return NULL; }
@@ -71,6 +90,9 @@ static __stdcall void WaitForThreadpoolWorkCallbacks(PVOID pwk, BOOL fCancelPend
 
 DECLARE_CRT_EXPORT("CreateThreadPoolWait", CreateThreadPoolWait);
 DECLARE_CRT_EXPORT("CreateThreadPool", CreateThreadPool);
+DECLARE_CRT_EXPORT("InitializeConditionVariable", InitializeConditionVariable);
+DECLARE_CRT_EXPORT("SleepConditionVariableCS", SleepConditionVariableCS);
+DECLARE_CRT_EXPORT("WakeAllConditionVariable", WakeAllConditionVariable);
 
 DECLARE_CRT_EXPORT("CreateThreadpoolTimer", CreateThreadpoolTimer);
 DECLARE_CRT_EXPORT("CloseThreadpoolTimer", CloseThreadpoolTimer);

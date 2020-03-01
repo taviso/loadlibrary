@@ -113,12 +113,25 @@ static NTSTATUS WINAPI BCryptGenRandom(PVOID phAlgorithm, PUCHAR pbBuffer, ULONG
     return STATUS_SUCCESS;
 }
 
-static BOOL WINAPI CertStrToNameW(DWORD dwCertEncodingType, PVOID pszX500, DWORD dwStrType, void *pvReserved, BYTE *pbEncoded, DWORD *pcbEncoded, PVOID ppszError)
+static BOOL WINAPI CertStrToNameW(DWORD dwCertEncodingType,
+                                  PVOID pszX500,
+                                  DWORD dwStrType,
+                                  void *pvReserved,
+                                  BYTE *pbEncoded,
+                                  DWORD *pcbEncoded,
+                                  PVOID ppszError)
 {
     uint16_t CertName[] = L"Totally Legitimate Certificate Name";
     char *name = CreateAnsiFromWide(pszX500);
 
-    DebugLog("%u, %p [%s], %u, %p, %p, %p, %p", dwCertEncodingType, pszX500, name, dwStrType, pvReserved, pbEncoded, pcbEncoded, ppszError);
+    DebugLog("%u, %p [%s], %u, %p, %p, %p, %p", dwCertEncodingType,
+                                                pszX500,
+                                                name,
+                                                dwStrType,
+                                                pvReserved,
+                                                pbEncoded,
+                                                pcbEncoded,
+                                                ppszError);
     free(name);
 
     *pcbEncoded = sizeof(CertName);
@@ -130,7 +143,11 @@ static BOOL WINAPI CertStrToNameW(DWORD dwCertEncodingType, PVOID pszX500, DWORD
     return TRUE;
 }
 
-static HANDLE WINAPI CertOpenStore(PCHAR lpszStoreProvider, DWORD dwMsgAndCertEncodingType, PVOID hCryptProv, DWORD dwFlags, PVOID pvPara)
+static HANDLE WINAPI CertOpenStore(PCHAR lpszStoreProvider,
+                                   DWORD dwMsgAndCertEncodingType,
+                                   PVOID hCryptProv,
+                                   DWORD dwFlags,
+                                   PVOID pvPara)
 {
     return (HANDLE) 'STOR';
 }
@@ -139,12 +156,26 @@ enum {
     CERT_FIND_SUBJECT_NAME = 131079,
 };
 
-static PVOID WINAPI CertFindCertificateInStore(HANDLE hCertStore, DWORD dwCertEncodingType, DWORD dwFindFlags, DWORD dwFindType, PVOID pvFindPara, PVOID pPrevCertContext)
+
+
+#include "rootcert.h"
+
+static PVOID WINAPI CertFindCertificateInStore(HANDLE hCertStore,
+                                               DWORD dwCertEncodingType,
+                                               DWORD dwFindFlags,
+                                               DWORD dwFindType,
+                                               PVOID pvFindPara,
+                                               PVOID pPrevCertContext)
 {
     static CERT_INFO FakeInfo = {0};
     static CERT_CONTEXT FakeCert = {0};
 
-    DebugLog("%p, %u, %#x, %#x, %p, %p", hCertStore, dwCertEncodingType, dwFindFlags, dwFindType, pvFindPara, pPrevCertContext);
+    DebugLog("%p, %u, %#x, %#x, %p, %p", hCertStore,
+                                         dwCertEncodingType,
+                                         dwFindFlags,
+                                         dwFindType,
+                                         pvFindPara,
+                                         pPrevCertContext);
 
     switch  (dwFindType) {
         case CERT_FIND_SUBJECT_NAME: {
@@ -155,6 +186,9 @@ static PVOID WINAPI CertFindCertificateInStore(HANDLE hCertStore, DWORD dwCertEn
 
     DebugLog("FakeCert: %p", &FakeCert);
 
+    FakeCert.dwCertEncodingType = 1;
+    FakeCert.pbCertEncoded = RootCertificate;
+    FakeCert.cbCertEncoded = sizeof(RootCertificate);
     FakeCert.pCertInfo = &FakeInfo;
     FakeCert.pCertInfo->SubjectPublicKeyInfo.Algorithm.pszObjId = "1.2.840.113549.1.1.1";
 
