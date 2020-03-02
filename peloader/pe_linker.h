@@ -986,12 +986,87 @@ typedef struct _CLIENT_ID {
     HANDLE UniqueThread;
 } CLIENT_ID;
 
+typedef struct _LIST_ENTRY {
+  struct _LIST_ENTRY *Flink;
+  struct _LIST_ENTRY *Blink;
+} LIST_ENTRY, *PLIST_ENTRY, PRLIST_ENTRY;
+
+typedef struct _PEB_LDR_DATA
+{
+    ULONG               Length;
+    BOOLEAN             Initialized;
+    PVOID               SsHandle;
+    LIST_ENTRY          InLoadOrderModuleList;
+    LIST_ENTRY          InMemoryOrderModuleList;
+    LIST_ENTRY          InInitializationOrderModuleList;
+} PEB_LDR_DATA, *PPEB_LDR_DATA;
+
+typedef struct _PEB
+{
+    BOOLEAN                      InheritedAddressSpace;           /* 0x00 */
+    BOOLEAN                      ReadImageFileExecOptions;        /* 0x01 */
+    BOOLEAN                      BeingDebugged;                   /* 0x02 */
+    BOOLEAN                      SpareBool;                       /* 0x03 */
+    HANDLE                       Mutant;                          /* 0x04 */
+    HMODULE                      ImageBaseAddress;                /* 0x08 */
+    PPEB_LDR_DATA                LdrData;                         /* 0x0c */
+    PVOID                        ProcessParameters;               /* 0x10 */
+    PVOID                        SubSystemData;                   /* 0x14 */
+    HANDLE                       ProcessHeap;                     /* 0x18 */
+    PVOID                        FastPebLock;                     /* 0x1c */
+    PVOID                        FastPebLockRoutine;              /* 0x20 */
+    PVOID                        FastPebUnlockRoutine;            /* 0x24 */
+    ULONG                        EnvironmentUpdateCount;          /* 0x28 */
+    PVOID                        KernelCallbackTable;             /* 0x2c */
+    PVOID                        EventLogSection;                 /* 0x30 */
+    PVOID                        EventLog;                        /* 0x34 */
+    PVOID                        FreeList;                        /* 0x38 */
+    ULONG                        TlsExpansionCounter;             /* 0x3c */
+    PRTL_BITMAP                  TlsBitmap;                       /* 0x40 */
+    ULONG                        TlsBitmapBits[2];                /* 0x44 */
+    PVOID                        ReadOnlySharedMemoryBase;        /* 0x4c */
+    PVOID                        ReadOnlySharedMemoryHeap;        /* 0x50 */
+    PVOID                       *ReadOnlyStaticServerData;        /* 0x54 */
+    PVOID                        AnsiCodePageData;                /* 0x58 */
+    PVOID                        OemCodePageData;                 /* 0x5c */
+    PVOID                        UnicodeCaseTableData;            /* 0x60 */
+    ULONG                        NumberOfProcessors;              /* 0x64 */
+    ULONG                        NtGlobalFlag;                    /* 0x68 */
+    BYTE                         Spare2[4];                       /* 0x6c */
+    LARGE_INTEGER                CriticalSectionTimeout;          /* 0x70 */
+    ULONG                        HeapSegmentReserve;              /* 0x78 */
+    ULONG                        HeapSegmentCommit;               /* 0x7c */
+    ULONG                        HeapDeCommitTotalFreeThreshold;  /* 0x80 */
+    ULONG                        HeapDeCommitFreeBlockThreshold;  /* 0x84 */
+    ULONG                        NumberOfHeaps;                   /* 0x88 */
+    ULONG                        MaximumNumberOfHeaps;            /* 0x8c */
+    PVOID                       *ProcessHeaps;                    /* 0x90 */
+    PVOID                        GdiSharedHandleTable;            /* 0x94 */
+    PVOID                        ProcessStarterHelper;            /* 0x98 */
+    PVOID                        GdiDCAttributeList;              /* 0x9c */
+    PVOID                        LoaderLock;                      /* 0xa0 */
+    ULONG                        OSMajorVersion;                  /* 0xa4 */
+    ULONG                        OSMinorVersion;                  /* 0xa8 */
+    ULONG                        OSBuildNumber;                   /* 0xac */
+    ULONG                        OSPlatformId;                    /* 0xb0 */
+    ULONG                        ImageSubSystem;                  /* 0xb4 */
+    ULONG                        ImageSubSystemMajorVersion;      /* 0xb8 */
+    ULONG                        ImageSubSystemMinorVersion;      /* 0xbc */
+    ULONG                        ImageProcessAffinityMask;        /* 0xc0 */
+    ULONG                        GdiHandleBuffer[34];             /* 0xc4 */
+    ULONG                        PostProcessInitRoutine;          /* 0x14c */
+    PRTL_BITMAP                  TlsExpansionBitmap;              /* 0x150 */
+    ULONG                        TlsExpansionBitmapBits[32];      /* 0x154 */
+    ULONG                        SessionId;                       /* 0x1d4 */
+} PEB, *PPEB;
+
 typedef struct _TEB {
     NT_TIB      Tib;
     PVOID       EnvironmentPointer;
     CLIENT_ID   Cid;
     PVOID       ActiveRpcInfo;
     PVOID       ThreadLocalStoragePointer;
+    PPEB        ProcessEnvironmentBlock;
     // The fields below this are deliberately omitted so that access causes a
     // crash (because of the segment limit). This lets me know I have to fix
     // it, otherwise the error is very difficult to track down.
@@ -1027,5 +1102,9 @@ int link_pe_images(struct pe_image *pe_image, unsigned short n);
 int get_export(const char *name, void *func);
 int get_data_export(char *name, uint32_t base, void *result);
 bool setup_nt_threadinfo(PEXCEPTION_HANDLER handler);
+bool setup_kuser_shared_data(void);
 bool process_extra_exports(void *imagebase, size_t base, const char *filename);
+
+extern PKUSER_SHARED_DATA SharedUserData;
+
 #endif

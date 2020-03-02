@@ -25,6 +25,7 @@
 #define FALSE                           0
 
 #define HANDLE                          PVOID
+#define HMODULE                         PVOID
 #define INVALID_HANDLE_VALUE            ((HANDLE)(-1))
 
 #define PASSIVE_LEVEL                   0
@@ -134,6 +135,7 @@
 #define WINAPI __attribute__((__stdcall__))
 
 #define KI_USER_SHARED_DATA 0xffdf0000
+#define MM_SHARED_USER_DATA_VA 0x7ffe0000
 
 typedef uint8_t     BOOLEAN, BOOL;
 typedef void       *PVOID;
@@ -192,11 +194,11 @@ typedef struct _FILETIME {
   DWORD dwHighDateTime;
 } FILETIME, *PFILETIME;
 
-struct ansi_string {
+typedef struct ansi_string {
         USHORT length;
         USHORT max_length;
         char *buf;
-};
+} ANSI_STRING, *PANSI_STRING;
 
 typedef struct unicode_string {
         USHORT Length;
@@ -1440,7 +1442,21 @@ typedef struct _EXCEPTION_FRAME {
   PEXCEPTION_HANDLER handler;
 } EXCEPTION_FRAME, *PEXCEPTION_FRAME;
 
-struct kuser_shared_data {
+typedef struct _RTL_BITMAP {
+    ULONG  SizeOfBitMap;
+    LPBYTE Buffer;
+} RTL_BITMAP, *PRTL_BITMAP;
+
+typedef const RTL_BITMAP *PCRTL_BITMAP;
+
+typedef struct _RTL_BITMAP_RUN {
+    ULONG StartingIndex;
+    ULONG NumberOfBits;
+} RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
+
+typedef const RTL_BITMAP_RUN *PCRTL_BITMAP_RUN;
+
+typedef struct _KUSER_SHARED_DATA {
         ULONG tick_count;
         ULONG tick_count_multiplier;
         volatile struct ksystem_time interrupt_time;
@@ -1479,7 +1495,7 @@ struct kuser_shared_data {
                 volatile struct ksystem_time tick_count;
                 volatile ULONG64 tick_count_quad;
         } tick;
-};
+} KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
 #define REG_NONE                        (0)
 #define REG_SZ                          (1)

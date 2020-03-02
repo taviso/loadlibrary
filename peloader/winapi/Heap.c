@@ -78,6 +78,33 @@ STATIC PVOID WINAPI LocalFree(PVOID hMem)
     return NULL;
 }
 
+STATIC PVOID WINAPI RtlCreateHeap(ULONG Flags,
+                                  PVOID HeapBase,
+                                  SIZE_T ReserveSize,
+                                  SIZE_T CommitSize,
+                                  PVOID Lock,
+                                  PVOID Parameters)
+{
+    DebugLog("%#x, %p, %#x, %#x, %p, %p",
+             Flags,
+             HeapBase,
+             ReserveSize,
+             CommitSize,
+             Lock,
+             Parameters);
+
+    return (HANDLE) 'HEAP';
+}
+
+STATIC PVOID WINAPI RtlAllocateHeap(PVOID HeapHandle,
+                                    ULONG Flags,
+                                    SIZE_T Size)
+{
+    DebugLog("%p, %#x, %u", HeapHandle, Flags, Size);
+
+    return malloc(Size);
+}
+
 DECLARE_CRT_EXPORT("HeapCreate", HeapCreate);
 DECLARE_CRT_EXPORT("GetProcessHeap", GetProcessHeap);
 DECLARE_CRT_EXPORT("HeapAlloc", HeapAlloc);
@@ -86,3 +113,5 @@ DECLARE_CRT_EXPORT("HeapSize", HeapSize);
 DECLARE_CRT_EXPORT("HeapReAlloc", HeapReAlloc);
 DECLARE_CRT_EXPORT("LocalAlloc", LocalAlloc);
 DECLARE_CRT_EXPORT("LocalFree", LocalFree);
+DECLARE_CRT_EXPORT("RtlCreateHeap", RtlCreateHeap);
+DECLARE_CRT_EXPORT("RtlAllocateHeap", RtlAllocateHeap);

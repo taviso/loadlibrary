@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <limits.h>
 #include <errno.h>
 #include <string.h>
 #include <search.h>
@@ -48,6 +49,7 @@ struct pe_exports {
 
 static struct pe_exports *pe_exports;
 static int num_pe_exports;
+PKUSER_SHARED_DATA SharedUserData;
 
 #define DRIVER_NAME "pelinker"
 #define RVA2VA(image, rva, type) (type)(ULONG_PTR)((void *)image + rva)
@@ -90,6 +92,12 @@ static const char *image_directory_name[] = {
 extern struct wrap_export crt_exports[];
 
 uintptr_t LocalStorage[1024] = {0};
+
+static ULONG TlsBitmapData[32];
+static RTL_BITMAP TlsBitmap = {
+    .SizeOfBitMap = sizeof(TlsBitmapData) * CHAR_BIT,
+    .Buffer = (PVOID) &TlsBitmapData[0],
+};
 
 struct hsearch_data extraexports;
 struct hsearch_data crtexports;
@@ -639,6 +647,9 @@ bool pe_load_library(const char *filename, void **image, size_t *size)
     // code that uses SEH as it accesses it via fs selector.
     setup_nt_threadinfo(NULL);
 
+    // Install a minimal KUSER_SHARED_DATA structure.
+    setup_kuser_shared_data();
+
     return true;
 
 error:
@@ -654,9 +665,13 @@ error:
 bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
 {
     static EXCEPTION_FRAME ExceptionFrame;
+    static PEB ProcessEnvironmentBlock = {
+        .TlsBitmap          = &TlsBitmap,
+    };
     static TEB ThreadEnvironment = {
         .Tib.Self                   = &ThreadEnvironment.Tib,
         .ThreadLocalStoragePointer  = LocalStorage, // https://github.com/taviso/loadlibrary/issues/65
+        .ProcessEnvironmentBlock    = &ProcessEnvironmentBlock,
     };
     struct user_desc pebdescriptor = {
         .entry_number       = -1,
@@ -685,6 +700,24 @@ bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
 
     // Install descriptor
     asm("mov %[segment], %%fs" :: [segment] "r"(pebdescriptor.entry_number*8+3));
+
+    return true;
+}
+
+// Minimal KUSER_SHARED_DATA structure, for those applications that require it.
+bool setup_kuser_shared_data(void)
+{
+    SharedUserData = mmap((PVOID)(MM_SHARED_USER_DATA_VA),
+                          sizeof(KUSER_SHARED_DATA),
+                          PROT_READ | PROT_WRITE,
+                          MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED,
+                          -1,
+                          0);
+
+    if (SharedUserData == MAP_FAILED) {
+        DebugLog("failed to map KUSER_SHARED_DATA, %m");
+        return false;
+    }
 
     return true;
 }
