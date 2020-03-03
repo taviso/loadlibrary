@@ -131,7 +131,10 @@ bool insert_function_redirect(void *function, void *redirect, uint32_t flags)
                         - (uintptr_t)(sizeof(struct branch));
 
     // Fix permissions on the redirect.
-    mprotect((void *)((uintptr_t) fixup & PAGE_MASK), PAGE_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC);
+    if (mprotect((void *)((uintptr_t) fixup & PAGE_MASK), PAGE_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
+        printf("mprotect() failed on stub => %m, try `sudo setenforce 0`\n", fixup);
+        return false;
+    }
 
     // Copy over the code we are going to clobber by installing the redirect.
     memcpy(&fixup->data, function, redirectsize);
