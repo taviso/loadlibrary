@@ -1,4 +1,4 @@
-CFLAGS  = -O1 -march=native -ggdb3 -m32 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -mstackrealign
+CFLAGS  = -O3 -march=native -ggdb3 -m32 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -mstackrealign
 CPPFLAGS=-DNDEBUG -D_GNU_SOURCE -I. -Iintercept -Ipeloader
 LDFLAGS = $(CFLAGS) -m32 -lm -Wl,--dynamic-list=exports.lst
 LDLIBS  = intercept/libdisasm.a -Wl,--whole-archive,peloader/libpeloader.a,--no-whole-archive
@@ -21,12 +21,8 @@ intercept/hook.o: intercept
 mpclient: mpclient.o intercept/hook.o | peloader
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
-# avscript requires libreadline-dev:i386
-avscript: avscript.o intercept/hook.o | peloader
-	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS) -lreadline
-
 clean:
-	rm -f a.out core *.o core.* vgcore.* gmon.out script.h mpclient avscript
+	rm -f a.out core *.o core.* vgcore.* gmon.out mpclient
 	make -C intercept clean
 	make -C peloader clean
 	rm -rf faketemp
