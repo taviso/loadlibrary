@@ -235,6 +235,10 @@ native Linux code to load simple Windows DLLs.
 
 The closest analogy would be ndiswrapper but for userspace.
 
+## Further Examples
+
+* [avscript](https://github.com/taviso/avscript) - Loading another antivirus engine, demonstrates hooking and patching.
+
 ## License
 
 GPL2
