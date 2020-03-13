@@ -9,6 +9,12 @@ TARGETS=mpclient | peloader
 
 all: $(TARGETS)
 	-mkdir -p faketemp
+	
+engine:
+	cd engine
+	wget "https://go.microsoft.com/fwlink/?LinkID=121721&arch=x86" --user-agent="Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0" -O mpam-fe.exe
+	cabextract mpam-fe.exe
+	cd ..
 
 intercept:
 	make -C intercept all
