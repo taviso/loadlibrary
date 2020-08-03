@@ -1325,6 +1325,8 @@ struct object_attributes {
         void *security_qos;
 };
 
+typedef void (*PFLS_CALLBACK_FUNCTION)(PVOID lpFlsData) wstdcall;
+
 typedef void (*PCALLBACK_FUNCTION)(void *context, void *arg1,
                                    void *arg2) wstdcall;
 

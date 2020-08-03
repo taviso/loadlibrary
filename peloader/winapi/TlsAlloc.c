@@ -19,6 +19,7 @@
 // Index zero is reserved for .tls
 static int TlsIndex = 1;
 extern uintptr_t LocalStorage[1024];
+extern PFLS_CALLBACK_FUNCTION FlsCallbacks[1024];
 
 STATIC DWORD WINAPI TlsAlloc(void)
 {
@@ -62,13 +63,50 @@ STATIC BOOL WINAPI TlsFree(DWORD dwTlsIndex)
     return FALSE;
 }
 
+static DWORD WINAPI FlsAlloc(PVOID lpCallback)
+{
+    DWORD Result;
+    DebugLog("%p", lpCallback);
+
+    // The primary API difference is the availability of callbacks for fibers.
+    if ((Result = TlsAlloc()) != TLS_OUT_OF_INDEXES) {
+        FlsCallbacks[Result] = lpCallback;
+    }
+
+    return Result;
+}
+
+static DWORD WINAPI FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
+{
+    DebugLog("%#x, %p", dwFlsIndex, lpFlsData);
+
+    return TlsSetValue(dwFlsIndex, lpFlsData);
+}
+
+static DWORD WINAPI FlsGetValue(DWORD dwFlsIndex)
+{
+    DebugLog("%#x", dwFlsIndex);
+
+    return TlsGetValue(dwFlsIndex);
+}
+
+static BOOL WINAPI FlsFree(DWORD dwFlsIndex)
+{
+    DebugLog("%#x", dwFlsIndex);
+
+    if (FlsCallbacks[dwFlsIndex]) {
+        FlsCallbacks[dwFlsIndex]((PVOID)(TlsGetValue(dwFlsIndex)));
+    }
+
+    return TlsFree(dwFlsIndex);
+}
+
 DECLARE_CRT_EXPORT("TlsFree", TlsFree);
 DECLARE_CRT_EXPORT("TlsAlloc", TlsAlloc);
 DECLARE_CRT_EXPORT("TlsSetValue", TlsSetValue);
 DECLARE_CRT_EXPORT("TlsGetValue", TlsGetValue);
 
-// These deliberately don't resolve, mpengine redirects to Tls variants.
-//DECLARE_CRT_EXPORT("FlsFree", NULL);
-//DECLARE_CRT_EXPORT("FlsAlloc", NULL);
-//DECLARE_CRT_EXPORT("FlsSetValue", NULL);
-//DECLARE_CRT_EXPORT("FlsGetValue", NULL);
+DECLARE_CRT_EXPORT("FlsFree", FlsFree);
+DECLARE_CRT_EXPORT("FlsAlloc", FlsAlloc);
+DECLARE_CRT_EXPORT("FlsSetValue", FlsSetValue);
+DECLARE_CRT_EXPORT("FlsGetValue", FlsGetValue);

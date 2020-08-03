@@ -92,6 +92,7 @@ static const char *image_directory_name[] = {
 extern struct wrap_export crt_exports[];
 
 uintptr_t LocalStorage[1024] = {0};
+PFLS_CALLBACK_FUNCTION FlsCallbacks[1024] = {0};
 
 static ULONG TlsBitmapData[32];
 static RTL_BITMAP TlsBitmap = {
