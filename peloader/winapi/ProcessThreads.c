@@ -107,7 +107,17 @@ static VOID WINAPI AcquireSRWLockExclusive(PVOID SRWLock)
     DebugLog("%p", SRWLock);
 }
 
+static VOID WINAPI AcquireSRWLockShared(PVOID SRWLock)
+{
+    DebugLog("%p", SRWLock);
+}
+
 static VOID WINAPI ReleaseSRWLockExclusive(PVOID SRWLock)
+{
+    DebugLog("%p", SRWLock);
+}
+
+static VOID WINAPI ReleaseSRWLockShared(PVOID SRWLock)
 {
     DebugLog("%p", SRWLock);
 }
@@ -184,8 +194,10 @@ DECLARE_CRT_EXPORT("InterlockedIncrement", InterlockedIncrement);
 DECLARE_CRT_EXPORT("InterlockedCompareExchange", InterlockedCompareExchange);
 DECLARE_CRT_EXPORT("CreateSemaphoreW", CreateSemaphoreW);
 DECLARE_CRT_EXPORT("AcquireSRWLockExclusive", AcquireSRWLockExclusive);
+DECLARE_CRT_EXPORT("AcquireSRWLockShared", AcquireSRWLockShared);
 DECLARE_CRT_EXPORT("InitializeSRWLock", InitializeSRWLock);
 DECLARE_CRT_EXPORT("ReleaseSRWLockExclusive", ReleaseSRWLockExclusive);
+DECLARE_CRT_EXPORT("ReleaseSRWLockShared", ReleaseSRWLockShared);
 DECLARE_CRT_EXPORT("SetThreadpoolTimer", SetThreadpoolTimer);
 DECLARE_CRT_EXPORT("WaitForThreadpoolTimerCallbacks", WaitForThreadpoolTimerCallbacks);
 DECLARE_CRT_EXPORT("GetCurrentThreadId", GetCurrentThreadId);

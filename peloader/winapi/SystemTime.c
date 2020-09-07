@@ -62,6 +62,11 @@ STATIC DWORD WINAPI GetTickCount(VOID)
     return 0;
 }
 
+STATIC ULONGLONG WINAPI GetTickCount64(VOID)
+{
+    return 0;
+}
+
 STATIC BOOL WINAPI QueryPerformanceFrequency(PVOID lpFrequency)
 {
     SetLastError(0);
@@ -89,5 +94,6 @@ DECLARE_CRT_EXPORT("GetSystemTimeAsFileTime", GetSystemTimeAsFileTime);
 DECLARE_CRT_EXPORT("QueryPerformanceCounter", QueryPerformanceCounter);
 DECLARE_CRT_EXPORT("QueryPerformanceFrequency", QueryPerformanceFrequency);
 DECLARE_CRT_EXPORT("GetTickCount", GetTickCount);
+DECLARE_CRT_EXPORT("GetTickCount64", GetTickCount64);
 DECLARE_CRT_EXPORT("GetProcessTimes", GetProcessTimes);
 DECLARE_CRT_EXPORT("DosDateTimeToFileTime", DosDateTimeToFileTime);
