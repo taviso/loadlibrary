@@ -48,6 +48,22 @@ ULONG WINAPI EtwEventWrite(HANDLE RegHAndle, PVOID EventDescriptor, ULONG UserDa
     return 0;
 }
 
+static HANDLE WINAPI LdrLoadDll(PWCHAR PathToFile,
+                                ULONG Flags,
+                                PUNICODE_STRING ModuleFilename,
+                                PHANDLE ModuleHandle)
+{
+    char *PathToFileA = CreateAnsiFromWide(PathToFile);
+    char *ModuleFilenameA = CreateAnsiFromWide(ModuleFilename);
+
+    DebugLog("%p [%s], %p [%s], %p, %#x", PathToFile, PathToFileA, ModuleFilename, ModuleFilenameA, ModuleHandle, Flags);
+
+    free(PathToFileA);
+    free(ModuleFilenameA);
+
+    return (HANDLE) 'LOAD';
+}
+
 NTSTATUS WINAPI LdrGetProcedureAddress(HMODULE Module,
                                        PANSI_STRING Name,
                                        WORD Ordinal,
@@ -74,4 +90,5 @@ NTSTATUS WINAPI LdrGetProcedureAddress(HMODULE Module,
 DECLARE_CRT_EXPORT("RtlAcquirePebLock", RtlAcquirePebLock);
 DECLARE_CRT_EXPORT("RtlReleasePebLock", RtlReleasePebLock);
 DECLARE_CRT_EXPORT("LdrGetDllHandle", LdrGetDllHandle);
+DECLARE_CRT_EXPORT("LdrLoadDll", LdrLoadDll);
 DECLARE_CRT_EXPORT("LdrGetProcedureAddress", LdrGetProcedureAddress);
