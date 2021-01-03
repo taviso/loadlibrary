@@ -54,12 +54,10 @@ static HANDLE WINAPI LdrLoadDll(PWCHAR PathToFile,
                                 PHANDLE ModuleHandle)
 {
     char *PathToFileA = CreateAnsiFromWide(PathToFile);
-    char *ModuleFilenameA = CreateAnsiFromWide(ModuleFilename);
 
-    DebugLog("%p [%s], %p [%s], %p, %#x", PathToFile, PathToFileA, ModuleFilename, ModuleFilenameA, ModuleHandle, Flags);
+    DebugLog("%p [%s], %p, %p, %#x", PathToFile, PathToFileA, ModuleFilename, ModuleHandle, Flags);
 
     free(PathToFileA);
-    free(ModuleFilenameA);
 
     return (HANDLE) 'LOAD';
 }
