@@ -59,6 +59,8 @@ static NTSTATUS WINAPI LdrLoadDll(PWCHAR PathToFile,
 
     DebugLog("%p [%s], %p, %p, %#x", PathToFile, PathToFileA, ModuleFilename, ModuleHandle, Flags);
 
+    *ModuleHandle = (HANDLE) 'LOAD';
+
     free(PathToFileA);
 
     return 0;
