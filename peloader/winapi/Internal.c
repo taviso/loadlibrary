@@ -63,6 +63,7 @@ static NTSTATUS WINAPI LdrLoadDll(PWCHAR PathToFile,
     *ModuleHandle = (HANDLE) 'LOAD';
 
     free(PathToFileA);
+    free(ModuleFilenameA);
 
     return 0;
 }
@@ -74,9 +75,9 @@ static NTSTATUS WINAPI LdrUnloadDll(HANDLE ModuleHandle) {
 }
 
 static NTSTATUS WINAPI LdrGetProcedureAddress(HMODULE Module,
-                                       PANSI_STRING Name,
-                                       WORD Ordinal,
-                                       PVOID *Address)
+                                              PANSI_STRING Name,
+                                              WORD Ordinal,
+                                              PVOID *Address)
 {
     DebugLog("%p %s %hu %p", Module, Name->buf, Ordinal, Address);
 
@@ -84,7 +85,6 @@ static NTSTATUS WINAPI LdrGetProcedureAddress(HMODULE Module,
     *Address = (PVOID) 'LDRZ';
 
     // Search if the requested function has been already exported.
-
     ENTRY e = { Name->buf, NULL }, *ep;
     hsearch_r(e, FIND, &ep, &crtexports);
 
