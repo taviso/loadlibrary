@@ -59,11 +59,11 @@ DWORD WINAPI GetLongPathNameW(LPCWSTR lpszShortPath,
                               DWORD cchBuffer)
 {
     // For now we just return the 8.3 format path as the long path
-    if (cchBuffer > strlen(lpszShortPath)) {
-        memcpy(lpszLongPath, lpszShortPath, sizeof(lpszShortPath));
+    if (cchBuffer > CountWideChars(lpszShortPath)) {
+        memcpy(lpszLongPath, lpszShortPath, CountWideChars(lpszShortPath) * sizeof(WCHAR));
     }
 
-    return strlen(lpszShortPath);
+    return CountWideChars(lpszShortPath);
 }
 
 DECLARE_CRT_EXPORT("GetTempPathW", GetTempPathW);
