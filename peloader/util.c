@@ -30,7 +30,7 @@
 #include "util.h"
 
 // Quick check if I'm running under GDB.
-bool IsDebuggerPresent()
+bool IsGdbPresent()
 {
     char *statusline;
     FILE *status;

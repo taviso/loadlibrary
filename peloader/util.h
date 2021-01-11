@@ -2,7 +2,7 @@
 #define __UTIL_H
 #pragma once
 
-bool IsDebuggerPresent();
+bool IsGdbPresent();
 
 #ifdef __linux__
 #define __thiscall      __attribute__((thiscall))

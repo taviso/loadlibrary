@@ -154,7 +154,7 @@ int main(int argc, char **argv, char **envp)
 #endif
     } else {
         // Calculate the commands needed to get export and map symbols visible in gdb.
-        if (IsDebuggerPresent()) {
+        if (IsGdbPresent()) {
             LogMessage("GDB: add-symbol-file %s %#x+%#x",
                        image.name,
                        image.image,
