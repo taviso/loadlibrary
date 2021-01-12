@@ -77,9 +77,16 @@ STATIC WINAPI int LCMapStringEx(PVOID lpLocaleName, DWORD dwMapFlags, PVOID lpSr
     return cchDest > cchSrc ? cchSrc : cchDest;
 }
 
+STATIC WINAPI int GetLocaleInfoEx(LPCWSTR lpLocaleName, DWORD LCType, LPWSTR lpLCData, int cchData)
+{
+    DebugLog("%S, %d, %S, %d", lpLocaleName, LCType, lpLCData, cchData);
+    return 0;
+}
+
 DECLARE_CRT_EXPORT("GetACP", GetACP);
 DECLARE_CRT_EXPORT("IsValidCodePage", IsValidCodePage);
 DECLARE_CRT_EXPORT("GetCPInfo", GetCPInfo);
 DECLARE_CRT_EXPORT("LocaleNameToLCID", LocaleNameToLCID);
 DECLARE_CRT_EXPORT("LCMapStringW", LCMapStringW);
 DECLARE_CRT_EXPORT("LCMapStringEx", LCMapStringEx);
+DECLARE_CRT_EXPORT("GetLocaleInfoEx", GetLocaleInfoEx);
