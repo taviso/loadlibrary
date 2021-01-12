@@ -40,10 +40,10 @@ char *string_from_wchar(void *wcharbuf, size_t len)
     return buf;
 }
 
-size_t CountWideChars(void *wcharbuf)
+size_t CountWideChars(const void *wcharbuf)
 {
     size_t i = 0;
-    uint16_t *p = wcharbuf;
+    const uint16_t *p = wcharbuf;
 
     if (!p) return 0;
 

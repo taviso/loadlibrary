@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <search.h>
 #include <assert.h>
+#include <string.h>
 
 #include "winnt_types.h"
 #include "pe_linker.h"
