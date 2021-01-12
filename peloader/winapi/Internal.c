@@ -50,29 +50,49 @@ ULONG WINAPI EtwEventWrite(HANDLE RegHAndle, PVOID EventDescriptor, ULONG UserDa
     return 0;
 }
 
-static HANDLE WINAPI LdrLoadDll(PWCHAR PathToFile,
-                                ULONG Flags,
-                                PUNICODE_STRING ModuleFilename,
-                                PHANDLE ModuleHandle)
+static NTSTATUS WINAPI LdrLoadDll(PWCHAR PathToFile,
+                                  ULONG Flags,
+                                  PUNICODE_STRING ModuleFilename,
+                                  PHANDLE ModuleHandle)
 {
     char *PathToFileA = CreateAnsiFromWide(PathToFile);
+    char *ModuleFilenameA = CreateAnsiFromWide(ModuleFilename->Buffer);
 
-    DebugLog("%p [%s], %p, %p, %#x", PathToFile, PathToFileA, ModuleFilename, ModuleHandle, Flags);
+    DebugLog("%p [%s], %p [%s], %p, %#x", PathToFile, PathToFileA, ModuleFilename, ModuleFilenameA, ModuleHandle, Flags);
+
+    *ModuleHandle = (HANDLE) 'LOAD';
 
     free(PathToFileA);
+    free(ModuleFilenameA);
 
-    return (HANDLE) 'LOAD';
+    return 0;
 }
 
-NTSTATUS WINAPI LdrGetProcedureAddress(HMODULE Module,
-                                       PANSI_STRING Name,
-                                       WORD Ordinal,
-                                       PVOID *Address)
+static NTSTATUS WINAPI LdrUnloadDll(HANDLE ModuleHandle) {
+    DebugLog("%p", ModuleHandle);
+
+    return 0;
+}
+
+static NTSTATUS WINAPI LdrGetProcedureAddress(HMODULE Module,
+                                              PANSI_STRING Name,
+                                              WORD Ordinal,
+                                              PVOID *Address)
 {
     DebugLog("%p %s %hu %p", Module, Name->buf, Ordinal, Address);
 
     // Recognizable value to crash on.
     *Address = (PVOID) 'LDRZ';
+
+    // Search if the requested function has been already exported.
+    ENTRY e = { Name->buf, NULL }, *ep;
+    hsearch_r(e, FIND, &ep, &crtexports);
+
+    // If found, store the pointer and return.
+    if (ep != NULL) {
+        *Address = ep->data;
+        return 0;
+    }
 
     if (strcmp(Name->buf, "EtwEventRegister") == 0) {
         *Address = EtwRegister;
@@ -91,4 +111,5 @@ DECLARE_CRT_EXPORT("RtlAcquirePebLock", RtlAcquirePebLock);
 DECLARE_CRT_EXPORT("RtlReleasePebLock", RtlReleasePebLock);
 DECLARE_CRT_EXPORT("LdrGetDllHandle", LdrGetDllHandle);
 DECLARE_CRT_EXPORT("LdrLoadDll", LdrLoadDll);
+DECLARE_CRT_EXPORT("LdrUnloadDll", LdrUnloadDll);
 DECLARE_CRT_EXPORT("LdrGetProcedureAddress", LdrGetProcedureAddress);

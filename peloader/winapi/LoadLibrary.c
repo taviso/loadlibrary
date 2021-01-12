@@ -77,7 +77,7 @@ static DWORD WINAPI GetModuleFileNameA(HANDLE hModule, PCHAR lpFilename, DWORD n
 {
     DebugLog("%p, %p, %u", hModule, lpFilename, nSize);
 
-    strncpy(lpFilename, "fakename.exe", nSize);
+    strncpy(lpFilename, "C:\\dummy\\fakename.exe", nSize);
 
     return strlen(lpFilename);
 }
@@ -86,11 +86,11 @@ static DWORD WINAPI GetModuleFileNameW(HANDLE hModule, PWCHAR lpFilename, DWORD 
 {
     DebugLog("%p, %p, %u", hModule, lpFilename, nSize);
 
-    if (nSize > strlen("fakename.exe")) {
-        memcpy(lpFilename, L"fakename.exe", sizeof(L"fakename.exe"));
+    if (nSize > strlen("C:\\dummy\\fakename.exe")) {
+        memcpy(lpFilename, L"C:\\dummy\\fakename.exe", sizeof(L"C:\\dummy\\fakename.exe"));
     }
 
-    return strlen("fakename.exe");
+    return strlen("C:\\dummy\\fakename.exe");
 }
 
 static HANDLE WINAPI GetModuleHandleA(PCHAR lpModuleName)

@@ -137,32 +137,39 @@
 #define KI_USER_SHARED_DATA 0xffdf0000
 #define MM_SHARED_USER_DATA_VA 0x7ffe0000
 
-typedef uint8_t     BOOLEAN, BOOL;
-typedef void       *PVOID;
-typedef uint8_t     BYTE;
-typedef uint8_t    *PBYTE;
-typedef uint8_t    *LPBYTE;
-typedef int8_t      CHAR;
-typedef char       *PCHAR;
-typedef uint8_t     UCHAR;
-typedef uint8_t    *PUCHAR;
-typedef uint16_t    SHORT;
-typedef uint16_t    USHORT;
-typedef uint16_t  *PUSHORT;
-typedef uint16_t    WORD;
-typedef int32_t     INT;
-typedef uint32_t    UINT;
-typedef uint32_t    DWORD, *PDWORD;
-typedef int32_t     LONG;
-typedef uint32_t    ULONG;
-typedef uint32_t   *PULONG;
-typedef int64_t     LONGLONG;
-typedef uint64_t    ULONGLONG, *PULONGLONG;
-typedef uint64_t    ULONGULONG;
-typedef uint64_t    ULONG64;
-typedef uint64_t    QWORD, *PQWORD;
-typedef uint16_t    WCHAR, *PWCHAR;
-typedef HANDLE     *PHANDLE;
+typedef uint8_t         BOOLEAN, BOOL;
+typedef void            *PVOID;
+typedef uint8_t         BYTE;
+typedef uint8_t         *PBYTE;
+typedef uint8_t         *LPBYTE;
+typedef int8_t          CHAR;
+typedef char            *PCHAR;
+typedef wchar_t         WCHAR;
+typedef CHAR            *LPSTR;
+typedef const char      *LPCSTR;
+typedef WCHAR           *LPWSTR;
+typedef const WCHAR     *LPCWSTR;
+typedef WCHAR           *PWSTR;
+typedef uint8_t         UCHAR;
+typedef uint8_t         *PUCHAR;
+typedef uint16_t        SHORT;
+typedef uint16_t        USHORT;
+typedef uint16_t        *PUSHORT;
+typedef uint16_t        WORD;
+typedef int32_t         INT;
+typedef uint32_t        UINT;
+typedef uint32_t        DWORD, *PDWORD;
+typedef int32_t         LONG;
+typedef uint32_t        ULONG;
+typedef uint32_t        *PULONG;
+typedef int64_t         LONGLONG;
+typedef uint64_t        ULONGLONG, *PULONGLONG;
+typedef uint64_t        ULONGULONG;
+typedef uint64_t        ULONG64;
+typedef uint64_t        QWORD, *PQWORD;
+typedef uint16_t        WCHAR, *PWCHAR;
+typedef HANDLE          *PHANDLE;
+typedef LONG            HRESULT;
 
 typedef CHAR CCHAR;
 typedef SHORT CSHORT;
@@ -1763,5 +1770,64 @@ static inline struct nt_list *InsertTailList(struct nt_list *head,
 #define FILE_OVERWRITTEN                0x00000003
 #define FILE_EXISTS                     0x00000004
 #define FILE_DOES_NOT_EXIST             0x00000005
+
+typedef enum _PROCESSINFOCLASS {
+    ProcessBasicInformation = 0,
+    ProcessQuotaLimits = 1,
+    ProcessIoCounters = 2,
+    ProcessVmCounters = 3,
+    ProcessTimes = 4,
+    ProcessBasePriority = 5,
+    ProcessRaisePriority = 6,
+    ProcessDebugPort = 7,
+    ProcessExceptionPort = 8,
+    ProcessAccessToken = 9,
+    ProcessLdtInformation = 10,
+    ProcessLdtSize = 11,
+    ProcessDefaultHardErrorMode = 12,
+    ProcessIoPortHandlers = 13,
+    ProcessPooledUsageAndLimits = 14,
+    ProcessWorkingSetWatch = 15,
+    ProcessUserModeIOPL = 16,
+    ProcessEnableAlignmentFaultFixup = 17,
+    ProcessPriorityClass = 18,
+    ProcessWx86Information = 19,
+    ProcessHandleCount = 20,
+    ProcessAffinityMask = 21,
+    ProcessPriorityBoost = 22,
+    ProcessDeviceMap = 23,
+    ProcessSessionInformation = 24,
+    ProcessForegroundInformation = 25,
+    ProcessWow64Information = 26,
+    ProcessImageFileName = 27,
+    ProcessLUIDDeviceMapsEnabled = 28,
+    ProcessBreakOnTermination = 29,
+    ProcessDebugObjectHandle = 30,
+    ProcessDebugFlags = 31,
+    ProcessHandleTracing = 32,
+    ProcessExecuteFlags = 34,
+    ProcessTlsInformation = 35,
+    ProcessCookie = 36,
+    ProcessImageInformation = 37,
+    ProcessCycleTime = 38,
+    ProcessPagePriority = 39,
+    ProcessInstrumentationCallback = 40,
+    ProcessThreadStackAllocation = 41,
+    ProcessWorkingSetWatchEx = 42,
+    ProcessImageFileNameWin32 = 43,
+    ProcessImageFileMapping = 44,
+    ProcessAffinityUpdateMode = 45,
+    ProcessMemoryAllocationMode = 46,
+    ProcessGroupInformation = 47,
+    ProcessTokenVirtualizationEnabled = 48,
+    ProcessConsoleHostProcess = 49,
+    ProcessWindowInformation = 50,
+    MaxProcessInfoClass
+} PROCESSINFOCLASS, PROCESS_INFORMATION_CLASS;
+
+typedef enum _HEAP_INFORMATION_CLASS {
+    HeapCompatibilityInformation,
+    HeapEnableTerminationOnCorruption
+} HEAP_INFORMATION_CLASS;
 
 #endif /* WINNT_TYPES_H */

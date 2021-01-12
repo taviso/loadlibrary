@@ -7,3 +7,5 @@
 mpclient
 avscript
 eicar.com
+.gradle/
+.idea/

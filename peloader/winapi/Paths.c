@@ -42,6 +42,32 @@ UINT WINAPI GetDriveTypeW(PWCHAR lpRootPathName)
     return DRIVE_FIXED;
 }
 
+DWORD WINAPI GetLongPathNameA(LPCSTR lpszShortPath,
+                              LPSTR lpszLongPath,
+                              DWORD cchBuffer)
+{
+    // For now we just return the 8.3 format path as the long path
+    if (cchBuffer > strlen(lpszShortPath)) {
+        memcpy(lpszLongPath, lpszShortPath, sizeof(lpszShortPath));
+    }
+
+    return strlen(lpszShortPath);
+}
+
+DWORD WINAPI GetLongPathNameW(LPCWSTR lpszShortPath,
+                              LPWSTR lpszLongPath,
+                              DWORD cchBuffer)
+{
+    // For now we just return the 8.3 format path as the long path
+    if (cchBuffer > CountWideChars(lpszShortPath)) {
+        memcpy(lpszLongPath, lpszShortPath, CountWideChars(lpszShortPath) * sizeof(WCHAR));
+    }
+
+    return CountWideChars(lpszShortPath);
+}
+
 DECLARE_CRT_EXPORT("GetTempPathW", GetTempPathW);
 DECLARE_CRT_EXPORT("GetLogicalDrives", GetLogicalDrives);
 DECLARE_CRT_EXPORT("GetDriveTypeW", GetDriveTypeW);
+DECLARE_CRT_EXPORT("GetLongPathNameA", GetLongPathNameA);
+DECLARE_CRT_EXPORT("GetLongPathNameW", GetLongPathNameW);
