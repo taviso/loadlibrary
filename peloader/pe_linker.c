@@ -475,7 +475,8 @@ static int fix_pe_image(struct pe_image *pe)
                           0);
 
         if (image == MAP_FAILED) {
-                ERROR("failed to mmap desired space for image: %d bytes, image base %p, %m", image_size, pe->opt_hdr->ImageBase);
+                ERROR("failed to mmap desired space for image: %d bytes, image base %#x, %m",
+                    image_size, pe->opt_hdr->ImageBase);
                 return -ENOMEM;
         }
 

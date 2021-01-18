@@ -132,7 +132,7 @@ bool insert_function_redirect(void *function, void *redirect, uint32_t flags)
 
     // Fix permissions on the redirect.
     if (mprotect((void *)((uintptr_t) fixup & PAGE_MASK), PAGE_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
-        printf("mprotect() failed on stub => %m, try `sudo setenforce 0`\n", fixup);
+        printf("mprotect() failed on stub => %p (%m), try `sudo setenforce 0`\n", fixup);
         return false;
     }
 
