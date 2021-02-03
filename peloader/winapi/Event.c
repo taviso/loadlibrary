@@ -47,14 +47,6 @@ static BOOL WINAPI ResetEvent(HANDLE hEvent)
     return TRUE;
 }
 
-static ULONG WINAPI EventActivityIdControl(ULONG ControlCode, LPGUID ActivityId)
-{
-    DebugLog("%u, %p", ControlCode, ActivityId);
-    return 1;
-};
-
-
 DECLARE_CRT_EXPORT("CreateEventW", CreateEventW);
 DECLARE_CRT_EXPORT("SetEvent", SetEvent);
 DECLARE_CRT_EXPORT("ResetEvent", ResetEvent);
-DECLARE_CRT_EXPORT("EventActivityIdControl", EventActivityIdControl);
