@@ -40,5 +40,13 @@ STATIC ULONG WINAPI UnregisterTraceGuids(HANDLE RegistrationHandle)
     return STATUS_SUCCESS;
 }
 
+static ULONG WINAPI EventActivityIdControl(ULONG ControlCode, LPGUID ActivityId)
+{
+    DebugLog("%u, %p", ControlCode, ActivityId);
+    return STATUS_SUCCESS;
+};
+
+
+DECLARE_CRT_EXPORT("EventActivityIdControl", EventActivityIdControl);
 DECLARE_CRT_EXPORT("RegisterTraceGuidsW", RegisterTraceGuidsW);
 DECLARE_CRT_EXPORT("UnregisterTraceGuids", UnregisterTraceGuids);
