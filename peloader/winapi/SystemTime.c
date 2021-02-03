@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <search.h>
 #include <stdlib.h>
+#include <time.h>
 #include <assert.h>
 
 #include "winnt_types.h"
@@ -51,10 +52,19 @@ STATIC VOID WINAPI GetSystemTimeAsFileTime(PVOID lpSystemTimeAsFileTime)
     return;
 }
 
-STATIC BOOL WINAPI QueryPerformanceCounter(PVOID lpPerformanceCount)
+STATIC BOOL WINAPI QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount)
 {
+    struct timespec tm;
+    DebugLog("");
+
     SetLastError(0);
-    return FALSE;
+
+    if (clock_gettime(CLOCK_MONOTONIC_RAW, &tm) != 0)
+        return FALSE;
+
+    *lpPerformanceCount = tm.tv_nsec;
+
+    return TRUE;
 }
 
 STATIC DWORD WINAPI GetTickCount(VOID)
@@ -67,10 +77,20 @@ STATIC ULONGLONG WINAPI GetTickCount64(VOID)
     return 0;
 }
 
-STATIC BOOL WINAPI QueryPerformanceFrequency(PVOID lpFrequency)
+STATIC BOOL WINAPI QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
 {
+    struct timespec tm;
+
+    DebugLog("");
+
+    if (clock_getres(CLOCK_MONOTONIC_RAW, &tm) != 0)
+        return FALSE;
+
+    *lpFrequency = tm.tv_nsec;
+
     SetLastError(0);
-    return FALSE;
+
+    return TRUE;
 }
 
 STATIC BOOL WINAPI GetProcessTimes(HANDLE hProcess, PFILETIME lpCreationTime, PFILETIME lpExitTime, PFILETIME lpKernelTime, PFILETIME lpUserTime)
