@@ -106,6 +106,11 @@ STATIC BOOL WINAPI DosDateTimeToFileTime(WORD wFatDate, WORD wFatTime, PFILETIME
     return FALSE;
 }
 
+STATIC BOOL WINAPI FileTimeToSystemTime(PFILETIME lpFileTime, PSYSTEMTIME lpSystemTime)
+{
+    DebugLog("");
+    return FALSE;
+}
 
 DECLARE_CRT_EXPORT("GetSystemTime", GetSystemTime);
 DECLARE_CRT_EXPORT("SystemTimeToFileTime", SystemTimeToFileTime);
@@ -117,3 +122,4 @@ DECLARE_CRT_EXPORT("GetTickCount", GetTickCount);
 DECLARE_CRT_EXPORT("GetTickCount64", GetTickCount64);
 DECLARE_CRT_EXPORT("GetProcessTimes", GetProcessTimes);
 DECLARE_CRT_EXPORT("DosDateTimeToFileTime", DosDateTimeToFileTime);
+DECLARE_CRT_EXPORT("FileTimeToSystemTime", FileTimeToSystemTime);
