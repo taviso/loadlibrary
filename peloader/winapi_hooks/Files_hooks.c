@@ -21,7 +21,7 @@
 #include "winapi_hook.h"
 
 
-static HANDLE WINAPI MyFindFirstFileW(PWCHAR lpFileName, PVOID lpFindFileData)
+STATIC HANDLE WINAPI MyFindFirstFileW(PWCHAR lpFileName, PVOID lpFindFileData)
 {
     DebugLog("%p, %p", lpFileName, lpFindFileData);
 
@@ -36,4 +36,4 @@ static HANDLE WINAPI MyFindFirstFileW(PWCHAR lpFileName, PVOID lpFindFileData)
     return INVALID_HANDLE_VALUE;
 }
 
-ADD_CUSTOM_HOOK("FindFirstFileW", FindFirstFileW, MyFindFirstFileW);
+ADD_CUSTOM_HOOK("FindFirstFileW", MyFindFirstFileW);
