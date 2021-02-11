@@ -16,9 +16,9 @@
 #include "winexports.h"
 #include "util.h"
 #include "winstrings.h"
-#include "../winapi/Files.h"
+#include "Files.h"
 #include "subhook.h"
-#include "my_hooks.h"
+#include "winapi_hook.h"
 
 
 static HANDLE WINAPI MyFindFirstFileW(PWCHAR lpFileName, PVOID lpFindFileData)

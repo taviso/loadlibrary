@@ -7,16 +7,17 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include "my_hooks.h"
+#include "subhook.h"
+#include "winapi_hook.h"
 
 
-struct hsearch_data my_hooks;
+struct hsearch_data winapihooks;
 
 
 void EnableHook(char *name)
 {
     ENTRY e = { name, NULL }, *ep;
-    hsearch_r(e, FIND, &ep, &my_hooks);
+    hsearch_r(e, FIND, &ep, &winapihooks);
 
     subhook_install(*((subhook_t *)ep->data));
 }
@@ -24,7 +25,7 @@ void EnableHook(char *name)
 void DisableHook(char *name)
 {
     ENTRY e = { name, NULL }, *ep;
-    hsearch_r(e, FIND, &ep, &my_hooks);
+    hsearch_r(e, FIND, &ep, &winapihooks);
 
     subhook_remove(*((subhook_t *)ep->data));
 }

@@ -18,7 +18,7 @@ peloader:
 
 intercept/hook.o: intercept
 
-mpclient: mpclient.o intercept/hook.o intercept/subhook/subhook.o | peloader
+mpclient: mpclient.o intercept/hook.o intercept/subhook/subhook.o intercept/winapi_hook.o | peloader
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
 clean:
