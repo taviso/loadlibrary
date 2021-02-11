@@ -103,6 +103,18 @@ static RTL_BITMAP TlsBitmap = {
 struct hsearch_data extraexports;
 struct hsearch_data crtexports;
 
+void ordinal_import_stub(void)
+{
+    warnx("function at %p attempted to call a symbol imported by ordinal", __builtin_return_address(0));
+    __debugbreak();
+}
+
+void unknown_symbol_stub(void)
+{
+    warnx("function at %p attempted to call an unknown symbol", __builtin_return_address(0));
+    __debugbreak();
+}
+
 void __destructor clearexports(void)
 {
     hdestroy_r(&crtexports);
@@ -254,18 +266,6 @@ static int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
         int i;
         int ret = 0;
         generic_func adr;
-
-        void ordinal_import_stub(void)
-        {
-            warnx("function at %p attempted to call a symbol imported by ordinal", __builtin_return_address(0));
-            __debugbreak();
-        }
-
-        void unknown_symbol_stub(void)
-        {
-            warnx("function at %p attempted to call an unknown symbol", __builtin_return_address(0));
-            __debugbreak();
-        }
 
         lookup_tbl = RVA2VA(image, dirent->u.OriginalFirstThunk, ULONG_PTR *);
         address_tbl = RVA2VA(image, dirent->FirstThunk, ULONG_PTR *);

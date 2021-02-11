@@ -51,6 +51,20 @@
 #include "streambuffer.h"
 #include "openscan.h"
 
+EXCEPTION_DISPOSITION ExceptionHandler(struct _EXCEPTION_RECORD *ExceptionRecord,
+                                       struct _EXCEPTION_FRAME *EstablisherFrame,
+                                       struct _CONTEXT *ContextRecord,
+                                       struct _EXCEPTION_FRAME **DispatcherContext)
+{
+    LogMessage("Toplevel Exception Handler Caught Exception");
+    abort();
+}
+
+VOID ResourceExhaustedHandler(int Signal)
+{
+    errx(EXIT_FAILURE, "Resource Limits Exhausted, Signal %s", strsignal(Signal));
+}
+
 // Any usage limits to prevent bugs disrupting system.
 const struct rlimit kUsageLimits[] = {
     [RLIMIT_FSIZE]  = { .rlim_cur = 0x20000000, .rlim_max = 0x20000000 },
@@ -171,20 +185,6 @@ int main(int argc, char **argv, char **envp)
 
     if (get_export("__rsignal", &__rsignal) == -1) {
         errx(EXIT_FAILURE, "Failed to resolve mpengine entrypoint");
-    }
-
-    EXCEPTION_DISPOSITION ExceptionHandler(struct _EXCEPTION_RECORD *ExceptionRecord,
-            struct _EXCEPTION_FRAME *EstablisherFrame,
-            struct _CONTEXT *ContextRecord,
-            struct _EXCEPTION_FRAME **DispatcherContext)
-    {
-        LogMessage("Toplevel Exception Handler Caught Exception");
-        abort();
-    }
-
-    VOID ResourceExhaustedHandler(int Signal)
-    {
-        errx(EXIT_FAILURE, "Resource Limits Exhausted, Signal %s", strsignal(Signal));
     }
 
     setup_nt_threadinfo(ExceptionHandler);

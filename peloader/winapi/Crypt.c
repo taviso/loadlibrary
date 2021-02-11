@@ -18,6 +18,8 @@
 #include "util.h"
 #include "winstrings.h"
 
+static int randomfd = -1;
+
 typedef struct _CRYPT_BIT_BLOB {
   DWORD cbData;
   BYTE  *pbData;
@@ -80,6 +82,16 @@ typedef struct _CERT_CONTEXT {
   HANDLE     hCertStore;
 } CERT_CONTEXT, *PCERT_CONTEXT;
 
+void __constructor init()
+{
+    randomfd = open("/dev/urandom", O_RDONLY);
+}
+
+void __destructor fini()
+{
+    close(randomfd);
+}
+
 static NTSTATUS WINAPI BCryptOpenAlgorithmProvider(PVOID phAlgorithm, PWCHAR pszAlgId, PWCHAR pszImplementation, DWORD dwFlags)
 {
     return STATUS_SUCCESS;
@@ -92,17 +104,6 @@ static NTSTATUS WINAPI BCryptCloseAlgorithmProvider(HANDLE hAlgorithm, ULONG dwF
 
 static NTSTATUS WINAPI BCryptGenRandom(PVOID phAlgorithm, PUCHAR pbBuffer, ULONG cbBuffer, ULONG dwFlags)
 {
-    static int randomfd = -1;
-
-    void __constructor init()
-    {
-        randomfd = open("/dev/urandom", O_RDONLY);
-    }
-
-    void __destructor fini()
-    {
-        close(randomfd);
-    }
 
     DebugLog("%p, %p, %lu, %#x [fd=%d]", phAlgorithm, pbBuffer, cbBuffer, dwFlags, randomfd);
 
