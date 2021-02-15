@@ -1,7 +1,14 @@
-CFLAGS=-O2 -ggdb3 -m32 -std=gnu99 -fshort-wchar -Wno-multichar -w -DHAVE_CONFIG_H -I.
+CFLAGS= -ggdb3 -m32 -std=gnu99 -fshort-wchar -Wno-multichar -w -DHAVE_CONFIG_H -I.
 LDFLAGS= $(CFLAGS) -m32
 
+RELEASE_CFLAGS	 = -O2
+DEBUG_CFLAGS 	 = -O0 -g
+
+all: CFLAGS += $(RELEASE_CFLAGS)
 all: libdisasm.a
+
+debug: CFLAGS += $(DEBUG_CFLAGS)
+debug: libdisasm.a
 
 libdisasm.a: ia32_implicit.o        \
              ia32_modrm.o           \
