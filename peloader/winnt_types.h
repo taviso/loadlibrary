@@ -144,9 +144,9 @@ typedef uint8_t         *PBYTE;
 typedef uint8_t         *LPBYTE;
 typedef int8_t          CHAR;
 typedef char            *PCHAR;
-typedef wchar_t         WCHAR;
 typedef CHAR            *LPSTR;
 typedef const char      *LPCSTR;
+typedef uint16_t        WCHAR, *PWCHAR;
 typedef WCHAR           *LPWSTR;
 typedef const WCHAR     *LPCWSTR;
 typedef WCHAR           *PWSTR;
@@ -167,7 +167,6 @@ typedef uint64_t        ULONGLONG, *PULONGLONG;
 typedef uint64_t        ULONGULONG;
 typedef uint64_t        ULONG64;
 typedef uint64_t        QWORD, *PQWORD;
-typedef uint16_t        WCHAR, *PWCHAR;
 typedef HANDLE          *PHANDLE;
 typedef LONG            HRESULT;
 

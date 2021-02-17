@@ -104,6 +104,7 @@ finished:
 #define EH_STACK_INVALID    0x08
 #define EH_NESTED_CALL      0x10
 
+#ifndef __x86_64__
 static WINAPI void RtlUnwind(PEXCEPTION_FRAME TargetFrame, PVOID TargetIp, PEXCEPTION_RECORD ExceptionRecord, PVOID ReturnValue)
 {
     PEXCEPTION_FRAME ExceptionList;
@@ -170,6 +171,6 @@ static WINAPI void RtlUnwind(PEXCEPTION_FRAME TargetFrame, PVOID TargetIp, PEXCE
     __debugbreak();
 }
 
-
-DECLARE_CRT_EXPORT("RaiseException", RaiseException);
 DECLARE_CRT_EXPORT("RtlUnwind", RtlUnwind);
+#endif
+DECLARE_CRT_EXPORT("RaiseException", RaiseException);

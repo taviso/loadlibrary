@@ -179,7 +179,7 @@ static void *get_dll_init(char *name)
  * Find and validate the coff header
  *
  */
-static int check_nt_hdr(IMAGE_NT_HEADERS *nt_hdr)
+int check_nt_hdr(IMAGE_NT_HEADERS *nt_hdr)
 {
         int i;
         WORD attr;
@@ -194,21 +194,21 @@ static int check_nt_hdr(IMAGE_NT_HEADERS *nt_hdr)
 
         opt_hdr = &nt_hdr->OptionalHeader;
 
-        if (opt_hdr->Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
-                ERROR("kernel is 32-bit, but Windows driver is not 32-bit;"
-                      "bad magic: %04X", opt_hdr->Magic);
+        if (opt_hdr->Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC &&
+        opt_hdr->Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
+                ERROR("bad magic: %04X", opt_hdr->Magic);
                 return -EINVAL;
         }
 
         /* Validate the image for the current architecture. */
-        if (nt_hdr->FileHeader.Machine != IMAGE_FILE_MACHINE_I386) {
-                ERROR("kernel is 32-bit, but Windows driver is not 32-bit;"
-                      " (PE signature is %04X)", nt_hdr->FileHeader.Machine);
+        if (nt_hdr->FileHeader.Machine != IMAGE_FILE_MACHINE_I386 &&
+        nt_hdr->FileHeader.Machine != IMAGE_FILE_MACHINE_AMD64) {
+                ERROR(" (PE signature %04X not supported)", nt_hdr->FileHeader.Machine);
                 return -EINVAL;
         }
 
         /* Must have attributes */
-        attr = IMAGE_FILE_EXECUTABLE_IMAGE | IMAGE_FILE_32BIT_MACHINE;
+        attr = IMAGE_FILE_EXECUTABLE_IMAGE;
 
         if ((nt_hdr->FileHeader.Characteristics & attr) != attr)
                 return -EINVAL;
