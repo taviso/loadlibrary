@@ -27,6 +27,7 @@
 /*
  * File formats definitions
  */
+
 typedef struct _IMAGE_DOS_HEADER {
     WORD  e_magic;      /* 00: MZ Header signature */
     WORD  e_cblp;       /* 02: Bytes on last page of file */
@@ -48,8 +49,6 @@ typedef struct _IMAGE_DOS_HEADER {
     WORD  e_res2[10];   /* 28: Reserved words */
     DWORD e_lfanew;     /* 3c: Offset to extended header */
 } IMAGE_DOS_HEADER, *PIMAGE_DOS_HEADER;
-
-struct pe_image;
 
 #define IMAGE_DOS_SIGNATURE    0x5A4D     /* MZ   */
 #define IMAGE_OS2_SIGNATURE    0x454E     /* NE   */
@@ -1107,6 +1106,17 @@ struct user_desc {
 #define LDT_READ 0
 #define LDT_WRITE 1
 
+struct pe_image {
+    char name[128];
+    BOOL WINAPI (*entry)(PVOID hinstDLL, DWORD fdwReason, PVOID lpvReserved);
+    void *image;
+    int size;
+    int type;
+
+    IMAGE_NT_HEADERS *nt_hdr;
+    IMAGE_OPTIONAL_HEADER *opt_hdr;
+} pe_image;
+
 bool pe_load_library(const char *filename, void **image, size_t *size);
 void * get_export_address(const char *name);
 int link_pe_images(struct pe_image *pe_image, unsigned short n);
@@ -1119,5 +1129,7 @@ bool process_extra_exports(void *imagebase, size_t base, const char *filename);
 extern PKUSER_SHARED_DATA SharedUserData;
 
 int check_nt_hdr(IMAGE_NT_HEADERS *nt_hdr);
+int read_exports(struct pe_image *pe);
+int fixup_imports(void *image, IMAGE_NT_HEADERS *nt_hdr);
 
 #endif

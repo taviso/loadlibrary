@@ -247,7 +247,7 @@ int check_nt_hdr(IMAGE_NT_HEADERS *nt_hdr)
         return -EINVAL;
 }
 
-static int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
+int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
 {
         ULONG_PTR *lookup_tbl, *address_tbl;
         char *symname = NULL;
@@ -294,7 +294,7 @@ static int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
         return 0;
 }
 
-static int read_exports(struct pe_image *pe)
+int read_exports(struct pe_image *pe)
 {
         IMAGE_EXPORT_DIRECTORY *export_dir_table;
         int i;
@@ -347,7 +347,7 @@ static int read_exports(struct pe_image *pe)
         return 0;
 }
 
-static int fixup_imports(void *image, IMAGE_NT_HEADERS *nt_hdr)
+int fixup_imports(void *image, IMAGE_NT_HEADERS *nt_hdr)
 {
         int i;
         char *name;
