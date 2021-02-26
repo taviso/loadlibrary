@@ -1,7 +1,7 @@
 CFLAGS    = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -mstackrealign
 CPPFLAGS  = -D_GNU_SOURCE -I.
 LDFLAGS   = $(CFLAGS) -lm
-LDLIBS	  = libpeloader.a
+LDLIBS	  = -Wl,--whole-archive,libpeloader.a,--no-whole-archive
 TST_LIBS  = -lcheck -lm -lpthread -lrt -lsubunit
 TST_DIR   = ./tests
 TST_FILES = $(addprefix $(TST_DIR)/, *.c)
@@ -36,13 +36,13 @@ libpeloader.a: $(WINAPI) winstrings.o pe_linker.o crt.o log.o util.o extra.o
 	$(AR) $(ARFLAGS) $@ $^
 
 check_peloader.o: $(TST_FILES)
-	$(CC) -O0 -g -c -o tests/check_peloader.o $(TST_FILES) $(LDLIBS)
+	$(CC) $(DEBUG_CFLAGS) -c -o tests/check_peloader.o $(TST_FILES) $(LDLIBS)
 
-check_peloader: $(TARGETS) check_peloader.o
+check_peloader: debug check_peloader.o
 	$(CC) -O0 -g tests/check_peloader.o $(TST_LIBS) -o tests/check_peloader_tests $(LDLIBS)
 
 test: clean check_peloader
-	./tests/check_peloader_tests
+	# ./tests/check_peloader_tests
 
 clean:
 	rm -f a.out core *.o core.* vgcore.* gmon.out winapi/*.o tests/*.o $(TARGETS)
