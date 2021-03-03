@@ -279,7 +279,12 @@ int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
                 else {
                         symname = RVA2VA(image, ((lookup_tbl[i] & ~IMAGE_ORDINAL_FLAG) + 2), char *);
                 }
-
+                #ifdef __x86_64__
+                            char x64_symname[255] = {0};
+                            strncpy(x64_symname, symname, strlen(symname));
+                            strcat(x64_symname, "_x64");
+                            symname = x64_symname;
+                #endif
                 if (get_export(symname, &adr) < 0) {
                         ERROR("unknown symbol: %s:%s", dll, symname);
                         address_tbl[i] = (ULONG) unknown_symbol_stub;

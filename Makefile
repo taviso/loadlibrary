@@ -1,6 +1,6 @@
-CFLAGS  = -march=native -ggdb3 -m32 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -mstackrealign
+CFLAGS  = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -mstackrealign
 CPPFLAGS= -D_GNU_SOURCE -I. -Iintercept -Ipeloader
-LDFLAGS = $(CFLAGS) -m32 -lm -Wl,--dynamic-list=exports.lst
+LDFLAGS = $(CFLAGS) -lm -Wl,--dynamic-list=exports.lst
 LDLIBS  = intercept/libdisasm.a -Wl,--whole-archive,peloader/libpeloader.a,--no-whole-archive
 
 .PHONY: clean peloader intercept
@@ -28,9 +28,19 @@ intercept:
 peloader:
 	make -C peloader $(BUILD_TARGET)
 
+peloader_x64:
+	make -C peloader debug ARCH=x64
+
 intercept/hook.o: intercept
 
+mpclient: CFLAGS += -m32
+mpclient: LDFLAGS += -m32
 mpclient: mpclient.o intercept/hook.o | peloader
+	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
+
+mpclient_x64: LDLIBS = -Wl,--whole-archive,peloader/libpeloader.a,--no-whole-archive
+mpclient_x64: CFLAGS += -g -O0
+mpclient_x64: mpclient_x64.o | peloader_x64
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
 clean:
