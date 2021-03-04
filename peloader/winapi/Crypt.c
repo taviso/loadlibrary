@@ -82,7 +82,7 @@ typedef struct _CERT_CONTEXT {
   HANDLE     hCertStore;
 } CERT_CONTEXT, *PCERT_CONTEXT;
 
-void __constructor init()
+static void __constructor init()
 {
     randomfd = open("/dev/urandom", O_RDONLY);
 }
