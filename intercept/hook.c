@@ -5,7 +5,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/user.h>
-#include "libdis.h"
+#include "Zydis/Zydis.h"
 #include "hook.h"
 
 // Routines to intercept or redirect routines.
@@ -21,10 +21,12 @@
 // instruction (where 16 is the longest possible instruction intel allows).
 #define MAX_REDIRECT_LENGTH 24
 
+ZydisDecoder decoder;
+
 static void __attribute__((constructor)) init(void)
 {
-    // Initialize libdisasm.
-    x86_init(opt_none, NULL, NULL);
+    // Initialize Zydis disassembler
+    ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_ADDRESS_WIDTH_64);
 }
 
 // Intercept calls to this function and execute redirect first. Depending on
@@ -62,32 +64,33 @@ bool insert_function_redirect(void *function, void *redirect, uint32_t flags)
     //      screwed. Seems unlikely though, so I'm not worrying about it right
     //      now. I could at least check for rets?
     //
-    for (redirectsize = 0; redirectsize < sizeof(struct branch) + sizeof(struct encodedsize); insncount++) {
-        x86_insn_t      insn            = {0};
-        ssize_t         insnlength      =  0;
 
-        // Test if libdisasm understood the instruction
-        if ((insnlength = x86_disasm(function, MAX_REDIRECT_LENGTH, (uintptr_t)(function), redirectsize, &insn))) {
+    ZyanUSize offset = 0;
+    for (redirectsize = 0; redirectsize < sizeof(struct branch) + sizeof(struct encodedsize); insncount++) {
+        ZydisDecodedInstruction instruction;
+
+        // Test if Zydis understood the instruction
+        if (ZYAN_SUCCESS(ZydisDecoderDecodeBuffer(&decoder, function + offset, sizeof(struct branch) + sizeof(struct encodedsize), &instruction))) {
 
             // Valid, increment size.
-            redirectsize += insnlength;
+            redirectsize += instruction.length;
 
             // Check for branches just to be safe, as these instructions are
             // relative and cannot be relocated safely (there are others of
             // course, but these are the most likely).
-            if (insn.group == insn_controlflow && flags != HOOK_REPLACE_FUNCTION) {
+            if ((instruction.meta.category == ZYDIS_CATEGORY_CALL ||
+                    instruction.meta.category == ZYDIS_CATEGORY_UNCOND_BR ||
+                    instruction.meta.category == ZYDIS_CATEGORY_COND_BR ||
+                    instruction.meta.category == ZYDIS_CATEGORY_RET) &&
+                    flags != HOOK_REPLACE_FUNCTION) {
                 printf("error: refusing to redirect function %p due to early controlflow manipulation (+%u)\n",
                        function,
                        redirectsize);
 
-                // Clean up.
-                x86_oplist_free(&insn);
-
                 return false;
             }
 
-            // Clean up.
-            x86_oplist_free(&insn);
+            offset += instruction.length;
 
             // Next instuction.
             continue;
@@ -275,42 +278,40 @@ bool remove_function_redirect(void *function)
 //
 //      redirect_call_within_function(tcp_input, inet_cksum, my_cksum_replacement);
 //
+
 bool redirect_call_within_function(void *function, void *target, void *redirect)
 {
     size_t          offset      = 0;
     struct branch  *callsite    = NULL;
 
     while (true) {
-        x86_insn_t      insn;
-        ssize_t         insnlength;
+        ZydisDecodedInstruction instruction;
 
-        // Test if libdisasm understood the instruction
-        if ((insnlength = x86_disasm(function, MAX_FUNCTION_LENGTH, (uintptr_t)(function), offset, &insn))) {
+        // Test if Zydis understood the instruction
+        if (ZYAN_SUCCESS(ZydisDecoderDecodeBuffer(&decoder, function + offset, MAX_FUNCTION_LENGTH, &instruction))) {
 
-            // Examine the instuction found to see if it matches the call we
+            // Examine the instruction found to see if it matches the call we
             // want to replace.
-            if (insn.type == insn_call) {
-                if (x86_get_rel_offset(&insn) == (uintptr_t)(target)
-                                               - (uintptr_t)(function + offset)
-                                               - (uintptr_t)(insnlength)) {
+            ZyanU64 result_address = 0;
+            if (instruction.mnemonic == ZYDIS_MNEMONIC_CALL) {
+
+                if (ZydisCalcAbsoluteAddress(&instruction,
+                &(instruction.operands[0]), (uintptr_t) function + offset, &result_address) != ZYAN_STATUS_SUCCESS)
+                    continue;
+
+                if (result_address == (uintptr_t)target) {
                     // Success, this is the location the caller wants us to patch.
                     callsite = (struct branch *)(function + offset);
 
                     // Let's move on to patching.
-                    printf("info: found a call at %p, the target is %#x\n", callsite, x86_get_rel_offset(&insn));
-
-                    // Clean up, then exit disassembly.
-                    x86_oplist_free(&insn);
+                    printf("info: found a call at %p, the target is %#x\n", callsite, result_address);
 
                     break;
                 }
             }
 
             // Valid, but not interesting. Increment size.
-            offset += insnlength;
-
-            // Clean up.
-            x86_oplist_free(&insn);
+            offset += instruction.length;
 
             // Next instuction.
             continue;

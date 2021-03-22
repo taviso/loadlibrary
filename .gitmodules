@@ -1,0 +1,3 @@
+[submodule "intercept/zydis"]
+	path = intercept/zydis
+	url = https://github.com/zyantific/zydis.git

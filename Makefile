@@ -1,7 +1,7 @@
 CFLAGS  = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -mstackrealign
 CPPFLAGS= -D_GNU_SOURCE -I. -Iintercept -Ipeloader
 LDFLAGS = $(CFLAGS) -lm -Wl,--dynamic-list=exports.lst
-LDLIBS  = intercept/libdisasm.a -Wl,--whole-archive,peloader/libpeloader.a,--no-whole-archive
+LDLIBS  = -Wl,intercept/libhook.a -Wl,intercept/libZydis.a,--whole-archive -Wl,peloader/libpeloader.a,--no-whole-archive
 
 .PHONY: clean peloader intercept
 
@@ -23,7 +23,9 @@ debug: $(TARGETS)
 	-mkdir -p faketemp
 
 intercept:
-	make -C intercept $(BUILD_TARGET)
+	cd intercept; mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Debug ..; make
+	cp intercept/build/libhook.a intercept/libhook.a
+	cp intercept/build/zydis/libZydis.a intercept/libZydis.a
 
 peloader:
 	make -C peloader $(BUILD_TARGET)
@@ -31,20 +33,18 @@ peloader:
 peloader_x64:
 	make -C peloader debug ARCH=x64
 
-intercept/hook.o: intercept
+intercept/libhook.a: intercept
 
 mpclient: CFLAGS += -m32
 mpclient: LDFLAGS += -m32
-mpclient: mpclient.o intercept/hook.o | peloader
+mpclient: mpclient.o | peloader intercept
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
-mpclient_x64: LDLIBS = -Wl,--whole-archive,peloader/libpeloader.a,--no-whole-archive
 mpclient_x64: CFLAGS += -g -O0
-mpclient_x64: mpclient_x64.o | peloader_x64
+mpclient_x64: mpclient_x64.o | peloader_x64 intercept
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
 clean:
-	rm -f a.out core *.o core.* vgcore.* gmon.out mpclient
-	make -C intercept clean
+	rm -rf a.out core *.o core.* vgcore.* gmon.out mpclient intercept/build intercept/libhook.a intercept/libZydis.a
 	make -C peloader clean
 	rm -rf faketemp
