@@ -1,11 +1,9 @@
-CFLAGS    = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -mstackrealign
-CPPFLAGS  = -D_GNU_SOURCE -I.
-LDFLAGS   = $(CFLAGS) -lm
-LDLIBS	  = -Wl,--whole-archive,libpeloader.a,--no-whole-archive
-TST_LIBS  = -lcheck -lm -lpthread -lrt -lsubunit
-TST_DIR   = ./tests
-TST_FILES = $(addprefix $(TST_DIR)/, *.c)
-ARCH	  = x86
+CFLAGS    	 = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -mstackrealign
+CPPFLAGS  	 = -D_GNU_SOURCE -I. -I../intercept/include
+LDFLAGS   	 = $(CFLAGS) -lm
+LDLIBS	  	 = -Wl,--whole-archive,libpeloader.a,--no-whole-archive -Wl,../intercept/libhook.a -Wl,../intercept/libx64_dispatcher.a -Wl,../intercept/libZydis.a,--whole-archive -Wl,../intercept/libsubhook.a
+ARCH	  	 = x86
+OBJECT_FILES = winstrings.o pe_linker.o crt.o log.o util.o extra.o
 
 ifeq ($(ARCH),x86)
 	CFLAGS  += -m32
@@ -32,17 +30,8 @@ all: $(TARGETS)
 debug: CFLAGS += $(DEBUG_CFLAGS)
 debug: $(TARGETS)
 
-libpeloader.a: $(WINAPI) winstrings.o pe_linker.o crt.o log.o util.o extra.o
+libpeloader.a: $(WINAPI) $(OBJECT_FILES)
 	$(AR) $(ARFLAGS) $@ $^
 
-check_peloader.o: $(TST_FILES)
-	$(CC) $(DEBUG_CFLAGS) -c -o tests/check_peloader.o $(TST_FILES) $(LDLIBS)
-
-check_peloader: debug check_peloader.o
-	$(CC) -O0 -g tests/check_peloader.o $(TST_LIBS) -o tests/check_peloader_tests $(LDLIBS)
-
-test: clean check_peloader
-	# ./tests/check_peloader_tests
-
 clean:
-	rm -f a.out core *.o core.* vgcore.* gmon.out winapi/*.o tests/*.o $(TARGETS)
+	rm -f a.out core *.o core.* vgcore.* gmon.out winapi/*.o $(TARGETS)

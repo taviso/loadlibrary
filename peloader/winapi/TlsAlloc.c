@@ -22,6 +22,7 @@ extern PFLS_CALLBACK_FUNCTION FlsCallbacks[1024];
 
 STATIC DWORD WINAPI TlsAlloc(void)
 {
+    NOP_FILL();
     if (TlsIndex >= ARRAY_SIZE(LocalStorage) - 1) {
         DebugLog("TlsAlloc() => %#x", TlsIndex);
         return TLS_OUT_OF_INDEXES;
@@ -32,6 +33,7 @@ STATIC DWORD WINAPI TlsAlloc(void)
 
 STATIC BOOL WINAPI TlsSetValue(DWORD dwTlsIndex, PVOID lpTlsValue)
 {
+    NOP_FILL();
     DebugLog("TlsSetValue(%u, %p)", dwTlsIndex, lpTlsValue);
 
     if (dwTlsIndex < ARRAY_SIZE(LocalStorage)) {
@@ -45,6 +47,7 @@ STATIC BOOL WINAPI TlsSetValue(DWORD dwTlsIndex, PVOID lpTlsValue)
 
 STATIC DWORD WINAPI TlsGetValue(DWORD dwTlsIndex)
 {
+    NOP_FILL();
     if (dwTlsIndex < ARRAY_SIZE(LocalStorage)) {
         return LocalStorage[dwTlsIndex];
     }
@@ -54,6 +57,7 @@ STATIC DWORD WINAPI TlsGetValue(DWORD dwTlsIndex)
 
 STATIC BOOL WINAPI TlsFree(DWORD dwTlsIndex)
 {
+    NOP_FILL();
     if (dwTlsIndex < ARRAY_SIZE(LocalStorage)) {
         LocalStorage[dwTlsIndex] = (uintptr_t) NULL;
         return TRUE;
@@ -64,6 +68,7 @@ STATIC BOOL WINAPI TlsFree(DWORD dwTlsIndex)
 
 static DWORD WINAPI FlsAlloc(PVOID lpCallback)
 {
+    NOP_FILL();
     DWORD Result;
     DebugLog("%p", lpCallback);
 
@@ -77,6 +82,7 @@ static DWORD WINAPI FlsAlloc(PVOID lpCallback)
 
 static DWORD WINAPI FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
 {
+    NOP_FILL();
     DebugLog("%#x, %p", dwFlsIndex, lpFlsData);
 
     return TlsSetValue(dwFlsIndex, lpFlsData);
@@ -84,6 +90,7 @@ static DWORD WINAPI FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
 
 static DWORD WINAPI FlsGetValue(DWORD dwFlsIndex)
 {
+    NOP_FILL();
     DebugLog("%#x", dwFlsIndex);
 
     return TlsGetValue(dwFlsIndex);
@@ -91,6 +98,7 @@ static DWORD WINAPI FlsGetValue(DWORD dwFlsIndex)
 
 static BOOL WINAPI FlsFree(DWORD dwFlsIndex)
 {
+    NOP_FILL();
     DebugLog("%#x", dwFlsIndex);
 
     if (FlsCallbacks[dwFlsIndex]) {

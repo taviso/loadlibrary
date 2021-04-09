@@ -20,6 +20,7 @@
 
 STATIC int WINAPI MultiByteToWideChar(UINT CodePage, DWORD  dwFlags, PCHAR lpMultiByteStr, int cbMultiByte, PUSHORT lpWideCharStr, int cchWideChar)
 {
+    NOP_FILL();
     size_t i;
 
     DebugLog("%u, %#x, %p, %u, %p, %u", CodePage, dwFlags, lpMultiByteStr, cbMultiByte, lpWideCharStr, cchWideChar);
@@ -61,6 +62,7 @@ STATIC int WINAPI MultiByteToWideChar(UINT CodePage, DWORD  dwFlags, PCHAR lpMul
 
 STATIC int WINAPI WideCharToMultiByte(UINT CodePage, DWORD dwFlags, PVOID lpWideCharStr, int cchWideChar, PVOID lpMultiByteStr, int cbMultiByte, PVOID lpDefaultChar, PVOID lpUsedDefaultChar)
 {
+    NOP_FILL();
     char *ansi = NULL;
 
     DebugLog("%u, %#x, %p, %d, %p, %d, %p, %p", CodePage, dwFlags, lpWideCharStr, cchWideChar, lpMultiByteStr, cbMultiByte, lpDefaultChar, lpUsedDefaultChar);
@@ -98,6 +100,7 @@ STATIC int WINAPI WideCharToMultiByte(UINT CodePage, DWORD dwFlags, PVOID lpWide
 
 STATIC BOOL WINAPI GetStringTypeA(DWORD locale, DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc, PUSHORT lpCharType)
 {
+    NOP_FILL();
     DebugLog("%u, %u, %p, %d, %p", locale, dwInfoType, lpSrcStr, cchSrc, lpCharType);
 
     memset(lpCharType, 1, cchSrc * sizeof(USHORT));
@@ -108,6 +111,7 @@ STATIC BOOL WINAPI GetStringTypeA(DWORD locale, DWORD dwInfoType, PUSHORT lpSrcS
 
 STATIC BOOL WINAPI GetStringTypeW(DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc, PUSHORT lpCharType)
 {
+    NOP_FILL();
     DebugLog("%u, %p, %d, %p", dwInfoType, lpSrcStr, cchSrc, lpCharType);
 
     memset(lpCharType, 1, cchSrc * sizeof(USHORT));
@@ -117,6 +121,7 @@ STATIC BOOL WINAPI GetStringTypeW(DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc
 
 STATIC VOID WINAPI RtlInitUnicodeString(PUNICODE_STRING DestinationString, PWCHAR SourceString)
 {
+    NOP_FILL();
     DestinationString->Length = CountWideChars(SourceString) * 2;
     DestinationString->MaximumLength = DestinationString->Length;
     DestinationString->Buffer = SourceString;
@@ -124,6 +129,7 @@ STATIC VOID WINAPI RtlInitUnicodeString(PUNICODE_STRING DestinationString, PWCHA
 
 STATIC PVOID WINAPI UuidFromStringW(PUSHORT StringUuid, PBYTE Uuid)
 {
+    NOP_FILL();
     int i;
 
     DebugLog("%S, %p", StringUuid, Uuid);
@@ -137,6 +143,7 @@ STATIC PVOID WINAPI UuidFromStringW(PUSHORT StringUuid, PBYTE Uuid)
 
 STATIC INT WINAPI UuidCreate(PBYTE Uuid)
 {
+    NOP_FILL();
     int i;
 
     DebugLog("%p", Uuid);

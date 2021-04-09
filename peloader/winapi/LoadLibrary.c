@@ -17,6 +17,7 @@
 
 static HANDLE WINAPI LoadLibraryExW(PVOID lpFileName, HANDLE hFile, DWORD dwFlags)
 {
+    NOP_FILL();
     char *name = CreateAnsiFromWide(lpFileName);
 
     DebugLog("%p [%s], %p, %#x", lpFileName, name, hFile, dwFlags);
@@ -28,6 +29,7 @@ static HANDLE WINAPI LoadLibraryExW(PVOID lpFileName, HANDLE hFile, DWORD dwFlag
 
 static HANDLE WINAPI LoadLibraryW(PVOID lpFileName)
 {
+    NOP_FILL();
     DebugLog("%p", lpFileName);
 
     return (HANDLE) 'LOAD';
@@ -35,6 +37,7 @@ static HANDLE WINAPI LoadLibraryW(PVOID lpFileName)
 
 static PVOID WINAPI GetProcAddress(HANDLE hModule, PCHAR lpProcName)
 {
+    NOP_FILL();
     ENTRY key = { lpProcName }, *item;
 
     assert(hModule == (HANDLE) NULL || hModule == (HANDLE) 'LOAD' || hModule == (HANDLE) 'MPEN' || hModule == (HANDLE) 'VERS' || hModule == (HANDLE) 'KERN');
@@ -50,6 +53,7 @@ static PVOID WINAPI GetProcAddress(HANDLE hModule, PCHAR lpProcName)
 
 static HANDLE WINAPI GetModuleHandleW(PVOID lpModuleName)
 {
+    NOP_FILL();
     char *name = CreateAnsiFromWide(lpModuleName);
 
     DebugLog("%p [%s]", lpModuleName, name);
@@ -75,6 +79,7 @@ static HANDLE WINAPI GetModuleHandleW(PVOID lpModuleName)
 
 static DWORD WINAPI GetModuleFileNameA(HANDLE hModule, PCHAR lpFilename, DWORD nSize)
 {
+    NOP_FILL();
     DebugLog("%p, %p, %u", hModule, lpFilename, nSize);
 
     strncpy(lpFilename, "C:\\dummy\\fakename.exe", nSize);
@@ -84,6 +89,7 @@ static DWORD WINAPI GetModuleFileNameA(HANDLE hModule, PCHAR lpFilename, DWORD n
 
 static DWORD WINAPI GetModuleFileNameW(HANDLE hModule, PWCHAR lpFilename, DWORD nSize)
 {
+    NOP_FILL();
     DebugLog("%p, %p, %u", hModule, lpFilename, nSize);
 
     if (nSize > strlen("C:\\dummy\\fakename.exe")) {
@@ -95,6 +101,7 @@ static DWORD WINAPI GetModuleFileNameW(HANDLE hModule, PWCHAR lpFilename, DWORD 
 
 static HANDLE WINAPI GetModuleHandleA(PCHAR lpModuleName)
 {
+    NOP_FILL();
     DebugLog("%p [%s]", lpModuleName, lpModuleName);
 
     return (HANDLE) NULL;
@@ -102,6 +109,7 @@ static HANDLE WINAPI GetModuleHandleA(PCHAR lpModuleName)
 
 static VOID WINAPI FreeLibrary(PVOID hLibModule)
 {
+    NOP_FILL();
     DebugLog("FreeLibrary(%p)", hLibModule);
 }
 

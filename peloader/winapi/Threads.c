@@ -17,35 +17,41 @@
 
 static __stdcall PVOID CreateThreadPoolWait(PVOID pwa)
 {
+    NOP_FILL();
     DebugLog("");
     return (PVOID) 0x41414141;
 }
 
 static __stdcall PVOID CreateThreadPool(PVOID reserved)
 {
+    NOP_FILL();
     DebugLog("");
     return (PVOID) 0x41414141;
 }
 
 static __stdcall PVOID CreateThreadpoolTimer(PVOID pfnti, PVOID pv, PVOID pcbe)
 {
+    NOP_FILL();
     DebugLog("");
     return (PVOID) 0x41414141;
 }
 
 static __stdcall PVOID CreateThreadpoolWork(PVOID pfnwk, PVOID pv, PVOID pcbe)
 {
+    NOP_FILL();
     DebugLog("");
     return (PVOID) 0x41414141;
 }
 
 static __stdcall void CloseThreadpoolTimer(PVOID pti)
 {
+    NOP_FILL();
     DebugLog("%p", pti);
 }
 
 static __stdcall void InitializeConditionVariable(PVOID ConditionVariable)
 {
+    NOP_FILL();
     DebugLog("%p", ConditionVariable);
 }
 
@@ -53,12 +59,14 @@ static __stdcall BOOL SleepConditionVariableCS(PVOID ConditionVariable,
                                                PVOID CriticalSection,
                                                DWORD dwMilliseconds)
 {
+    NOP_FILL();
     DebugLog("%p %p %u", ConditionVariable, CriticalSection, dwMilliseconds);
     return TRUE;
 }
 
 static __stdcall void WakeAllConditionVariable(PVOID ConditionVariable)
 {
+    NOP_FILL();
     DebugLog("%p", ConditionVariable);
 }
 

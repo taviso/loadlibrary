@@ -25,6 +25,7 @@ WCHAR EnvironmentStrings[] =
 
 STATIC PVOID WINAPI GetEnvironmentStringsW(void)
 {
+    NOP_FILL();
     DebugLog("");
 
     return EnvironmentStrings;
@@ -32,6 +33,7 @@ STATIC PVOID WINAPI GetEnvironmentStringsW(void)
 
 STATIC BOOL WINAPI FreeEnvironmentStringsW(PVOID lpszEnvironmentBlock)
 {
+    NOP_FILL();
     DebugLog("%p", lpszEnvironmentBlock);
 
     return TRUE;
@@ -39,6 +41,7 @@ STATIC BOOL WINAPI FreeEnvironmentStringsW(PVOID lpszEnvironmentBlock)
 
 STATIC DWORD WINAPI GetEnvironmentVariableW(PWCHAR lpName, PVOID lpBuffer, DWORD nSize)
 {
+    NOP_FILL();
     char *AnsiName = CreateAnsiFromWide(lpName);
 
     DebugLog("%p [%s], %p, %u", lpName, AnsiName, lpBuffer, nSize);
@@ -64,6 +67,7 @@ STATIC DWORD WINAPI GetEnvironmentVariableW(PWCHAR lpName, PVOID lpBuffer, DWORD
 // MPENGINE is very fussy about what ExpandEnvironmentStringsW returns.
 STATIC DWORD WINAPI ExpandEnvironmentStringsW(PWCHAR lpSrc, PWCHAR lpDst, DWORD nSize)
 {
+    NOP_FILL();
     PCHAR AnsiString = CreateAnsiFromWide(lpSrc);
     DWORD Result;
     struct {
@@ -111,6 +115,7 @@ finish:
 
 static DWORD WINAPI GetEnvironmentVariableA(PCHAR lpName, PVOID lpBuffer, DWORD nSize)
 {
+    NOP_FILL();
     DebugLog("%s, %p, %u", lpName, lpBuffer, nSize);
     return 0;
 }

@@ -42,6 +42,7 @@ typedef struct _SYSTEM_INFO {
 
 static DWORD WINAPI RtlGetVersion(PRTL_OSVERSIONINFOEXW lpVersionInformation)
 {
+    NOP_FILL();
     if (lpVersionInformation->dwOSVersionInfoSize == sizeof (RTL_OSVERSIONINFOEXW)) {
         DebugLog("%p (RTL_OSVERSIONINFOEXW)", lpVersionInformation);
     } else {
@@ -61,6 +62,7 @@ static DWORD WINAPI RtlGetVersion(PRTL_OSVERSIONINFOEXW lpVersionInformation)
 
 static VOID WINAPI GetSystemInfo(LPSYSTEM_INFO lpSystemInfo)
 {
+    NOP_FILL();
     DebugLog("%p", lpSystemInfo);
 
     lpSystemInfo->wProcessorArchitecture = PROCESSOR_ARCHITECTURE_INTEL;
@@ -69,6 +71,7 @@ static VOID WINAPI GetSystemInfo(LPSYSTEM_INFO lpSystemInfo)
 
 static DWORD GetSystemDefaultLCID(void)
 {
+    NOP_FILL();
     DebugLog("");
     return 0x0800; // I dunno
 }
@@ -78,6 +81,7 @@ static NTSTATUS WINAPI NtQuerySystemInformation(DWORD SystemInformationClass,
                                                 ULONG SystemInformationLength,
                                                 PULONG ReturnLength)
 {
+    NOP_FILL();
     DebugLog("");
     return -1;
 }
@@ -86,6 +90,7 @@ static BOOL WINAPI GetComputerNameExW(DWORD NameType,
                                       PWCHAR lpBuffer,
                                       PDWORD lpnSize)
 {
+    NOP_FILL();
     DebugLog("");
     return FALSE;
 }
@@ -96,6 +101,7 @@ static BOOL WINAPI GetProductInfo(DWORD dwOSMajorVersion,
                                   DWORD dwSpMinorVersion,
                                   PDWORD pdwReturnedProductType)
 {
+    NOP_FILL();
     DebugLog("");
     *pdwReturnedProductType = 6;
     return TRUE;
@@ -103,12 +109,14 @@ static BOOL WINAPI GetProductInfo(DWORD dwOSMajorVersion,
 
 static DWORD WINAPI GetVersion(void)
 {
+    NOP_FILL();
     DebugLog("");
     return 0x80000000;
 }
 
 static DWORD WINAPI GetVersionExA(PRTL_OSVERSIONINFOEXW lpVersionInformation)
 {
+    NOP_FILL();
     DebugLog("");
     return TRUE;
 }

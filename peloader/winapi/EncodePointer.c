@@ -15,6 +15,7 @@
 
 STATIC PVOID WINAPI EncodePointer(PVOID Ptr)
 {
+    NOP_FILL();
     DebugLog("%p", Ptr);
 
     // Super secret high-security encryption algorithm.
@@ -23,6 +24,7 @@ STATIC PVOID WINAPI EncodePointer(PVOID Ptr)
 
 STATIC PVOID WINAPI DecodePointer(PVOID Ptr)
 {
+    NOP_FILL();
     DebugLog("%p", Ptr);
 
     return (PVOID)((DWORD)(Ptr) ^ ~0);

@@ -18,6 +18,7 @@ static const uint16_t kTempPath[] = L".\\FAKETEMP\\";
 
 DWORD WINAPI GetTempPathW(DWORD nBufferLength, PVOID lpBuffer)
 {
+    NOP_FILL();
     DebugLog("%u, %p", nBufferLength, lpBuffer);
 
     memcpy(lpBuffer, kTempPath, sizeof(kTempPath));
@@ -27,6 +28,7 @@ DWORD WINAPI GetTempPathW(DWORD nBufferLength, PVOID lpBuffer)
 
 DWORD WINAPI GetLogicalDrives(void)
 {
+    NOP_FILL();
     DebugLog("");
 
     return 1 << 2;
@@ -36,6 +38,7 @@ DWORD WINAPI GetLogicalDrives(void)
 
 UINT WINAPI GetDriveTypeW(PWCHAR lpRootPathName)
 {
+    NOP_FILL();
     char *path = CreateAnsiFromWide(lpRootPathName);
     DebugLog("%p [%s]", lpRootPathName, path);
     free(path);
@@ -46,6 +49,7 @@ DWORD WINAPI GetLongPathNameA(LPCSTR lpszShortPath,
                               LPSTR lpszLongPath,
                               DWORD cchBuffer)
 {
+    NOP_FILL();
     // For now we just return the 8.3 format path as the long path
     if (cchBuffer > strlen(lpszShortPath)) {
         memcpy(lpszLongPath, lpszShortPath, sizeof(lpszShortPath));
@@ -58,6 +62,7 @@ DWORD WINAPI GetLongPathNameW(LPCWSTR lpszShortPath,
                               LPWSTR lpszLongPath,
                               DWORD cchBuffer)
 {
+    NOP_FILL();
     // For now we just return the 8.3 format path as the long path
     if (cchBuffer > CountWideChars(lpszShortPath)) {
         memcpy(lpszLongPath, lpszShortPath, CountWideChars(lpszShortPath) * sizeof(WCHAR));

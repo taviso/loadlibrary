@@ -15,18 +15,21 @@
 
 void WINAPI RtlAcquirePebLock(void)
 {
+    NOP_FILL();
     DebugLog("");
     return;
 }
 
 void WINAPI RtlReleasePebLock(void)
 {
+    NOP_FILL();
     DebugLog("");
     return;
 }
 
 NTSTATUS WINAPI LdrGetDllHandle(PWCHAR pwPath, PVOID unused, PUNICODE_STRING ModuleFileName, PHANDLE pHModule)
 {
+    NOP_FILL();
     DebugLog("%S %p %p %p", pwPath, unused, ModuleFileName, pHModule);
     pHModule = (HANDLE) 'LDRP';
     return 0;
@@ -34,18 +37,21 @@ NTSTATUS WINAPI LdrGetDllHandle(PWCHAR pwPath, PVOID unused, PUNICODE_STRING Mod
 
 NTSTATUS WINAPI EtwRegister(PVOID ProvideId, PVOID EnableCallback, PVOID CallbackContext, PVOID RegHandle)
 {
+    NOP_FILL();
     DebugLog("");
     return 0;
 }
 
 NTSTATUS WINAPI EtwUnregister(HANDLE RegHandle)
 {
+    NOP_FILL();
     DebugLog("");
     return 0;
 }
 
 ULONG WINAPI EtwEventWrite(HANDLE RegHAndle, PVOID EventDescriptor, ULONG UserDataCount, PVOID UserData, PVOID a5)
 {
+    NOP_FILL();
     DebugLog("");
     return 0;
 }
@@ -55,6 +61,7 @@ static NTSTATUS WINAPI LdrLoadDll(PWCHAR PathToFile,
                                   PUNICODE_STRING ModuleFilename,
                                   PHANDLE ModuleHandle)
 {
+    NOP_FILL();
     char *PathToFileA = CreateAnsiFromWide(PathToFile);
     char *ModuleFilenameA = CreateAnsiFromWide(ModuleFilename->Buffer);
 
@@ -68,7 +75,9 @@ static NTSTATUS WINAPI LdrLoadDll(PWCHAR PathToFile,
     return 0;
 }
 
-static NTSTATUS WINAPI LdrUnloadDll(HANDLE ModuleHandle) {
+static NTSTATUS WINAPI LdrUnloadDll(HANDLE ModuleHandle)
+{
+    NOP_FILL();
     DebugLog("%p", ModuleHandle);
 
     return 0;
@@ -79,6 +88,7 @@ static NTSTATUS WINAPI LdrGetProcedureAddress(HMODULE Module,
                                               WORD Ordinal,
                                               PVOID *Address)
 {
+    NOP_FILL();
     DebugLog("%p %s %hu %p", Module, Name->buf, Ordinal, Address);
 
     // Recognizable value to crash on.

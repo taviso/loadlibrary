@@ -20,6 +20,7 @@
 
 static BOOL WINAPI IsDebuggerPresent()
 {
+    NOP_FILL();
     DebugLog("");
     return false;
 }

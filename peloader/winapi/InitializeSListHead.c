@@ -15,11 +15,13 @@
 
 STATIC VOID WINAPI InitializeSListHead(PVOID ListHead)
 {
+    NOP_FILL();
     DebugLog("%p", ListHead);
 }
 
 STATIC PVOID WINAPI InterlockedFlushSList(PVOID ListHead)
 {
+    NOP_FILL();
     DebugLog("%p", ListHead);
     return NULL;
 }

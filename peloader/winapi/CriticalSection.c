@@ -15,31 +15,37 @@
 
 STATIC VOID WINAPI DeleteCriticalSection(PVOID lpCriticalSection)
 {
+    NOP_FILL();
     return;
 }
 
 STATIC VOID WINAPI EnterCriticalSection(PVOID lpCriticalSection)
 {
+    NOP_FILL();
     return;
 }
 
 STATIC VOID WINAPI LeaveCriticalSection(PVOID lpCriticalSection)
 {
+    NOP_FILL();
     return;
 }
 
 STATIC BOOL WINAPI InitializeCriticalSectionAndSpinCount(PVOID lpCriticalSection, DWORD dwSpinCount)
 {
+    NOP_FILL();
     return TRUE;
 }
 
 STATIC BOOL WINAPI InitializeCriticalSectionEx(PVOID lpCriticalSection, DWORD dwSpinCount, DWORD Flags)
 {
+    NOP_FILL();
     return TRUE;
 }
 
 STATIC VOID WINAPI InitializeCriticalSection(PVOID lpCriticalSection)
 {
+    NOP_FILL();
     return;
 }
 

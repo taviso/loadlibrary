@@ -30,30 +30,35 @@ extern void WINAPI SetLastError(DWORD dwErrCode);
 
 STATIC VOID WINAPI GetSystemTime(PSYSTEMTIME lpSystemTime)
 {
+    NOP_FILL();
     memset(lpSystemTime, 0, sizeof(SYSTEMTIME));
     return;
 }
 
 STATIC BOOL WINAPI SystemTimeToFileTime(SYSTEMTIME *lpSystemTime, PFILETIME lpFileTime)
 {
+    NOP_FILL();
     memset(lpFileTime, 0, sizeof(FILETIME));
     return TRUE;
 }
 
 STATIC VOID WINAPI GetSystemTimePreciseAsFileTime(PFILETIME lpSystemTimeAsFileTime)
 {
+    NOP_FILL();
     memset(lpSystemTimeAsFileTime, 0, sizeof(FILETIME));
     return;
 }
 
 STATIC VOID WINAPI GetSystemTimeAsFileTime(PVOID lpSystemTimeAsFileTime)
 {
+    NOP_FILL();
     memset(lpSystemTimeAsFileTime, 0, sizeof(FILETIME));
     return;
 }
 
 STATIC BOOL WINAPI QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount)
 {
+    NOP_FILL();
     struct timespec tm;
     DebugLog("");
 
@@ -69,16 +74,19 @@ STATIC BOOL WINAPI QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount)
 
 STATIC DWORD WINAPI GetTickCount(VOID)
 {
+    NOP_FILL();
     return 0;
 }
 
 STATIC ULONGLONG WINAPI GetTickCount64(VOID)
 {
+    NOP_FILL();
     return 0;
 }
 
 STATIC BOOL WINAPI QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
 {
+    NOP_FILL();
     struct timespec tm;
 
     DebugLog("");
@@ -95,6 +103,7 @@ STATIC BOOL WINAPI QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
 
 STATIC BOOL WINAPI GetProcessTimes(HANDLE hProcess, PFILETIME lpCreationTime, PFILETIME lpExitTime, PFILETIME lpKernelTime, PFILETIME lpUserTime)
 {
+    NOP_FILL();
     SetLastError(0);
     DebugLog("");
     return FALSE;
@@ -102,12 +111,14 @@ STATIC BOOL WINAPI GetProcessTimes(HANDLE hProcess, PFILETIME lpCreationTime, PF
 
 STATIC BOOL WINAPI DosDateTimeToFileTime(WORD wFatDate, WORD wFatTime, PFILETIME lpFileTime)
 {
+    NOP_FILL();
     DebugLog("");
     return FALSE;
 }
 
 STATIC BOOL WINAPI FileTimeToSystemTime(PFILETIME lpFileTime, PSYSTEMTIME lpSystemTime)
 {
+    NOP_FILL();
     DebugLog("");
     return FALSE;
 }

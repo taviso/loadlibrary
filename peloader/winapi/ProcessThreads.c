@@ -78,64 +78,76 @@ static HANDLE WINAPI CreateSemaphoreW(PVOID lpSemaphoreAttributes, LONG lInitial
 
 static HANDLE WINAPI GetCurrentProcess(VOID)
 {
+    NOP_FILL();
     return (HANDLE) -1;
 }
 
 static HANDLE WINAPI GetCurrentThread(VOID)
 {
+    NOP_FILL();
     return (HANDLE) -1;
 }
 
 static DWORD WINAPI GetCurrentThreadId(VOID)
 {
+    NOP_FILL();
     return getpid();
 }
 
 static DWORD WINAPI GetCurrentProcessId(VOID)
 {
+    NOP_FILL();
     return getpid();
 }
 
 static BOOL WINAPI RegisterWaitForSingleObject(PHANDLE phNewWaitObject, HANDLE hObject, PVOID Callback, PVOID Context, ULONG dwMilliseconds, ULONG dwFlags)
 {
+    NOP_FILL();
     DebugLog("");
     return TRUE;
 }
 
 static VOID WINAPI AcquireSRWLockExclusive(PVOID SRWLock)
 {
+    NOP_FILL();
     DebugLog("%p", SRWLock);
 }
 
 static VOID WINAPI AcquireSRWLockShared(PVOID SRWLock)
 {
+    NOP_FILL();
     DebugLog("%p", SRWLock);
 }
 
 static VOID WINAPI ReleaseSRWLockExclusive(PVOID SRWLock)
 {
+    NOP_FILL();
     DebugLog("%p", SRWLock);
 }
 
 static VOID WINAPI ReleaseSRWLockShared(PVOID SRWLock)
 {
+    NOP_FILL();
     DebugLog("%p", SRWLock);
 }
 
 static HANDLE WINAPI CreateMutexW(PVOID lpMutexAttributes, BOOL bInitialOwner, PWCHAR lpName)
 {
+    NOP_FILL();
     DebugLog("%p, %u, %p");
     return INVALID_HANDLE_VALUE;
 }
 
 static DWORD WINAPI WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
 {
+    NOP_FILL();
     DebugLog("%p, %u", hHandle, dwMilliseconds);
     return -1;
 }
 
 static ULONG WINAPI LsaNtStatusToWinError(NTSTATUS Status)
 {
+    NOP_FILL();
     DebugLog("%#x", Status);
     return Status;
 }
@@ -148,6 +160,7 @@ static BOOL WINAPI CreateTimerQueueTimer(PHANDLE phNewTimer,
                                          DWORD Period,
                                          ULONG Flags)
 {
+    NOP_FILL();
     DebugLog("");
     return TRUE;
 }
@@ -158,24 +171,28 @@ static BOOL WINAPI GetThreadTimes(HANDLE hThread,
                                   PFILETIME lpKernelTime,
                                   PFILETIME lpUserTime)
 {
+    NOP_FILL();
     DebugLog("");
     return TRUE;
 }
 
 static ULONG WINAPI RtlNtStatusToDosError(NTSTATUS Status)
 {
+    NOP_FILL();
     DebugLog("%#x", Status);
     return 5;
 }
 
 static BOOL WINAPI SetThreadToken(PHANDLE Thread, HANDLE Token)
 {
+    NOP_FILL();
     DebugLog("");
     return FALSE;
 }
 
 static BOOL WINAPI ProcessIdToSessionId(DWORD dwProcessId, DWORD *pSessionId)
 {
+    NOP_FILL();
     DebugLog("");
     return FALSE;
 }

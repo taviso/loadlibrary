@@ -1,0 +1,4 @@
+data/
+cmake-*
+build/
+Testing

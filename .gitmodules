@@ -1,3 +1,6 @@
 [submodule "intercept/zydis"]
 	path = intercept/zydis
 	url = https://github.com/zyantific/zydis.git
+[submodule "intercept/subhook"]
+	path = intercept/subhook
+	url = https://github.com/cube0x8/subhook.git

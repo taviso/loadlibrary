@@ -36,6 +36,7 @@ extern void WINAPI SetLastError(DWORD dwErrCode);
 
 static DWORD WINAPI GetFileAttributesW(PVOID lpFileName)
 {
+    NOP_FILL();
     DWORD Result = FILE_ATTRIBUTE_NORMAL;
     char *filename = CreateAnsiFromWide(lpFileName);
     DebugLog("%p [%s]", lpFileName, filename);
@@ -53,6 +54,7 @@ finish:
 
 static DWORD WINAPI GetFileAttributesExW(PWCHAR lpFileName, DWORD fInfoLevelId, LPWIN32_FILE_ATTRIBUTE_DATA lpFileInformation)
 {
+    NOP_FILL();
     char *filename = CreateAnsiFromWide(lpFileName);
     DebugLog("%p [%s], %u, %p", lpFileName, filename, fInfoLevelId, lpFileInformation);
 
@@ -73,6 +75,7 @@ enum {
 
 static HANDLE WINAPI CreateFileA(PCHAR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, PVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
 {
+    NOP_FILL();
     FILE *FileHandle;
 
     DebugLog("%p [%s], %#x, %#x, %p, %#x, %#x, %p", lpFileName, lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
@@ -115,6 +118,7 @@ static HANDLE WINAPI CreateFileA(PCHAR lpFileName, DWORD dwDesiredAccess, DWORD 
 
 static HANDLE WINAPI CreateFileW(PWCHAR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, PVOID lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
 {
+    NOP_FILL();
     FILE *FileHandle;
     char *filename = CreateAnsiFromWide(lpFileName);
 
@@ -164,6 +168,7 @@ static HANDLE WINAPI CreateFileW(PWCHAR lpFileName, DWORD dwDesiredAccess, DWORD
  */
 static DWORD WINAPI SetFilePointer(HANDLE hFile, LONG liDistanceToMove,  LONG *lpDistanceToMoveHigh, DWORD dwMoveMethod)
 {
+    NOP_FILL();
     int result;
 
     DebugLog("%p, %llu, %p, %u", hFile, liDistanceToMove, lpDistanceToMoveHigh, dwMoveMethod);
@@ -182,6 +187,7 @@ static DWORD WINAPI SetFilePointer(HANDLE hFile, LONG liDistanceToMove,  LONG *l
 
 static BOOL WINAPI SetFilePointerEx(HANDLE hFile, uint64_t liDistanceToMove,  uint64_t *lpNewFilePointer, DWORD dwMoveMethod)
 {
+    NOP_FILL();
     int result;
 
     //DebugLog("%p, %llu, %p, %u", hFile, liDistanceToMove, lpNewFilePointer, dwMoveMethod);
@@ -200,6 +206,7 @@ static BOOL WINAPI SetFilePointerEx(HANDLE hFile, uint64_t liDistanceToMove,  ui
 
 static BOOL WINAPI CloseHandle(HANDLE hObject)
 {
+    NOP_FILL();
     DebugLog("%p", hObject);
     if (hObject != (HANDLE) 'EVNT'
      && hObject != INVALID_HANDLE_VALUE
@@ -210,18 +217,21 @@ static BOOL WINAPI CloseHandle(HANDLE hObject)
 
 static BOOL WINAPI ReadFile(HANDLE hFile, PVOID lpBuffer, DWORD nNumberOfBytesToRead, PDWORD lpNumberOfBytesRead, PVOID lpOverlapped)
 {
+    NOP_FILL();
     *lpNumberOfBytesRead = fread(lpBuffer, 1, nNumberOfBytesToRead, hFile);
     return TRUE;
 }
 
 static BOOL WINAPI WriteFile(HANDLE hFile, PVOID lpBuffer, DWORD nNumberOfBytesToWrite, PDWORD lpNumberOfBytesWritten, PVOID lpOverlapped)
 {
+    NOP_FILL();
     *lpNumberOfBytesWritten = fwrite(lpBuffer, 1, nNumberOfBytesToWrite, hFile);
     return TRUE;
 }
 
 static BOOL WINAPI DeleteFileW(PWCHAR lpFileName)
 {
+    NOP_FILL();
     char *AnsiFilename = CreateAnsiFromWide(lpFileName);
 
     DebugLog("%p [%s]", lpFileName, AnsiFilename);
@@ -232,6 +242,7 @@ static BOOL WINAPI DeleteFileW(PWCHAR lpFileName)
 
 static BOOL WINAPI GetFileSizeEx(HANDLE hFile, uint64_t *lpFileSize)
 {
+    NOP_FILL();
     long curpos = ftell(hFile);
 
     fseek(hFile, 0, SEEK_END);
@@ -248,6 +259,7 @@ static BOOL WINAPI GetFileSizeEx(HANDLE hFile, uint64_t *lpFileSize)
 
 static HANDLE WINAPI FindFirstFileW(PWCHAR lpFileName, PVOID lpFindFileData)
 {
+    NOP_FILL();
     char *name = CreateAnsiFromWide(lpFileName);
 
     DebugLog("%p [%s], %p", lpFileName, name, lpFindFileData);
@@ -261,17 +273,20 @@ static HANDLE WINAPI FindFirstFileW(PWCHAR lpFileName, PVOID lpFindFileData)
 
 static DWORD WINAPI NtOpenSymbolicLinkObject(PHANDLE LinkHandle, DWORD DesiredAccess, PVOID ObjectAttributes)
 {
+    NOP_FILL();
     *LinkHandle = (HANDLE) 'SYMB';
     return STATUS_SUCCESS;
 }
 
 static NTSTATUS WINAPI NtQuerySymbolicLinkObject(HANDLE LinkHandle, PUNICODE_STRING LinkTarget, PULONG ReturnedLength)
 {
+    NOP_FILL();
     return STATUS_SUCCESS;
 }
 
 static NTSTATUS WINAPI NtClose(HANDLE Handle)
 {
+    NOP_FILL();
     return STATUS_SUCCESS;
 }
 
@@ -285,6 +300,7 @@ static BOOL WINAPI DeviceIoControl(
   PDWORD      lpBytesReturned,
   PVOID       lpOverlapped)
 {
+    NOP_FILL();
     DebugLog("");
     return FALSE;
 }
@@ -296,6 +312,7 @@ static NTSTATUS  NtQueryVolumeInformationFile(
  ULONG                Length,
  DWORD FsInformationClass)
 {
+    NOP_FILL();
     DebugLog("");
     return 1;
 }
@@ -306,42 +323,49 @@ static DWORD WINAPI GetFullPathNameW(
   PWCHAR  lpBuffer,
   PWCHAR  *lpFilePart)
 {
+    NOP_FILL();
     DebugLog("");
     return 0;
 }
 
 static BOOL SetEndOfFile(HANDLE hFile)
 {
+    NOP_FILL();
     DebugLog("");
     return ftruncate(fileno(hFile), ftell(hFile)) != -1;
 }
 
 static DWORD WINAPI GetFileVersionInfoSizeExW(DWORD dwFlags, PWCHAR lptstrFilename, PDWORD lpdwHandle)
 {
+    NOP_FILL();
     DebugLog("%#x, %p, %p", dwFlags, lptstrFilename, lpdwHandle);
     return 0;
 }
 
 static BOOL WINAPI GetFileVersionInfoExW(DWORD dwFlags, PWCHAR lptstrFilename, DWORD dwHandle, DWORD dwLen, PVOID lpData)
 {
+    NOP_FILL();
     DebugLog("");
     return FALSE;
 }
 
 static BOOL WINAPI VerQueryValueW(PVOID pBlock, PWCHAR lpSubBlock, PVOID  *lplpBuffer, PDWORD puLen)
 {
+    NOP_FILL();
     DebugLog("");
     return FALSE;
 }
 
 static DWORD WINAPI QueryDosDevice(PVOID lpDeviceName, PVOID lpTargetPath, DWORD ucchMax)
 {
+    NOP_FILL();
     DebugLog("");
     return 0;
 }
 
 static BOOL WINAPI GetDiskFreeSpaceExW(PWCHAR lpDirectoryName, PVOID lpFreeBytesAvailableToCaller, PVOID lpTotalNumberOfBytes, QWORD *lpTotalNumberOfFreeBytes)
 {
+    NOP_FILL();
     DebugLog("%S", lpDirectoryName);
     *lpTotalNumberOfFreeBytes = 0x000000000ULL;
     return FALSE;

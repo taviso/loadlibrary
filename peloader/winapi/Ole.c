@@ -16,6 +16,7 @@
 
 STATIC DWORD WINAPI CoCreateGuid(PVOID pguid)
 {
+    NOP_FILL();
     DebugLog("%p", pguid);
     memcpy(pguid, "GUIDGUIDGUIDGUIDGUIDGUIDGUIDGUID", 16);
     return 0;
@@ -23,30 +24,35 @@ STATIC DWORD WINAPI CoCreateGuid(PVOID pguid)
 
 STATIC DWORD CoCreateInstance(PVOID rclsid, PVOID pUnkOuter, DWORD dwClsContext, PVOID riid, PVOID *ppv)
 {
+    NOP_FILL();
     DebugLog("%p, %p, %u, %p, %p", rclsid, pUnkOuter, dwClsContext, riid, ppv);
     return -1;
 }
 
 STATIC DWORD CoInitializeEx(PVOID pvReserved, DWORD dCwoInit)
 {
+    NOP_FILL();
     DebugLog("%p, %u", pvReserved, dCwoInit);
     return -1;
 }
 
 STATIC DWORD CoSetProxyBlanket(PVOID a)
 {
+    NOP_FILL();
     DebugLog("");
     return -1;
 }
 
 STATIC DWORD CoUninitialize(PVOID a)
 {
+    NOP_FILL();
     DebugLog("");
     return -1;
 }
 
 STATIC DWORD IIDFromString(PVOID a)
 {
+    NOP_FILL();
     DebugLog("");
     return -1;
 }

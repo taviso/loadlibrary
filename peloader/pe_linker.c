@@ -40,6 +40,7 @@
 #include "ntoskernel.h"
 #include "util.h"
 #include "log.h"
+#include "hook.h"
 
 struct pe_exports {
         char *dll;
@@ -279,12 +280,9 @@ int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
                 else {
                         symname = RVA2VA(image, ((lookup_tbl[i] & ~IMAGE_ORDINAL_FLAG) + 2), char *);
                 }
-                #ifdef __x86_64__
-                            char x64_symname[255] = {0};
-                            strncpy(x64_symname, symname, strlen(symname));
-                            strcat(x64_symname, "_x64");
-                            symname = x64_symname;
-                #endif
+                if (strcmp(symname, "QueryPerformanceCounter") == 0) {
+                    printf("QueryPerformanceCounter found!");
+                }
                 if (get_export(symname, &adr) < 0) {
                         ERROR("unknown symbol: %s:%s", dll, symname);
                         address_tbl[i] = (ULONG) unknown_symbol_stub;
@@ -667,6 +665,18 @@ error:
         munmap(image, buf.st_size);
 
     return false;
+}
+
+// Unmap and unlink a dll
+bool pe_unload_library(struct pe_image pe)
+{
+    // Search PE exports
+    free(pe_exports);
+    num_pe_exports = 0;
+
+    munmap(pe.image, pe.size);
+
+    return true;
 }
 
 bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)

@@ -17,6 +17,7 @@ STATIC NTSTATUS WINAPI NtSetInformationProcess(HANDLE ProcessHandle,
                                                PVOID ProcessInformation,
                                                ULONG ProcessInformationLength)
 {
+    NOP_FILL();
     DebugLog("%p", ProcessHandle);
     return 0;
 }

@@ -82,16 +82,19 @@ typedef struct _CERT_CONTEXT {
 
 static NTSTATUS WINAPI BCryptOpenAlgorithmProvider(PVOID phAlgorithm, PWCHAR pszAlgId, PWCHAR pszImplementation, DWORD dwFlags)
 {
+    NOP_FILL();
     return STATUS_SUCCESS;
 }
 
 static NTSTATUS WINAPI BCryptCloseAlgorithmProvider(HANDLE hAlgorithm, ULONG dwFlags)
 {
+    NOP_FILL();
     return STATUS_SUCCESS;
 }
 
 static NTSTATUS WINAPI BCryptGenRandom(PVOID phAlgorithm, PUCHAR pbBuffer, ULONG cbBuffer, ULONG dwFlags)
 {
+    NOP_FILL();
     static int randomfd = -1;
 
     void __constructor init()
@@ -121,6 +124,7 @@ static BOOL WINAPI CertStrToNameW(DWORD dwCertEncodingType,
                                   DWORD *pcbEncoded,
                                   PVOID ppszError)
 {
+    NOP_FILL();
     uint16_t CertName[] = L"Totally Legitimate Certificate Name";
     char *name = CreateAnsiFromWide(pszX500);
 
@@ -149,6 +153,7 @@ static HANDLE WINAPI CertOpenStore(PCHAR lpszStoreProvider,
                                    DWORD dwFlags,
                                    PVOID pvPara)
 {
+    NOP_FILL();
     return (HANDLE) 'STOR';
 }
 
@@ -167,6 +172,7 @@ static PVOID WINAPI CertFindCertificateInStore(HANDLE hCertStore,
                                                PVOID pvFindPara,
                                                PVOID pPrevCertContext)
 {
+    NOP_FILL();
     static CERT_INFO FakeInfo = {0};
     static CERT_CONTEXT FakeCert = {0};
 
@@ -197,16 +203,19 @@ static PVOID WINAPI CertFindCertificateInStore(HANDLE hCertStore,
 
 static BOOL WINAPI CertCloseStore(HANDLE hCertStore, DWORD dwFlags)
 {
+    NOP_FILL();
     return TRUE;
 }
 
 static BOOL WINAPI CryptAcquireContextW(PVOID phProv, PWCHAR pszContainer, PWCHAR pszProvider, DWORD dwProvType, DWORD dwFlags)
 {
+    NOP_FILL();
     return TRUE;
 }
 
 static BOOL WINAPI CertFreeCertificateContext(PVOID pCertContext)
 {
+    NOP_FILL();
     return TRUE;
 }
 
@@ -217,6 +226,7 @@ enum {
 
 static BOOL WINAPI CryptCreateHash(PVOID hProv, DWORD Algid, HANDLE hKey, DWORD dwFlags, PDWORD phHash)
 {
+    NOP_FILL();
     DebugLog("%p, %#x, %p, %#x, %p", hProv, Algid, hKey, dwFlags, phHash);
 
     switch (Algid) {
@@ -242,6 +252,7 @@ enum HashParameters
 
 static BOOL WINAPI CryptGetHashParam(DWORD hHash, DWORD dwParam, PDWORD pbData, PDWORD pdwDataLen, DWORD dwFlags)
 {
+    NOP_FILL();
     DebugLog("%#x, %u, %p, %p, %#x", hHash, dwParam, pbData, pdwDataLen, dwFlags);
 
     switch (dwParam) {
@@ -262,16 +273,19 @@ static BOOL WINAPI CryptGetHashParam(DWORD hHash, DWORD dwParam, PDWORD pbData, 
 
 static BOOL WINAPI CryptSetHashParam(PVOID hHash, DWORD dwParam, PVOID pbData, DWORD dwFlags)
 {
+    NOP_FILL();
     return TRUE;
 }
 
 static BOOL WINAPI CryptImportPublicKeyInfo(HANDLE hCryptProv, DWORD dwCertEncodingType, PCERT_PUBLIC_KEY_INFO pInfo, HANDLE *phKey)
 {
+    NOP_FILL();
     return TRUE;
 }
 
 static BOOL WINAPI CryptVerifySignatureW(DWORD hHash, PVOID pbSignature, DWORD dwSigLen, HANDLE hPubKey, PVOID sDescription, DWORD dwFlags)
 {
+    NOP_FILL();
     switch (hHash) {
         case 'SHA2': {
             if (dwSigLen != 256) {
@@ -293,12 +307,14 @@ static BOOL WINAPI CryptVerifySignatureW(DWORD hHash, PVOID pbSignature, DWORD d
 
 static BOOL WINAPI CertVerifyCertificateChainPolicy(PVOID pszPolicyOID, PVOID pChainContext, PVOID pPolicyPara, PVOID pPolicyStatus)
 {
+    NOP_FILL();
     DebugLog("Certificate policy verification is not implemented #YOLO");
     return TRUE;
 }
 
 static BOOL WINAPI CryptDestroyHash(DWORD hHash)
 {
+    NOP_FILL();
     DebugLog("%p", hHash);
 
     assert(hHash == 'SHA2' || hHash == 'SHA1');
@@ -322,4 +338,3 @@ DECLARE_CRT_EXPORT("CryptGetHashParam", CryptGetHashParam);
 DECLARE_CRT_EXPORT("CryptSetHashParam", CryptSetHashParam);
 DECLARE_CRT_EXPORT("CryptVerifySignatureW", CryptVerifySignatureW);
 DECLARE_CRT_EXPORT("CryptDestroyHash", CryptDestroyHash);
-

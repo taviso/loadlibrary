@@ -1,0 +1,213 @@
+;; x64 Windows <=> Linux x86_64 calling convention switcher.
+;; Author: Alessandro De Vito (cube0x8)
+
+extern malloc
+extern free
+
+SECTION .bss
+    temp_buffer: resq 0x5
+    ptr_array: resq 0xc8
+
+SECTION .data
+    index:   dd  0x0
+
+SECTION .text
+    GLOBAL nix_to_win
+    GLOBAL win_to_nix
+
+
+nix_to_win:
+    ;; pusha
+    push rdi
+    push rsi
+    push rdx
+    push rcx
+    push rbx
+    push rax
+    push r8
+    push r9
+    ;; allocate 16 bytes on the heap
+    mov rdi, 0x10
+    call malloc WRT ..plt
+    ;; get the original return address from the stack
+    mov r11, [rsp+0x40]
+    ;; store it on the heap
+    mov [rax], r11
+    ;; store rbx (preserved register)
+    mov rbx, QWORD[rsp+0x18]
+    mov [rax+0x8], rbx
+    ;; store the pointer to the heap block in the global array
+    lea rbx, [rel ptr_array]
+    mov ecx, [rel index]
+    imul edi, ecx, 0x8
+    mov [rbx+rdi], rax
+    inc ecx
+    mov DWORD[rel index], ecx
+
+    ;; restore registers
+    pop r9
+    pop r8
+    pop rax
+    pop rbx
+    pop rcx
+    pop rdx
+    pop rsi
+    pop rdi
+
+    ;; skip the original return address
+    add rsp, 0x8
+
+    ;; calling convetion switch
+    push r9
+    push r8
+    ;; slack space
+    sub rsp, 0x20
+
+    mov r9,  rcx
+    mov r8,  rdx
+    mov rdx, rsi
+    mov rcx, rdi
+
+    ;; call the target function
+    call rax
+    ;; store the result in the temporary buffer
+    lea rbx, [rel temp_buffer]
+    mov [rbx], rax
+    ;; reset the stack to its original form (slack space - r9 -r8)
+    add rsp, 0x30
+
+    ;; take the array_ptr index and decrement it
+    mov ecx, [rel index]
+    dec ecx
+    mov DWORD[rel index], ecx
+    ;; take our heap block address
+    lea rbx, [rel ptr_array]
+    imul edi, ecx, 0x8
+    mov r11, QWORD [rbx+rdi]
+    ;; get the old original return address and store it in the temporary buffer
+    mov rcx, QWORD [r11]
+    lea rbx, [rel temp_buffer]
+    mov [rbx+0x8], rcx
+    ;; get the old rbx value and store it in the temporary buffer
+    mov rax, QWORD [r11+0x8]
+    mov [rbx+0x10], rax
+    ;; free the heap block
+    mov rdi, r11
+    call free WRT ..plt
+
+    ;; restore the result
+    lea r11, [rel temp_buffer]
+    mov rax, QWORD[r11]
+    ;; restore rbx
+    mov rbx, [r11+0x10]
+    ;; restore the original return address
+    mov rcx, [r11+0x8]
+    push rcx
+    ret
+
+win_to_nix:
+    ;; pusha
+    push rdi
+    push rsi
+    push rdx
+    push rcx
+    push rbx
+    push rax
+    push r8
+    push r9
+    ;; allocate 32 bytes on the heap
+    mov rdi, 0x20
+    call malloc WRT ..plt
+    ;; get the original return address from the stack
+    mov r11, [rsp+0x40]
+    ;; store it on the heap
+    mov [rax], r11
+    ;; store the pointer to the heap block in the global array
+    lea rbx, [rel ptr_array]
+    mov ecx, [rel index]
+    imul edi, ecx, 0x8
+    mov [rbx+rdi], rax
+    inc ecx
+    mov DWORD[rel index], ecx
+
+    ;; store rdi and rsi (preserved registers on windows x64)
+    mov rdi, QWORD [rsp+0x38]
+    mov [rax+0x8], rdi
+    mov rsi, QWORD [rsp+0x30]
+    mov [rax+0x10], rsi
+    mov rbx, QWORD [rsp+0x18]
+    mov [rax+0x18], rbx
+
+    ;; restore registers
+    pop r9
+    pop r8
+    pop rax
+    pop rbx
+    pop rcx
+    pop rdx
+    pop rsi
+    pop rdi
+    ;; skip the original return address
+    add rsp, 0x8
+
+    mov rdi, rcx
+    mov rsi, rdx
+    mov rdx, r8
+    mov rcx, r9
+    mov r8, QWORD [rsp+0x20]
+    mov r9, QWORD [rsp+0x28]
+    ;; skip slack space + 5th and 6th args: (0x20) + arg5 (0x8) + arg6 (0x8) = 0x30
+    add rsp, 0x30
+    ;; this 0x30 bytes can be potentially overwritten by the function we are going to call
+    ;; should we preserve them?
+
+    call rax
+    ;; store the result in the temporary buffer
+    lea rbx, [rel temp_buffer]
+    mov [rbx], rax
+    ;; reset the stack to its original form (slack space + r9 + r8)
+    sub rsp, 0x30
+
+    ;; take the array_ptr index and decrement it
+    mov ecx, [rel index]
+    dec ecx
+    mov DWORD[rel index], ecx
+    ;; take our heap block address
+    lea rbx, [rel ptr_array]
+    imul edi, ecx, 0x8
+    mov r11, QWORD [rbx+rdi]
+
+    ;; get the old original return address and store it in the temporary buffer
+    mov rcx, [r11]
+    lea rbx, [rel temp_buffer]
+    mov [rbx+0x8], rcx
+    ;; restore callee preserved registers
+
+    ;; rdi
+    mov rax, QWORD [r11+0x8]
+    mov [rbx+0x10], rax
+    ;; rsi
+    mov rax, QWORD [r11+0x10]
+    mov [rbx+0x18], rax
+    ;; rbx
+    mov rax, QWORD [r11+0x18]
+    mov [rbx+0x20], rax
+    ;; free the heap block
+    mov rdi, r11
+    call free WRT ..plt
+
+    ;; restore the result
+    lea r11, [rel temp_buffer]
+    mov rax, QWORD[r11]
+    ;; restore the original return address
+    mov rcx, [r11+0x8]
+    ;; restore rdi
+    mov rdi, QWORD[r11+0x10]
+    ;; restore rsi
+    mov rsi, QWORD[r11+0x18]
+    ;; restore rbx
+    mov rbx, QWORD[r11+0x20]
+
+    ;; push the original return address
+    push rcx
+    ret

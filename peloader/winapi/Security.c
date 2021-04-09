@@ -14,6 +14,7 @@
 
 BOOL WINAPI LookupPrivilegeValueW(PVOID lpSystemName, PVOID lpName, PVOID lpLuid)
 {
+    NOP_FILL();
     DebugLog("%p, %p, %p", lpSystemName, lpName, lpLuid);
 
     return FALSE;

@@ -32,6 +32,7 @@ typedef struct _KEY_VALUE_PARTIAL_INFORMATION {
 
 STATIC LONG WINAPI RegOpenKeyExW(HANDLE hKey, PVOID lpSubKey, DWORD ulOptions, DWORD samDesired, PHANDLE phkResult)
 {
+    NOP_FILL();
     LONG Result = -1;
     char *ansikey = CreateAnsiFromWide(lpSubKey);
 
@@ -53,6 +54,7 @@ STATIC LONG WINAPI RegOpenKeyExW(HANDLE hKey, PVOID lpSubKey, DWORD ulOptions, D
 
 STATIC LONG WINAPI RegCloseKey(HANDLE hKey)
 {
+    NOP_FILL();
     DebugLog("%p");
     return 0;
 }
@@ -71,6 +73,7 @@ STATIC LONG WINAPI RegQueryInfoKeyW(
   PDWORD   lpcbSecurityDescriptor,
   PVOID    lpftLastWriteTime)
 {
+    NOP_FILL();
     DebugLog("");
 
     if (lpClass || lpcClass || lpReserved || lpcSubKeys || lpcMaxSubKeyLen || lpcMaxClassLen || lpcMaxValueLen || lpcbSecurityDescriptor || lpftLastWriteTime) {
@@ -101,6 +104,7 @@ STATIC NTSTATUS WINAPI NtEnumerateValueKey(
   ULONG                       Length,
   PULONG                      ResultLength
 ) {
+    NOP_FILL();
     DebugLog("%p, %u, %u, %p, %u, %p", KeyHandle, Index, KeyValueInformationClass, KeyValueInformation, Length, ResultLength);
 
     if (KeyValueInformationClass != 0) {
@@ -144,6 +148,7 @@ STATIC NTSTATUS WINAPI NtQueryValueKey(
  PULONG                      ResultLength
 )
 {
+    NOP_FILL();
     DebugLog("%p, %p, %u, %u, %u, %p", KeyHandle, ValueName, KeyValueInformationClass, KeyValueInformation, Length, ResultLength);
 
     if (KeyValueInformationClass != 2) {
@@ -180,6 +185,7 @@ STATIC NTSTATUS WINAPI NtQueryValueKey(
 
 STATIC LONG WINAPI RegCreateKeyExW(HANDLE hKey, PVOID lpSubKey, DWORD Reserved, PVOID lpClass, DWORD dwOptions, PVOID samDesired, PVOID lpSecurityAttributes, PVOID phkResult, PDWORD lpdwDisposition)
 {
+    NOP_FILL();
     DebugLog("%p, %p, %#x, %p, %#x, %p, %p, %p, %p",
              hKey,
              lpSubKey,

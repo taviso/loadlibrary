@@ -23,6 +23,7 @@
 // you need to debug exception handling.
 VOID DumpExceptionChain(VOID)
 {
+    NOP_FILL();
     PEXCEPTION_FRAME ExceptionList;
     DWORD Depth;
 
@@ -43,6 +44,7 @@ VOID DumpExceptionChain(VOID)
 
 static WINAPI PVOID RaiseException(DWORD dwExceptionCode, DWORD dwExceptionFlags, DWORD nNumberOfArguments, PVOID Arguments)
 {
+    NOP_FILL();
     PEXCEPTION_FRAME ExceptionList;
     PEXCEPTION_FRAME Dispatch = NULL;
     DWORD Disposition;

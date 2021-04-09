@@ -1,7 +1,7 @@
-CFLAGS  = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -mstackrealign
-CPPFLAGS= -D_GNU_SOURCE -I. -Iintercept -Ipeloader
+CFLAGS  = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -Iintercept/include -Ipeloader -mstackrealign
+CPPFLAGS= -D_GNU_SOURCE -I.
 LDFLAGS = $(CFLAGS) -lm -Wl,--dynamic-list=exports.lst
-LDLIBS  = -Wl,intercept/libhook.a -Wl,intercept/libZydis.a,--whole-archive -Wl,peloader/libpeloader.a,--no-whole-archive
+LDLIBS  = -Wl,intercept/libhook.a -Wl,intercept/libx64_dispatcher.a -Wl,intercept/libZydis.a,--whole-archive -Wl,intercept/libsubhook.a -Wl,peloader/libpeloader.a,--no-whole-archive
 
 .PHONY: clean peloader intercept
 
@@ -19,13 +19,16 @@ all: $(TARGETS)
 
 debug: CFLAGS += $(DEBUG_CFLAGS)
 debug: BUILD_TARGET = "debug"
+debug: CMAKE_FLAGS = -DCMAKE_BUILD_TYPE=Debug
 debug: $(TARGETS)
 	-mkdir -p faketemp
 
 intercept:
-	cd intercept; mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Debug ..; make
+	cd intercept; mkdir build; cd build; cmake $(CMAKE_FLAGS) ..; make
 	cp intercept/build/libhook.a intercept/libhook.a
 	cp intercept/build/zydis/libZydis.a intercept/libZydis.a
+	cp intercept/build/subhook/libsubhook.a intercept/libsubhook.a
+	cp intercept/build/libx64_dispatcher.a intercept/libx64_dispatcher.a
 
 peloader:
 	make -C peloader $(BUILD_TARGET)
@@ -37,14 +40,21 @@ intercept/libhook.a: intercept
 
 mpclient: CFLAGS += -m32
 mpclient: LDFLAGS += -m32
+mpclient: CMAKE_FLAGS += -DARCH:STRING=x86
 mpclient: mpclient.o | peloader intercept
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
-mpclient_x64: CFLAGS += -g -O0
+mpclient_x64: CFLAGS += -g -O0  -fPIC
+mpclient_x64: CMAKE_FLAGS = -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=Debug
 mpclient_x64: mpclient_x64.o | peloader_x64 intercept
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
+tests: CMAKE_FLAGS = -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=Debug
+tests: peloader_x64
+	cd tests; mkdir build; cd build; cmake $(CMAKE_FLAGS) ..; cd tests; make
+	cd tests; ./build/tests/check_hook; ./build/tests/check_peloader
+
 clean:
-	rm -rf a.out core *.o core.* vgcore.* gmon.out mpclient intercept/build intercept/libhook.a intercept/libZydis.a
+	rm -rf a.out core *.o core.* vgcore.* gmon.out mpclient intercept/build intercept/*.a tests/build
 	make -C peloader clean
 	rm -rf faketemp

@@ -1118,8 +1118,10 @@ struct pe_image {
 } pe_image;
 
 bool pe_load_library(const char *filename, void **image, size_t *size);
-void * get_export_address(const char *name);
+
+void *get_export_address(const char *name);
 int link_pe_images(struct pe_image *pe_image, unsigned short n);
+bool pe_unload_library(struct pe_image pe);
 int get_export(const char *name, void *func);
 int get_data_export(char *name, uint32_t base, void *result);
 bool setup_nt_threadinfo(PEXCEPTION_HANDLER handler);

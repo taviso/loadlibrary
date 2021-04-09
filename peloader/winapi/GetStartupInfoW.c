@@ -35,6 +35,7 @@ typedef struct _STARTUPINFO {
 
 STATIC void WINAPI GetStartupInfoA(LPSTARTUPINFO lpStartupInfo)
 {
+    NOP_FILL();
     memset(lpStartupInfo, 0, sizeof *lpStartupInfo);
 
     DebugLog("GetStartupInfoA(%p)", lpStartupInfo);
@@ -43,6 +44,7 @@ STATIC void WINAPI GetStartupInfoA(LPSTARTUPINFO lpStartupInfo)
 
 STATIC void WINAPI GetStartupInfoW(LPSTARTUPINFO lpStartupInfo)
 {
+    NOP_FILL();
     memset(lpStartupInfo, 0, sizeof *lpStartupInfo);
 
     DebugLog("GetStartupInfoW(%p)", lpStartupInfo);
@@ -50,12 +52,14 @@ STATIC void WINAPI GetStartupInfoW(LPSTARTUPINFO lpStartupInfo)
 
 STATIC PVOID WINAPI GetCommandLineA(void)
 {
+    NOP_FILL();
     DebugLog("");
     return "totallylegit.exe notfake very real";
 }
 
 STATIC PVOID WINAPI GetCommandLineW(void)
 {
+    NOP_FILL();
     DebugLog("");
     return L"totallylegit.exe notfake very real";
 }

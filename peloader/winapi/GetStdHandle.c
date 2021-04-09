@@ -23,6 +23,7 @@
 
 STATIC HANDLE WINAPI GetStdHandle(DWORD nStdHandle)
 {
+    NOP_FILL();
     DebugLog("%d", nStdHandle);
 
     switch (nStdHandle) {
@@ -39,6 +40,7 @@ STATIC HANDLE WINAPI GetStdHandle(DWORD nStdHandle)
 
 STATIC DWORD WINAPI GetFileType(HANDLE hFile)
 {
+    NOP_FILL();
     DebugLog("%p", hFile);
 
     return FILE_TYPE_CHAR;

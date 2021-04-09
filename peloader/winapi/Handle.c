@@ -16,6 +16,7 @@
 
 STATIC BOOL WINAPI DuplicateHandle(HANDLE hSourceProcessHandle, HANDLE hSourceHandle, HANDLE hTargetProcessHandle, PHANDLE lpTargetHandle, DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwOptions)
 {
+    NOP_FILL();
     DebugLog("%p, %p, %p, %p, %#x, %u, %#x", hSourceProcessHandle, hSourceHandle, hTargetProcessHandle, lpTargetHandle, dwDesiredAccess, bInheritHandle, dwOptions);
 
     // lol i dunno
@@ -25,6 +26,7 @@ STATIC BOOL WINAPI DuplicateHandle(HANDLE hSourceProcessHandle, HANDLE hSourceHa
 
 STATIC UINT WINAPI SetHandleCount(UINT handleCount)
 {
+    NOP_FILL();
     DebugLog("%u", handleCount);
     return handleCount;
 }

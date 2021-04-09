@@ -22,10 +22,15 @@ bool IsGdbPresent();
 
 #define MIN(x, y)       ((x) > (y) ? (y) : (x))
 
+
 static inline void *ZeroMemory(void *s, size_t n)
 {
     return memset(s, 0, n);
 }
+
+#ifdef __x86_64__
+#define NOP_FILL() __asm__ ("nop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop");
+#endif
 
 #else
 # warning util.h included twice

@@ -43,13 +43,13 @@
 #include "pe_linker.h"
 #include "ntoskernel.h"
 #include "util.h"
-#include "hook.h"
 #include "log.h"
 #include "rsignal.h"
 #include "engineboot.h"
 #include "scanreply.h"
 #include "streambuffer.h"
 #include "openscan.h"
+#include "hook.h"
 
 // Any usage limits to prevent bugs disrupting system.
 const struct rlimit kUsageLimits[] = {
@@ -59,7 +59,7 @@ const struct rlimit kUsageLimits[] = {
     [RLIMIT_NOFILE] = { .rlim_cur = 32,         .rlim_max = 32 },
 };
 
-DWORD (* __rsignal)(void *rdi, void *rsi, DWORD Code, PHANDLE KernelHandle, PVOID Params, DWORD Size);
+DWORD (* __rsignal)(PHANDLE KernelHandle, DWORD Code, PVOID Params, DWORD Size);
 
 static DWORD EngineScanCallback(PSCANSTRUCT Scan)
 {
@@ -173,6 +173,8 @@ int main(int argc, char **argv, char **envp)
         errx(EXIT_FAILURE, "Failed to resolve mpengine entrypoint");
     }
 
+    P_REDIRECT export_entry = insert_function_redirect(__rsignal, NULL, CALLING_CONVENTION_SWITCH, NIX2WIN);
+
     EXCEPTION_DISPOSITION ExceptionHandler(struct _EXCEPTION_RECORD *ExceptionRecord,
             struct _EXCEPTION_FRAME *EstablisherFrame,
             struct _CONTEXT *ContextRecord,
@@ -190,7 +192,8 @@ int main(int argc, char **argv, char **envp)
     setup_nt_threadinfo(ExceptionHandler);
 
     // Call DllMain()
-    image.entry((PVOID) 'MPEN', DLL_PROCESS_ATTACH, NULL);
+    P_REDIRECT entry_point = insert_function_redirect(image.entry, NULL, CALLING_CONVENTION_SWITCH, NIX2WIN);
+    image.entry((PVOID) 'MPENENGN', DLL_PROCESS_ATTACH, NULL);
 
     // Install usage limits to prevent system crash.
     setrlimit(RLIMIT_CORE, &kUsageLimits[RLIMIT_CORE]);
@@ -221,7 +224,7 @@ int main(int argc, char **argv, char **envp)
     BootParams.EngineConfig = &EngineConfig;
     KernelHandle = NULL;
 
-    if (__rsignal(NULL, NULL, RSIG_BOOTENGINE, &KernelHandle, &BootParams, sizeof BootParams) != 0) {
+    if (__rsignal(&KernelHandle, RSIG_BOOTENGINE, &BootParams, sizeof BootParams) != 0) {
         LogMessage("__rsignal(RSIG_BOOTENGINE) returned failure, missing definitions?");
         LogMessage("Make sure the VDM files and mpengine.dll are in the engine directory");
         return 1;
@@ -257,7 +260,7 @@ int main(int argc, char **argv, char **envp)
 
         LogMessage("Scanning %s...", *argv);
 
-        if (__rsignal(NULL, NULL, RSIG_SCAN_STREAMBUFFER, &KernelHandle, &ScanParams, sizeof ScanParams) != 0) {
+        if (__rsignal(&KernelHandle, RSIG_SCAN_STREAMBUFFER, &ScanParams, sizeof ScanParams) != 0) {
             LogMessage("__rsignal(RSIG_SCAN_STREAMBUFFER) returned failure, file unreadable?");
             return 1;
         }

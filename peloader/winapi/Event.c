@@ -19,6 +19,7 @@ extern void WINAPI SetLastError(DWORD dwErrCode);
 
 static HANDLE WINAPI CreateEventW(PVOID lpEventAttributes, BOOL bManualReset, BOOL bInitialState, PWCHAR lpName)
 {
+    NOP_FILL();
     char *AnsiName;
 #ifndef NDEBUG
     AnsiName = lpName ? CreateAnsiFromWide(lpName) : NULL;
@@ -37,12 +38,14 @@ static HANDLE WINAPI CreateEventW(PVOID lpEventAttributes, BOOL bManualReset, BO
 
 static BOOL WINAPI SetEvent(HANDLE hEvent)
 {
+    NOP_FILL();
     DebugLog("%p", hEvent);
     return TRUE;
 }
 
 static BOOL WINAPI ResetEvent(HANDLE hEvent)
 {
+    NOP_FILL();
     DebugLog("%p", hEvent);
     return TRUE;
 }

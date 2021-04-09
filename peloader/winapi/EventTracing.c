@@ -21,6 +21,7 @@ STATIC ULONG WINAPI RegisterTraceGuidsW(PVOID RequestAddress,
                                  PVOID MofResourceName,
                                  PVOID RegistrationHandle)
 {
+    NOP_FILL();
     DebugLog("%p, %p, %p, %u, %p, %p, %p, %p",
              RequestAddress,
              RequestContext,
@@ -36,12 +37,14 @@ STATIC ULONG WINAPI RegisterTraceGuidsW(PVOID RequestAddress,
 
 STATIC ULONG WINAPI UnregisterTraceGuids(HANDLE RegistrationHandle)
 {
+    NOP_FILL();
     DebugLog("%p", RegistrationHandle);
     return STATUS_SUCCESS;
 }
 
 static ULONG WINAPI EventActivityIdControl(ULONG ControlCode, LPGUID ActivityId)
 {
+    NOP_FILL();
     DebugLog("%u, %p", ControlCode, ActivityId);
     return STATUS_SUCCESS;
 };

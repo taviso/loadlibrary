@@ -26,6 +26,7 @@
 
 STATIC PVOID WINAPI VirtualAlloc(PVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect)
 {
+    NOP_FILL();
     if (flAllocationType & ~(MEM_COMMIT | MEM_RESERVE)) {
         DebugLog("flAllocationType %#x not implemnted", flAllocationType);
         return NULL;
@@ -45,6 +46,7 @@ STATIC PVOID WINAPI VirtualAlloc(PVOID lpAddress, SIZE_T dwSize, DWORD flAllocat
 
 STATIC BOOL WINAPI VirtualProtect(PVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpflOldProtect)
 {
+    NOP_FILL();
     if (flNewProtect != PAGE_READONLY) {
         DebugLog("unimplemented VirtualProtect() request, %#x", flNewProtect);
     }
@@ -53,11 +55,13 @@ STATIC BOOL WINAPI VirtualProtect(PVOID lpAddress, SIZE_T dwSize, DWORD flNewPro
 
 STATIC BOOL WINAPI VirtualUnlock(PVOID lpAddress, SIZE_T dwSize)
 {
+    NOP_FILL();
     return TRUE;
 }
 
 STATIC BOOL WINAPI VirtualFree(PVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType)
 {
+    NOP_FILL();
     if (dwFreeType == MEM_RELEASE)
         code_free(lpAddress);
     return TRUE;
