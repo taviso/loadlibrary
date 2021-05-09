@@ -23,7 +23,7 @@ typedef struct _SYSTEMTIME {
   WORD wMilliseconds;
 } SYSTEMTIME, *PSYSTEMTIME;
 
-extern void WINAPI SetLastError(DWORD dwErrCode);
+extern void WINAPI SetLastErrorLocal(DWORD dwErrCode);
 
 // These routines are called to check if signing certificates have expired, so
 // should return similar values.
@@ -62,7 +62,7 @@ STATIC BOOL WINAPI QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount)
     struct timespec tm;
     DebugLog("");
 
-    SetLastError(0);
+    SetLastErrorLocal(0);
 
     if (clock_gettime(CLOCK_MONOTONIC_RAW, &tm) != 0)
         return FALSE;
@@ -96,7 +96,7 @@ STATIC BOOL WINAPI QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
 
     *lpFrequency = tm.tv_nsec;
 
-    SetLastError(0);
+    SetLastErrorLocal(0);
 
     return TRUE;
 }
@@ -104,7 +104,7 @@ STATIC BOOL WINAPI QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
 STATIC BOOL WINAPI GetProcessTimes(HANDLE hProcess, PFILETIME lpCreationTime, PFILETIME lpExitTime, PFILETIME lpKernelTime, PFILETIME lpUserTime)
 {
     NOP_FILL();
-    SetLastError(0);
+    SetLastErrorLocal(0);
     DebugLog("");
     return FALSE;
 }
@@ -123,14 +123,14 @@ STATIC BOOL WINAPI FileTimeToSystemTime(PFILETIME lpFileTime, PSYSTEMTIME lpSyst
     return FALSE;
 }
 
-DECLARE_CRT_EXPORT("GetSystemTime", GetSystemTime);
-DECLARE_CRT_EXPORT("SystemTimeToFileTime", SystemTimeToFileTime);
-DECLARE_CRT_EXPORT("GetSystemTimePreciseAsFileTime", GetSystemTimePreciseAsFileTime);
-DECLARE_CRT_EXPORT("GetSystemTimeAsFileTime", GetSystemTimeAsFileTime);
-DECLARE_CRT_EXPORT("QueryPerformanceCounter", QueryPerformanceCounter);
-DECLARE_CRT_EXPORT("QueryPerformanceFrequency", QueryPerformanceFrequency);
-DECLARE_CRT_EXPORT("GetTickCount", GetTickCount);
-DECLARE_CRT_EXPORT("GetTickCount64", GetTickCount64);
-DECLARE_CRT_EXPORT("GetProcessTimes", GetProcessTimes);
-DECLARE_CRT_EXPORT("DosDateTimeToFileTime", DosDateTimeToFileTime);
-DECLARE_CRT_EXPORT("FileTimeToSystemTime", FileTimeToSystemTime);
+DECLARE_CRT_EXPORT("GetSystemTime", GetSystemTime, 1);
+DECLARE_CRT_EXPORT("SystemTimeToFileTime", SystemTimeToFileTime, 2);
+DECLARE_CRT_EXPORT("GetSystemTimePreciseAsFileTime", GetSystemTimePreciseAsFileTime, 1);
+DECLARE_CRT_EXPORT("GetSystemTimeAsFileTime", GetSystemTimeAsFileTime, 1);
+DECLARE_CRT_EXPORT("QueryPerformanceCounter", QueryPerformanceCounter, 1);
+DECLARE_CRT_EXPORT("QueryPerformanceFrequency", QueryPerformanceFrequency, 1);
+DECLARE_CRT_EXPORT("GetTickCount", GetTickCount, 0);
+DECLARE_CRT_EXPORT("GetTickCount64", GetTickCount64, 0);
+DECLARE_CRT_EXPORT("GetProcessTimes", GetProcessTimes, 5);
+DECLARE_CRT_EXPORT("DosDateTimeToFileTime", DosDateTimeToFileTime, 3);
+DECLARE_CRT_EXPORT("FileTimeToSystemTime", FileTimeToSystemTime, 2);

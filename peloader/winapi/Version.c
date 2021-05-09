@@ -122,11 +122,11 @@ static DWORD WINAPI GetVersionExA(PRTL_OSVERSIONINFOEXW lpVersionInformation)
 }
 
 
-DECLARE_CRT_EXPORT("GetVersion", GetVersion);
-DECLARE_CRT_EXPORT("GetVersionExA", GetVersionExA);
-DECLARE_CRT_EXPORT("RtlGetVersion", RtlGetVersion);
-DECLARE_CRT_EXPORT("GetSystemInfo", GetSystemInfo);
-DECLARE_CRT_EXPORT("GetSystemDefaultLCID", GetSystemDefaultLCID);
-DECLARE_CRT_EXPORT("NtQuerySystemInformation", NtQuerySystemInformation);
-DECLARE_CRT_EXPORT("GetComputerNameExW", GetComputerNameExW);
-DECLARE_CRT_EXPORT("GetProductInfo", GetProductInfo);
+DECLARE_CRT_EXPORT("GetVersion", GetVersion, 0);
+DECLARE_CRT_EXPORT("GetVersionExA", GetVersionExA, 1);
+DECLARE_CRT_EXPORT("RtlGetVersion", RtlGetVersion, 1);
+DECLARE_CRT_EXPORT("GetSystemInfo", GetSystemInfo, 1);
+DECLARE_CRT_EXPORT("GetSystemDefaultLCID", GetSystemDefaultLCID, 0);
+DECLARE_CRT_EXPORT("NtQuerySystemInformation", NtQuerySystemInformation, 4);
+DECLARE_CRT_EXPORT("GetComputerNameExW", GetComputerNameExW, 3);
+DECLARE_CRT_EXPORT("GetProductInfo", GetProductInfo, 5);

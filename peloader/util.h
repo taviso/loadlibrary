@@ -28,9 +28,15 @@ static inline void *ZeroMemory(void *s, size_t n)
     return memset(s, 0, n);
 }
 
-#ifdef __x86_64__
 #define NOP_FILL() __asm__ ("nop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop");
-#endif
+
+union long_int64 {
+    int64_t value;
+    struct {
+        int32_t low;
+        int32_t high;
+    };
+};
 
 #else
 # warning util.h included twice

@@ -20,6 +20,51 @@ static int TlsIndex = 1;
 extern uintptr_t LocalStorage[1024];
 extern PFLS_CALLBACK_FUNCTION FlsCallbacks[1024];
 
+
+STATIC DWORD TlsAllocLocal(void)
+{
+    if (TlsIndex >= ARRAY_SIZE(LocalStorage) - 1) {
+        DebugLog("TlsAlloc() => %#x", TlsIndex);
+        return TLS_OUT_OF_INDEXES;
+    }
+
+    return TlsIndex++;
+}
+
+STATIC BOOL TlsSetValueLocal(DWORD dwTlsIndex, PVOID lpTlsValue)
+{
+    DebugLog("TlsSetValue(%u, %p)", dwTlsIndex, lpTlsValue);
+
+    if (dwTlsIndex < ARRAY_SIZE(LocalStorage)) {
+        LocalStorage[dwTlsIndex] = (uintptr_t) (lpTlsValue);
+        return TRUE;
+    }
+
+    DebugLog("dwTlsIndex higher than current maximum");
+    return FALSE;
+}
+
+STATIC DWORD TlsGetValueLocal(DWORD dwTlsIndex)
+{
+    if (dwTlsIndex < ARRAY_SIZE(LocalStorage)) {
+        return LocalStorage[dwTlsIndex];
+    }
+
+    return 0;
+}
+
+STATIC BOOL TlsFreeLocal(DWORD dwTlsIndex)
+{
+    NOP_FILL();
+    if (dwTlsIndex < ARRAY_SIZE(LocalStorage)) {
+        LocalStorage[dwTlsIndex] = (uintptr_t) NULL;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+
 STATIC DWORD WINAPI TlsAlloc(void)
 {
     NOP_FILL();
@@ -73,7 +118,7 @@ static DWORD WINAPI FlsAlloc(PVOID lpCallback)
     DebugLog("%p", lpCallback);
 
     // The primary API difference is the availability of callbacks for fibers.
-    if ((Result = TlsAlloc()) != TLS_OUT_OF_INDEXES) {
+    if ((Result = TlsAllocLocal()) != TLS_OUT_OF_INDEXES) {
         FlsCallbacks[Result] = lpCallback;
     }
 
@@ -85,7 +130,7 @@ static DWORD WINAPI FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
     NOP_FILL();
     DebugLog("%#x, %p", dwFlsIndex, lpFlsData);
 
-    return TlsSetValue(dwFlsIndex, lpFlsData);
+    return TlsSetValueLocal(dwFlsIndex, lpFlsData);
 }
 
 static DWORD WINAPI FlsGetValue(DWORD dwFlsIndex)
@@ -93,7 +138,7 @@ static DWORD WINAPI FlsGetValue(DWORD dwFlsIndex)
     NOP_FILL();
     DebugLog("%#x", dwFlsIndex);
 
-    return TlsGetValue(dwFlsIndex);
+    return TlsGetValueLocal(dwFlsIndex);
 }
 
 static BOOL WINAPI FlsFree(DWORD dwFlsIndex)
@@ -105,15 +150,15 @@ static BOOL WINAPI FlsFree(DWORD dwFlsIndex)
         FlsCallbacks[dwFlsIndex]((PVOID)(TlsGetValue(dwFlsIndex)));
     }
 
-    return TlsFree(dwFlsIndex);
+    return TlsFreeLocal(dwFlsIndex);
 }
 
-DECLARE_CRT_EXPORT("TlsFree", TlsFree);
-DECLARE_CRT_EXPORT("TlsAlloc", TlsAlloc);
-DECLARE_CRT_EXPORT("TlsSetValue", TlsSetValue);
-DECLARE_CRT_EXPORT("TlsGetValue", TlsGetValue);
+DECLARE_CRT_EXPORT("TlsFree", TlsFree, 1);
+DECLARE_CRT_EXPORT("TlsAlloc", TlsAlloc, 0);
+DECLARE_CRT_EXPORT("TlsSetValue", TlsSetValue, 2);
+DECLARE_CRT_EXPORT("TlsGetValue", TlsGetValue, 1);
 
-DECLARE_CRT_EXPORT("FlsFree", FlsFree);
-DECLARE_CRT_EXPORT("FlsAlloc", FlsAlloc);
-DECLARE_CRT_EXPORT("FlsSetValue", FlsSetValue);
-DECLARE_CRT_EXPORT("FlsGetValue", FlsGetValue);
+DECLARE_CRT_EXPORT("FlsFree", FlsFree, 1);
+DECLARE_CRT_EXPORT("FlsAlloc", FlsAlloc, 1);
+DECLARE_CRT_EXPORT("FlsSetValue", FlsSetValue, 2);
+DECLARE_CRT_EXPORT("FlsGetValue", FlsGetValue, 1);

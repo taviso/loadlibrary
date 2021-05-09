@@ -16,7 +16,7 @@
 
 #define ERROR_ENVVAR_NOT_FOUND 203
 
-extern void WINAPI SetLastError(DWORD dwErrCode);
+extern void WINAPI SetLastErrorLocal(DWORD dwErrCode);
 
 WCHAR EnvironmentStrings[] =
     L"ALLUSERSPROFILE=AllUsersProfile\0"
@@ -57,7 +57,7 @@ STATIC DWORD WINAPI GetEnvironmentVariableW(PWCHAR lpName, PVOID lpBuffer, DWORD
     } else if (strcmp(AnsiName, "MP_METASTORE_DISABLE") == 0) {
         memcpy(lpBuffer, L"1", sizeof(L"1"));
     } else {
-        SetLastError(ERROR_ENVVAR_NOT_FOUND);
+        SetLastErrorLocal(ERROR_ENVVAR_NOT_FOUND);
     }
 
     free(AnsiName);
@@ -120,8 +120,8 @@ static DWORD WINAPI GetEnvironmentVariableA(PCHAR lpName, PVOID lpBuffer, DWORD 
     return 0;
 }
 
-DECLARE_CRT_EXPORT("GetEnvironmentStringsW", GetEnvironmentStringsW);
-DECLARE_CRT_EXPORT("FreeEnvironmentStringsW", FreeEnvironmentStringsW);
-DECLARE_CRT_EXPORT("GetEnvironmentVariableW", GetEnvironmentVariableW);
-DECLARE_CRT_EXPORT("ExpandEnvironmentStringsW", ExpandEnvironmentStringsW);
-DECLARE_CRT_EXPORT("GetEnvironmentVariableA", GetEnvironmentVariableA);
+DECLARE_CRT_EXPORT("GetEnvironmentStringsW", GetEnvironmentStringsW, 0);
+DECLARE_CRT_EXPORT("FreeEnvironmentStringsW", FreeEnvironmentStringsW, 1);
+DECLARE_CRT_EXPORT("GetEnvironmentVariableW", GetEnvironmentVariableW, 3);
+DECLARE_CRT_EXPORT("ExpandEnvironmentStringsW", ExpandEnvironmentStringsW, 3);
+DECLARE_CRT_EXPORT("GetEnvironmentVariableA", GetEnvironmentVariableA, 3);

@@ -1,9 +1,9 @@
-CFLAGS    	 = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -mstackrealign
+CFLAGS    	 = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -I../include -mstackrealign
 CPPFLAGS  	 = -D_GNU_SOURCE -I. -I../intercept/include
 LDFLAGS   	 = $(CFLAGS) -lm
 LDLIBS	  	 = -Wl,--whole-archive,libpeloader.a,--no-whole-archive -Wl,../intercept/libhook.a -Wl,../intercept/libx64_dispatcher.a -Wl,../intercept/libZydis.a,--whole-archive -Wl,../intercept/libsubhook.a
 ARCH	  	 = x86
-OBJECT_FILES = winstrings.o pe_linker.o crt.o log.o util.o extra.o
+OBJECT_FILES = winstrings.o pe_linker.o crt.o log.o util.o extra.o file_mapping.o
 
 ifeq ($(ARCH),x86)
 	CFLAGS  += -m32

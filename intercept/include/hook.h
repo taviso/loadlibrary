@@ -31,7 +31,8 @@ enum ENUM_REDIRECT_FLAGS{
         void *func;                               // The function we want to target
         void *fixup_area;                         // size of the fixup area
         size_t redirect_size;                     // size of the patched target instructions
-        size_t trampoline_size;                   // size of the trampoline code created by subhook library
+        void *trampoline_code;                    // clobbered code executed from the dispatcher
+        size_t trampoline_size;                   // size of the trampoline code
         enum ENUM_DISPATCHERS dispatcher_type;    // which dispatcher to use
         void* dispatcher;                         // pointer to the dispatcher
         subhook_t hook;                           // Installed hook
@@ -41,7 +42,7 @@ enum ENUM_REDIRECT_FLAGS{
 #endif
 
 #ifdef __x86_64__
-    struct REDIRECT *insert_function_redirect(void *function, void *redirect, uint32_t flags, enum ENUM_DISPATCHERS dispatcher);
+    struct REDIRECT *insert_function_redirect(void *function, int n_args, void *redirect, uint32_t flags, enum ENUM_DISPATCHERS dispatcher);
     bool remove_function_redirect(P_REDIRECT function_redirect);
 #else
     bool insert_function_redirect(void *function, void *target, uint32_t flags);

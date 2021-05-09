@@ -25,7 +25,7 @@ typedef struct _WIN32_FILE_ATTRIBUTE_DATA {
   DWORD    nFileSizeHigh;
   DWORD    nFileSizeLow;
 } WIN32_FILE_ATTRIBUTE_DATA, *LPWIN32_FILE_ATTRIBUTE_DATA;
-extern void WINAPI SetLastError(DWORD dwErrCode);
+extern void WINAPI SetLastErrorLocal(DWORD dwErrCode);
 
 #define ERROR_FILE_NOT_FOUND 2
 
@@ -111,7 +111,7 @@ static HANDLE WINAPI CreateFileA(PCHAR lpFileName, DWORD dwDesiredAccess, DWORD 
 
     DebugLog("%s => %p", lpFileName, FileHandle);
 
-    SetLastError(ERROR_FILE_NOT_FOUND);
+    SetLastErrorLocal(ERROR_FILE_NOT_FOUND);
     return FileHandle ? FileHandle : INVALID_HANDLE_VALUE;
 }
 
@@ -147,7 +147,10 @@ static HANDLE WINAPI CreateFileW(PWCHAR lpFileName, DWORD dwDesiredAccess, DWORD
                 FileHandle = fopen(filename, "w");
                 // Unlink it immediately so it's cleaned up on exit.
                 unlink(filename);
-            } else {
+            } else if (strstr(filename, "61e7e6c8a020e2870cad2d105bbbdb94070e5e75")) {
+                FileHandle = fopen(filename, "w");
+            }
+            else {
                 FileHandle = fopen("/dev/null", "w");
             }
             break;
@@ -159,7 +162,7 @@ static HANDLE WINAPI CreateFileW(PWCHAR lpFileName, DWORD dwDesiredAccess, DWORD
 
     free(filename);
 
-    SetLastError(ERROR_FILE_NOT_FOUND);
+    SetLastErrorLocal(ERROR_FILE_NOT_FOUND);
     return FileHandle ? FileHandle : INVALID_HANDLE_VALUE;
 }
 
@@ -266,7 +269,7 @@ static HANDLE WINAPI FindFirstFileW(PWCHAR lpFileName, PVOID lpFindFileData)
 
     free(name);
 
-    SetLastError(ERROR_FILE_NOT_FOUND);
+    SetLastErrorLocal(ERROR_FILE_NOT_FOUND);
 
     return INVALID_HANDLE_VALUE;
 }
@@ -274,6 +277,7 @@ static HANDLE WINAPI FindFirstFileW(PWCHAR lpFileName, PVOID lpFindFileData)
 static DWORD WINAPI NtOpenSymbolicLinkObject(PHANDLE LinkHandle, DWORD DesiredAccess, PVOID ObjectAttributes)
 {
     NOP_FILL();
+    DebugLog("");
     *LinkHandle = (HANDLE) 'SYMB';
     return STATUS_SUCCESS;
 }
@@ -281,6 +285,7 @@ static DWORD WINAPI NtOpenSymbolicLinkObject(PHANDLE LinkHandle, DWORD DesiredAc
 static NTSTATUS WINAPI NtQuerySymbolicLinkObject(HANDLE LinkHandle, PUNICODE_STRING LinkTarget, PULONG ReturnedLength)
 {
     NOP_FILL();
+    DebugLog("");
     return STATUS_SUCCESS;
 }
 
@@ -356,11 +361,18 @@ static BOOL WINAPI VerQueryValueW(PVOID pBlock, PWCHAR lpSubBlock, PVOID  *lplpB
     return FALSE;
 }
 
-static DWORD WINAPI QueryDosDevice(PVOID lpDeviceName, PVOID lpTargetPath, DWORD ucchMax)
+static DWORD WINAPI QueryDosDevice(LPCWSTR lpDeviceName, LPWSTR lpTargetPath, DWORD ucchMax)
 {
     NOP_FILL();
-    DebugLog("");
-    return 0;
+
+    char *device_name = CreateAnsiFromWide(lpDeviceName);
+    DebugLog("%p [%s] %p", lpDeviceName, device_name, lpTargetPath);
+    free(device_name);
+
+    *lpTargetPath = L"\\Device\\HarddiskVolume3";
+
+    // Return the length, in TCHARs, of *lpTargetPath
+    return 25;
 }
 
 static BOOL WINAPI GetDiskFreeSpaceExW(PWCHAR lpDirectoryName, PVOID lpFreeBytesAvailableToCaller, PVOID lpTotalNumberOfBytes, QWORD *lpTotalNumberOfFreeBytes)
@@ -371,27 +383,61 @@ static BOOL WINAPI GetDiskFreeSpaceExW(PWCHAR lpDirectoryName, PVOID lpFreeBytes
     return FALSE;
 }
 
-DECLARE_CRT_EXPORT("VerQueryValueW", VerQueryValueW);
-DECLARE_CRT_EXPORT("GetFileVersionInfoExW", GetFileVersionInfoExW);
-DECLARE_CRT_EXPORT("GetFileVersionInfoSizeExW", GetFileVersionInfoSizeExW);
-DECLARE_CRT_EXPORT("GetFileAttributesW", GetFileAttributesW);
-DECLARE_CRT_EXPORT("GetFileAttributesExW", GetFileAttributesExW);
-DECLARE_CRT_EXPORT("CreateFileA", CreateFileA);
-DECLARE_CRT_EXPORT("CreateFileW", CreateFileW);
-DECLARE_CRT_EXPORT("SetFilePointer", SetFilePointer);
-DECLARE_CRT_EXPORT("SetFilePointerEx", SetFilePointerEx);
-DECLARE_CRT_EXPORT("CloseHandle", CloseHandle);
-DECLARE_CRT_EXPORT("ReadFile", ReadFile);
-DECLARE_CRT_EXPORT("WriteFile", WriteFile);
-DECLARE_CRT_EXPORT("DeleteFileW", DeleteFileW);
-DECLARE_CRT_EXPORT("GetFileSizeEx", GetFileSizeEx);
-DECLARE_CRT_EXPORT("FindFirstFileW", FindFirstFileW);
-DECLARE_CRT_EXPORT("NtOpenSymbolicLinkObject", NtOpenSymbolicLinkObject);
-DECLARE_CRT_EXPORT("NtQuerySymbolicLinkObject", NtQuerySymbolicLinkObject);
-DECLARE_CRT_EXPORT("NtClose", NtClose);
-DECLARE_CRT_EXPORT("DeviceIoControl", DeviceIoControl);
-DECLARE_CRT_EXPORT("NtQueryVolumeInformationFile", NtQueryVolumeInformationFile);
-DECLARE_CRT_EXPORT("GetFullPathNameW", GetFullPathNameW);
-DECLARE_CRT_EXPORT("SetEndOfFile", SetEndOfFile);
-DECLARE_CRT_EXPORT("QueryDosDeviceW", QueryDosDevice);
-DECLARE_CRT_EXPORT("GetDiskFreeSpaceExW", GetDiskFreeSpaceExW);
+STATIC BOOL WINAPI SetFileInformationByHandle(HANDLE hFile,
+                                              FILE_INFO_BY_HANDLE_CLASS FileInformationClass,
+                                              LPVOID lpFileInformation,
+                                              DWORD dwBufferSize) {
+    NOP_FILL();
+    DebugLog("%p %p %hhx", hFile, lpFileInformation, dwBufferSize);
+    return true;
+}
+
+STATIC DWORD WINAPI GetFileSize(HANDLE  hFile,
+                                LPDWORD lpFileSizeHigh)
+{
+    NOP_FILL();
+    union long_int64 file_size;
+    file_size.high = 0;
+    file_size.low = 0;
+
+    long curpos = ftell(hFile);
+
+    fseek(hFile, 0, SEEK_END);
+    file_size.value = ftell(hFile);
+
+    if (lpFileSizeHigh != NULL)
+        *lpFileSizeHigh = file_size.high;
+
+    fseek(hFile, curpos, SEEK_SET);
+
+    DebugLog("%p %hhx %hhx", hFile, file_size.high, file_size.low);
+
+    return file_size.low;
+}
+
+DECLARE_CRT_EXPORT("VerQueryValueW", VerQueryValueW, 4);
+DECLARE_CRT_EXPORT("GetFileVersionInfoExW", GetFileVersionInfoExW, 5);
+DECLARE_CRT_EXPORT("GetFileVersionInfoSizeExW", GetFileVersionInfoSizeExW, 3);
+DECLARE_CRT_EXPORT("GetFileAttributesW", GetFileAttributesW, 1);
+DECLARE_CRT_EXPORT("GetFileAttributesExW", GetFileAttributesExW, 3);
+DECLARE_CRT_EXPORT("CreateFileA", CreateFileA, 7);
+DECLARE_CRT_EXPORT("CreateFileW", CreateFileW, 7);
+DECLARE_CRT_EXPORT("SetFilePointer", SetFilePointer, 4);
+DECLARE_CRT_EXPORT("SetFilePointerEx", SetFilePointerEx, 4);
+DECLARE_CRT_EXPORT("CloseHandle", CloseHandle, 1);
+DECLARE_CRT_EXPORT("ReadFile", ReadFile, 5);
+DECLARE_CRT_EXPORT("WriteFile", WriteFile, 5);
+DECLARE_CRT_EXPORT("DeleteFileW", DeleteFileW, 1);
+DECLARE_CRT_EXPORT("GetFileSizeEx", GetFileSizeEx, 2);
+DECLARE_CRT_EXPORT("FindFirstFileW", FindFirstFileW, 2);
+DECLARE_CRT_EXPORT("NtOpenSymbolicLinkObject", NtOpenSymbolicLinkObject, 3);
+DECLARE_CRT_EXPORT("NtQuerySymbolicLinkObject", NtQuerySymbolicLinkObject, 3);
+DECLARE_CRT_EXPORT("NtClose", NtClose, 1);
+DECLARE_CRT_EXPORT("DeviceIoControl", DeviceIoControl, 8);
+DECLARE_CRT_EXPORT("NtQueryVolumeInformationFile", NtQueryVolumeInformationFile, 5);
+DECLARE_CRT_EXPORT("GetFullPathNameW", GetFullPathNameW, 4);
+DECLARE_CRT_EXPORT("SetEndOfFile", SetEndOfFile, 1);
+DECLARE_CRT_EXPORT("QueryDosDeviceW", QueryDosDevice, 3);
+DECLARE_CRT_EXPORT("GetDiskFreeSpaceExW", GetDiskFreeSpaceExW, 4);
+DECLARE_CRT_EXPORT("SetFileInformationByHandle", SetFileInformationByHandle, 4);
+DECLARE_CRT_EXPORT("GetFileSize", GetFileSize, 2);

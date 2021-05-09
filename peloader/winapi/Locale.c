@@ -90,10 +90,10 @@ STATIC WINAPI int GetLocaleInfoEx(LPCWSTR lpLocaleName, DWORD LCType, LPWSTR lpL
     return 0;
 }
 
-DECLARE_CRT_EXPORT("GetACP", GetACP);
-DECLARE_CRT_EXPORT("IsValidCodePage", IsValidCodePage);
-DECLARE_CRT_EXPORT("GetCPInfo", GetCPInfo);
-DECLARE_CRT_EXPORT("LocaleNameToLCID", LocaleNameToLCID);
-DECLARE_CRT_EXPORT("LCMapStringW", LCMapStringW);
-DECLARE_CRT_EXPORT("LCMapStringEx", LCMapStringEx);
-DECLARE_CRT_EXPORT("GetLocaleInfoEx", GetLocaleInfoEx);
+DECLARE_CRT_EXPORT("GetACP", GetACP, 0);
+DECLARE_CRT_EXPORT("IsValidCodePage", IsValidCodePage, 1);
+DECLARE_CRT_EXPORT("GetCPInfo", GetCPInfo, 2);
+DECLARE_CRT_EXPORT("LocaleNameToLCID", LocaleNameToLCID, 2);
+DECLARE_CRT_EXPORT("LCMapStringW", LCMapStringW, 6);
+DECLARE_CRT_EXPORT("LCMapStringEx", LCMapStringEx, 9);
+DECLARE_CRT_EXPORT("GetLocaleInfoEx", GetLocaleInfoEx, 4);

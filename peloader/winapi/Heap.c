@@ -36,7 +36,7 @@ PVOID WINAPI HeapAlloc(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes)
     NOP_FILL();
     PVOID Buffer;
 
-    DebugLog("%p, %#x, %u", hHeap, dwFlags, dwBytes);
+    //DebugLog("%p, %#x, %u", hHeap, dwFlags, dwBytes);
 
     if (dwFlags & HEAP_ZERO_MEMORY) {
         Buffer = calloc(dwBytes, 1);
@@ -50,7 +50,7 @@ PVOID WINAPI HeapAlloc(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes)
 BOOL WINAPI HeapFree(HANDLE hHeap, DWORD dwFlags, PVOID lpMem)
 {
     NOP_FILL();
-    DebugLog("%p, %#x, %p", hHeap, dwFlags, lpMem);
+    //DebugLog("%p, %#x, %p", hHeap, dwFlags, lpMem);
 
     free(lpMem);
 
@@ -158,17 +158,17 @@ STATIC PVOID WINAPI GlobalFree(PVOID hMem)
     return NULL;
 }
 
-DECLARE_CRT_EXPORT("HeapCreate", HeapCreate);
-DECLARE_CRT_EXPORT("GetProcessHeap", GetProcessHeap);
-DECLARE_CRT_EXPORT("HeapAlloc", HeapAlloc);
-DECLARE_CRT_EXPORT("HeapFree", HeapFree);
-DECLARE_CRT_EXPORT("RtlFreeHeap", RtlFreeHeap);
-DECLARE_CRT_EXPORT("RtlSetHeapInformation", RtlSetHeapInformation);
-DECLARE_CRT_EXPORT("HeapSize", HeapSize);
-DECLARE_CRT_EXPORT("HeapReAlloc", HeapReAlloc);
-DECLARE_CRT_EXPORT("LocalAlloc", LocalAlloc);
-DECLARE_CRT_EXPORT("LocalFree", LocalFree);
-DECLARE_CRT_EXPORT("RtlCreateHeap", RtlCreateHeap);
-DECLARE_CRT_EXPORT("RtlAllocateHeap", RtlAllocateHeap);
-DECLARE_CRT_EXPORT("GlobalAlloc", GlobalAlloc);
-DECLARE_CRT_EXPORT("GlobalFree", GlobalFree);
+DECLARE_CRT_EXPORT("HeapCreate", HeapCreate,3 );
+DECLARE_CRT_EXPORT("GetProcessHeap", GetProcessHeap, 0);
+DECLARE_CRT_EXPORT("HeapAlloc", HeapAlloc, 3);
+DECLARE_CRT_EXPORT("HeapFree", HeapFree, 3);
+DECLARE_CRT_EXPORT("RtlFreeHeap", RtlFreeHeap, 3);
+DECLARE_CRT_EXPORT("RtlSetHeapInformation", RtlSetHeapInformation,4);
+DECLARE_CRT_EXPORT("HeapSize", HeapSize, 3);
+DECLARE_CRT_EXPORT("HeapReAlloc", HeapReAlloc, 4);
+DECLARE_CRT_EXPORT("LocalAlloc", LocalAlloc, 2);
+DECLARE_CRT_EXPORT("LocalFree", LocalFree, 1);
+DECLARE_CRT_EXPORT("RtlCreateHeap", RtlCreateHeap, 6);
+DECLARE_CRT_EXPORT("RtlAllocateHeap", RtlAllocateHeap, 3);
+DECLARE_CRT_EXPORT("GlobalAlloc", GlobalAlloc, 2);
+DECLARE_CRT_EXPORT("GlobalFree", GlobalFree, 1);

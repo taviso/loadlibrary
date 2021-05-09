@@ -18,44 +18,52 @@
 
 static PVOID WINAPI CreateThreadpoolTimer(PVOID pfnti, PVOID pv, PVOID pcbe)
 {
+    NOP_FILL();
     // DebugLog("%p, %p, %p", pfnti, pv, pcbe);
     return (PVOID) 'POOL';
 }
 
 static VOID WINAPI InitializeSRWLock(PVOID SRWLock)
 {
+    NOP_FILL();
     DebugLog("%p", SRWLock);
 }
 
 static VOID WINAPI SetThreadpoolTimer(PVOID pti, PVOID pftDueTime, DWORD msPeriod, DWORD msWindowLength)
 {
+    NOP_FILL();
     DebugLog("%p, %p, %u, %u", pti, pftDueTime, msPeriod, msWindowLength);
 }
 
 static VOID WINAPI WaitForThreadpoolTimerCallbacks(PVOID pti, BOOL fCancelPendingCallbacks)
 {
+    NOP_FILL();
     DebugLog("%p, %u", pti, fCancelPendingCallbacks);
 }
 
 static VOID WINAPI CloseThreadpoolTimer(PVOID pti)
 {
+    NOP_FILL();
     DebugLog("%p", pti);
 }
 
 static LONG InterlockedDecrement(PULONG Addend)
 {
+    NOP_FILL();
     DebugLog("%p", Addend);
     return --*Addend;
 }
 
 static LONG InterlockedIncrement(PULONG Addend)
 {
+    NOP_FILL();
     DebugLog("%p", Addend);
     return ++*Addend;
 }
 
 static LONG InterlockedCompareExchange(PULONG Destination, LONG Exchange, LONG Comparand)
 {
+    NOP_FILL();
     DebugLog("%p", Destination);
     if (*Destination == Comparand) {
         *Destination = Exchange;
@@ -65,6 +73,7 @@ static LONG InterlockedCompareExchange(PULONG Destination, LONG Exchange, LONG C
 
 static HANDLE WINAPI CreateSemaphoreW(PVOID lpSemaphoreAttributes, LONG lInitialCount, LONG lMaximumCount, PWCHAR lpName)
 {
+    NOP_FILL();
     char *name;
 #ifndef NDEBUG
     name = CreateAnsiFromWide(lpName);
@@ -197,26 +206,26 @@ static BOOL WINAPI ProcessIdToSessionId(DWORD dwProcessId, DWORD *pSessionId)
     return FALSE;
 }
 
-DECLARE_CRT_EXPORT("RtlNtStatusToDosError", RtlNtStatusToDosError);
-DECLARE_CRT_EXPORT("GetThreadTimes", GetThreadTimes);
-DECLARE_CRT_EXPORT("GetCurrentThread", GetCurrentThread);
-DECLARE_CRT_EXPORT("CreateTimerQueueTimer", CreateTimerQueueTimer);
-DECLARE_CRT_EXPORT("RegisterWaitForSingleObject", RegisterWaitForSingleObject);
-DECLARE_CRT_EXPORT("WaitForSingleObject", WaitForSingleObject);
-DECLARE_CRT_EXPORT("GetCurrentProcess", GetCurrentProcess);
-DECLARE_CRT_EXPORT("LsaNtStatusToWinError", LsaNtStatusToWinError);
-DECLARE_CRT_EXPORT("SetThreadToken", SetThreadToken);
-DECLARE_CRT_EXPORT("InterlockedDecrement", InterlockedDecrement);
-DECLARE_CRT_EXPORT("InterlockedIncrement", InterlockedIncrement);
-DECLARE_CRT_EXPORT("InterlockedCompareExchange", InterlockedCompareExchange);
-DECLARE_CRT_EXPORT("CreateSemaphoreW", CreateSemaphoreW);
-DECLARE_CRT_EXPORT("AcquireSRWLockExclusive", AcquireSRWLockExclusive);
-DECLARE_CRT_EXPORT("AcquireSRWLockShared", AcquireSRWLockShared);
-DECLARE_CRT_EXPORT("InitializeSRWLock", InitializeSRWLock);
-DECLARE_CRT_EXPORT("ReleaseSRWLockExclusive", ReleaseSRWLockExclusive);
-DECLARE_CRT_EXPORT("ReleaseSRWLockShared", ReleaseSRWLockShared);
-DECLARE_CRT_EXPORT("SetThreadpoolTimer", SetThreadpoolTimer);
-DECLARE_CRT_EXPORT("WaitForThreadpoolTimerCallbacks", WaitForThreadpoolTimerCallbacks);
-DECLARE_CRT_EXPORT("GetCurrentThreadId", GetCurrentThreadId);
-DECLARE_CRT_EXPORT("GetCurrentProcessId", GetCurrentProcessId);
-DECLARE_CRT_EXPORT("ProcessIdToSessionId", ProcessIdToSessionId);
+DECLARE_CRT_EXPORT("RtlNtStatusToDosError", RtlNtStatusToDosError, 1);
+DECLARE_CRT_EXPORT("GetThreadTimes", GetThreadTimes, 5);
+DECLARE_CRT_EXPORT("GetCurrentThread", GetCurrentThread, 0);
+DECLARE_CRT_EXPORT("CreateTimerQueueTimer", CreateTimerQueueTimer, 7);
+DECLARE_CRT_EXPORT("RegisterWaitForSingleObject", RegisterWaitForSingleObject, 6);
+DECLARE_CRT_EXPORT("WaitForSingleObject", WaitForSingleObject, 2);
+DECLARE_CRT_EXPORT("GetCurrentProcess", GetCurrentProcess, 0);
+DECLARE_CRT_EXPORT("LsaNtStatusToWinError", LsaNtStatusToWinError, 1);
+DECLARE_CRT_EXPORT("SetThreadToken", SetThreadToken, 2);
+DECLARE_CRT_EXPORT("InterlockedDecrement", InterlockedDecrement, 1);
+DECLARE_CRT_EXPORT("InterlockedIncrement", InterlockedIncrement, 1);
+DECLARE_CRT_EXPORT("InterlockedCompareExchange", InterlockedCompareExchange, 3);
+DECLARE_CRT_EXPORT("CreateSemaphoreW", CreateSemaphoreW, 4);
+DECLARE_CRT_EXPORT("AcquireSRWLockExclusive", AcquireSRWLockExclusive, 1);
+DECLARE_CRT_EXPORT("AcquireSRWLockShared", AcquireSRWLockShared, 1);
+DECLARE_CRT_EXPORT("InitializeSRWLock", InitializeSRWLock, 1);
+DECLARE_CRT_EXPORT("ReleaseSRWLockExclusive", ReleaseSRWLockExclusive, 1);
+DECLARE_CRT_EXPORT("ReleaseSRWLockShared", ReleaseSRWLockShared, 1);
+DECLARE_CRT_EXPORT("SetThreadpoolTimer", SetThreadpoolTimer, 4);
+DECLARE_CRT_EXPORT("WaitForThreadpoolTimerCallbacks", WaitForThreadpoolTimerCallbacks, 2);
+DECLARE_CRT_EXPORT("GetCurrentThreadId", GetCurrentThreadId, 0);
+DECLARE_CRT_EXPORT("GetCurrentProcessId", GetCurrentProcessId, 0);
+DECLARE_CRT_EXPORT("ProcessIdToSessionId", ProcessIdToSessionId, 2);

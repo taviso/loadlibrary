@@ -71,8 +71,8 @@ DWORD WINAPI GetLongPathNameW(LPCWSTR lpszShortPath,
     return CountWideChars(lpszShortPath);
 }
 
-DECLARE_CRT_EXPORT("GetTempPathW", GetTempPathW);
-DECLARE_CRT_EXPORT("GetLogicalDrives", GetLogicalDrives);
-DECLARE_CRT_EXPORT("GetDriveTypeW", GetDriveTypeW);
-DECLARE_CRT_EXPORT("GetLongPathNameA", GetLongPathNameA);
-DECLARE_CRT_EXPORT("GetLongPathNameW", GetLongPathNameW);
+DECLARE_CRT_EXPORT("GetTempPathW", GetTempPathW, 2);
+DECLARE_CRT_EXPORT("GetLogicalDrives", GetLogicalDrives, 0);
+DECLARE_CRT_EXPORT("GetDriveTypeW", GetDriveTypeW, 1);
+DECLARE_CRT_EXPORT("GetLongPathNameA", GetLongPathNameA, 3);
+DECLARE_CRT_EXPORT("GetLongPathNameW", GetLongPathNameW, 3);

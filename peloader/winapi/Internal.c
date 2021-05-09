@@ -117,9 +117,9 @@ static NTSTATUS WINAPI LdrGetProcedureAddress(HMODULE Module,
     return 0;
 }
 
-DECLARE_CRT_EXPORT("RtlAcquirePebLock", RtlAcquirePebLock);
-DECLARE_CRT_EXPORT("RtlReleasePebLock", RtlReleasePebLock);
-DECLARE_CRT_EXPORT("LdrGetDllHandle", LdrGetDllHandle);
-DECLARE_CRT_EXPORT("LdrLoadDll", LdrLoadDll);
-DECLARE_CRT_EXPORT("LdrUnloadDll", LdrUnloadDll);
-DECLARE_CRT_EXPORT("LdrGetProcedureAddress", LdrGetProcedureAddress);
+DECLARE_CRT_EXPORT("RtlAcquirePebLock", RtlAcquirePebLock, 1);
+DECLARE_CRT_EXPORT("RtlReleasePebLock", RtlReleasePebLock, 1);
+DECLARE_CRT_EXPORT("LdrGetDllHandle", LdrGetDllHandle, 4);
+DECLARE_CRT_EXPORT("LdrLoadDll", LdrLoadDll, 4);
+DECLARE_CRT_EXPORT("LdrUnloadDll", LdrUnloadDll, 1);
+DECLARE_CRT_EXPORT("LdrGetProcedureAddress", LdrGetProcedureAddress, 4);

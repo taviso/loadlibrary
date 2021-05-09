@@ -50,6 +50,12 @@
 #include "scanreply.h"
 #include "streambuffer.h"
 #include "openscan.h"
+#include "include/mpclient.h"
+
+struct pe_image image = {
+        .entry  = NULL,
+        .name   = "engine/mpengine.dll",
+};
 
 // Any usage limits to prevent bugs disrupting system.
 const struct rlimit kUsageLimits[] = {
@@ -129,10 +135,6 @@ int main(int argc, char **argv, char **envp)
     STREAMBUFFER_DESCRIPTOR ScanDescriptor;
     ENGINE_INFO EngineInfo;
     ENGINE_CONFIG EngineConfig;
-    struct pe_image image = {
-        .entry  = NULL,
-        .name   = "engine/mpengine.dll",
-    };
 
     // Load the mpengine module.
     if (pe_load_library(image.name, &image.image, &image.size) == false) {

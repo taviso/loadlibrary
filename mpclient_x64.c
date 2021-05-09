@@ -50,6 +50,12 @@
 #include "streambuffer.h"
 #include "openscan.h"
 #include "hook.h"
+#include "include/mpclient.h"
+
+struct pe_image image = {
+        .entry  = NULL,
+        .name   = "engine/x64/mpengine.dll",
+};
 
 // Any usage limits to prevent bugs disrupting system.
 const struct rlimit kUsageLimits[] = {
@@ -63,6 +69,7 @@ DWORD (* __rsignal)(PHANDLE KernelHandle, DWORD Code, PVOID Params, DWORD Size);
 
 static DWORD EngineScanCallback(PSCANSTRUCT Scan)
 {
+    NOP_FILL();
     if (Scan->Flags & SCAN_MEMBERNAME) {
         LogMessage("Scanning archive member %s", Scan->VirusName);
     }
@@ -93,6 +100,7 @@ static DWORD EngineScanCallback(PSCANSTRUCT Scan)
 
 static DWORD ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
 {
+    NOP_FILL();
     fseek(this, Offset, SEEK_SET);
     *SizeRead = fread(Buffer, 1, Size, this);
     return TRUE;
@@ -100,6 +108,7 @@ static DWORD ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, 
 
 static DWORD GetStreamSize(PVOID this, PULONGLONG FileSize)
 {
+    NOP_FILL();
     fseek(this, 0, SEEK_END);
     *FileSize = ftell(this);
     return TRUE;
@@ -107,6 +116,7 @@ static DWORD GetStreamSize(PVOID this, PULONGLONG FileSize)
 
 static PWCHAR GetStreamName(PVOID this)
 {
+    NOP_FILL();
     return L"input";
 }
 
@@ -129,10 +139,6 @@ int main(int argc, char **argv, char **envp)
     STREAMBUFFER_DESCRIPTOR ScanDescriptor;
     ENGINE_INFO EngineInfo;
     ENGINE_CONFIG EngineConfig;
-    struct pe_image image = {
-        .entry  = NULL,
-        .name   = "engine/x64/mpengine.dll",
-    };
 
     // Load the mpengine module.
     if (pe_load_library(image.name, &image.image, &image.size) == false) {
@@ -173,7 +179,7 @@ int main(int argc, char **argv, char **envp)
         errx(EXIT_FAILURE, "Failed to resolve mpengine entrypoint");
     }
 
-    P_REDIRECT export_entry = insert_function_redirect(__rsignal, NULL, CALLING_CONVENTION_SWITCH, NIX2WIN);
+    P_REDIRECT export_entry = insert_function_redirect(__rsignal, 4, NULL, CALLING_CONVENTION_SWITCH, NIX2WIN);
 
     EXCEPTION_DISPOSITION ExceptionHandler(struct _EXCEPTION_RECORD *ExceptionRecord,
             struct _EXCEPTION_FRAME *EstablisherFrame,
@@ -191,8 +197,13 @@ int main(int argc, char **argv, char **envp)
 
     setup_nt_threadinfo(ExceptionHandler);
 
+    if (argc < 2) {
+        LogMessage("usage: %s [filenames...]", *argv);
+        return 1;
+    }
+
     // Call DllMain()
-    P_REDIRECT entry_point = insert_function_redirect(image.entry, NULL, CALLING_CONVENTION_SWITCH, NIX2WIN);
+    P_REDIRECT entry_point = insert_function_redirect(image.entry, 3, NULL, CALLING_CONVENTION_SWITCH, NIX2WIN);
     image.entry((PVOID) 'MPENENGN', DLL_PROCESS_ATTACH, NULL);
 
     // Install usage limits to prevent system crash.
@@ -215,7 +226,7 @@ int main(int argc, char **argv, char **envp)
 
     BootParams.ClientVersion = BOOTENGINE_PARAMS_VERSION;
     BootParams.Attributes    = BOOT_ATTR_NORMAL;
-    BootParams.SignatureLocation = L"engine";
+    BootParams.SignatureLocation = L"engine\\x64";
     BootParams.ProductName = L"Legitimate Antivirus";
     EngineConfig.QuarantineLocation = L"quarantine";
     EngineConfig.Inclusions = L"*.*";
@@ -234,6 +245,11 @@ int main(int argc, char **argv, char **envp)
     ZeroMemory(&ScanDescriptor, sizeof ScanDescriptor);
     ZeroMemory(&ScanReply, sizeof ScanReply);
 
+    P_REDIRECT engine_scan_callback_redirect = insert_function_redirect(EngineScanCallback, 1, NULL, CALLING_CONVENTION_SWITCH, WIN2NIX);
+    P_REDIRECT read_stream_redirect = insert_function_redirect(ReadStream, 5, NULL, CALLING_CONVENTION_SWITCH, WIN2NIX);
+    P_REDIRECT get_stream_size_redirect = insert_function_redirect(GetStreamSize, 2, NULL, CALLING_CONVENTION_SWITCH, WIN2NIX);
+    P_REDIRECT get_stream_name_redirect = insert_function_redirect(GetStreamName, 1, NULL, CALLING_CONVENTION_SWITCH, WIN2NIX);
+
     ScanParams.Descriptor        = &ScanDescriptor;
     ScanParams.ScanReply         = &ScanReply;
     ScanReply.EngineScanCallback = EngineScanCallback;
@@ -241,11 +257,6 @@ int main(int argc, char **argv, char **envp)
     ScanDescriptor.Read          = ReadStream;
     ScanDescriptor.GetSize       = GetStreamSize;
     ScanDescriptor.GetName       = GetStreamName;
-
-    if (argc < 2) {
-        LogMessage("usage: %s [filenames...]", *argv);
-        return 1;
-    }
 
     // Enable Instrumentation.
     InstrumentationCallback(image.image, image.size);

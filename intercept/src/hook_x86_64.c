@@ -127,13 +127,19 @@ bool create_fixup_area(P_REDIRECT function_redirect) {
             fixup_jmp = setup_call_to_dispatcher(function_redirect->fixup_area, call_to_dispatch,
                                                  function_redirect->dispatcher);
 
-            /* Copy over the code we are going to clobber by installing the function_redirect.
-             * the dispatcher will start executing code from here
-             */
-            void *trampoline_code = subhook_get_trampoline(function_redirect->hook);
+            // Store the code clobbered from the hook to the fixup area
+            memcpy(fixup_jmp, function_redirect->trampoline_code,
+                   function_redirect->redirect_size);
 
-            memcpy(fixup_jmp, trampoline_code,
-                       function_redirect->redirect_size + subhook_get_jmp_size(SUBHOOK_64BIT_OFFSET) * 2);
+            // Restore the execution to the original function
+            subhook_t hook = subhook_new((void *) fixup_jmp + function_redirect->redirect_size,
+                                         (void *) function_redirect->func + subhook_get_jmp_size(SUBHOOK_64BIT_OFFSET),
+                                         SUBHOOK_64BIT_OFFSET);
+
+            if (subhook_install(hook) != 0) {
+                printf("Cannot install the redirect to the original function");
+                return false;
+            }
 
             break;
         case HOOK_REPLACE_FUNCTION:
@@ -183,20 +189,33 @@ bool create_fixup_area(P_REDIRECT function_redirect) {
     return true;
 }
 
-P_REDIRECT insert_function_redirect(void *function, void *redirect, uint32_t flags, ENUM_DISPATCHERS dispatcher) {
+P_REDIRECT
+insert_function_redirect(void *function, int n_args, void *redirect, uint32_t flags, ENUM_DISPATCHERS dispatcher) {
     uint32_t redirect_size = 0;
     size_t fixup_area_size;
+    size_t hook_area_size;
     void *selected_dispatcher;
     void *fixup_area;
+    void *hook_area;
+    void *trampoline_code;
     size_t jmp64_size = subhook_get_jmp_size(SUBHOOK_64BIT_OFFSET);
 
-    // Set the dispatcher
+    // Set the dispatcher and calculate hook_area size
     switch (dispatcher) {
         case NIX2WIN:
             selected_dispatcher = nix_to_win;
             break;
         case WIN2NIX:
-            selected_dispatcher = win_to_nix;
+            if (n_args <= 4 && n_args >= 0)
+                selected_dispatcher = win_to_nix;
+            else if (n_args == 5)
+                selected_dispatcher = win_to_nix_5;
+            else if (n_args > 5)
+                selected_dispatcher = win_to_nix_6;
+            else {
+                printf("Invalid number of arguments.");
+                return false;
+            }
             break;
         case NIX2NIX:
             selected_dispatcher = NULL;
@@ -208,6 +227,12 @@ P_REDIRECT insert_function_redirect(void *function, void *redirect, uint32_t fla
 
     if (!disassemble(function, &redirect_size, jmp64_size, flags))
         return false;
+
+    /* Copy over the code we are going to clobber by installing the function_redirect.
+     * the dispatcher will start executing code from here
+     */
+    trampoline_code = calloc(redirect_size, 1);
+    memcpy(trampoline_code, function, redirect_size);
 
     // Calculate the size of the fixup area
     if (flags == HOOK_REPLACE_FUNCTION) {
@@ -225,20 +250,6 @@ P_REDIRECT insert_function_redirect(void *function, void *redirect, uint32_t fla
 
     // Allocate the fixup_area
     fixup_area = calloc(fixup_area_size, 1);
-    // Create a x64 push mov ret hook from the function to the fixup_area
-    subhook_t hook = subhook_new(function, fixup_area, SUBHOOK_64BIT_OFFSET);
-    if (subhook_install(hook) != 0) {
-        printf("Cannot install the redirect on the given function (%p).", function);
-        return false;
-    }
-
-    size_t trampoline_size = subhook_get_trampoline_size(hook);
-    if (trampoline_size == 0) {
-        // subhook failed to create the trampoline code
-        printf("%p: Failed to create the fixup area\n", function);
-        subhook_remove(hook);
-        return false;
-    }
 
     // Define the redirect we are going to install
     P_REDIRECT function_redirect = (P_REDIRECT) calloc(sizeof(struct REDIRECT), 1);
@@ -247,15 +258,23 @@ P_REDIRECT insert_function_redirect(void *function, void *redirect, uint32_t fla
     function_redirect->func = function;
     function_redirect->fixup_area = fixup_area;
     function_redirect->redirect_size = redirect_size;
-    function_redirect->trampoline_size = trampoline_size;
+    function_redirect->trampoline_code = trampoline_code;
     function_redirect->dispatcher_type = dispatcher;
     function_redirect->dispatcher = selected_dispatcher;
-    function_redirect->hook = hook;
 
     if (!create_fixup_area(function_redirect)) {
         printf("Cannot setup the fixup area. Exit");
         return false;
     }
+
+    // Create a x64 "push mov ret" hook from the function to the fixup_area
+    subhook_t hook = subhook_new(function, fixup_area, SUBHOOK_64BIT_OFFSET);
+    if (subhook_install(hook) != 0) {
+        printf("Cannot install the redirect on the given function (%p).", function);
+        return false;
+    }
+
+    function_redirect->hook = hook;
 
     // Clean up the left over slack bytes (not actually needed, as we're careful to
     // restore execution to the next valid instructions, but intended to make

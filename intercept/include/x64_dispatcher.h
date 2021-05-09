@@ -6,5 +6,7 @@
 
 void *nix_to_win();
 void *win_to_nix();
+void *win_to_nix_5();
+void *win_to_nix_6();
 
 #endif //LOADLIBRARY_X64_DISPATCHER_H

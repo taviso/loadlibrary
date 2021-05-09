@@ -1101,21 +1101,15 @@ struct user_desc {
     unsigned int  limit_in_pages : 1;
     unsigned int  seg_not_present : 1;
     unsigned int  useable : 1;
+#ifdef __x86_64__
+    unsigned int  lm : 1;
+#endif
 };
 
 #define LDT_READ 0
 #define LDT_WRITE 1
 
-struct pe_image {
-    char name[128];
-    BOOL WINAPI (*entry)(PVOID hinstDLL, DWORD fdwReason, PVOID lpvReserved);
-    void *image;
-    int size;
-    int type;
-
-    IMAGE_NT_HEADERS *nt_hdr;
-    IMAGE_OPTIONAL_HEADER *opt_hdr;
-} pe_image;
+struct pe_image;
 
 bool pe_load_library(const char *filename, void **image, size_t *size);
 

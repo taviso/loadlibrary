@@ -46,6 +46,17 @@ struct ntos_work_item {
         NTOS_WORK_FUNC func;
 };
 
+struct pe_image {
+    char name[128];
+    BOOL WINAPI (*entry)(PVOID hinstDLL, DWORD fdwReason, PVOID lpvReserved);
+    void *image;
+    int size;
+    int type;
+
+    IMAGE_NT_HEADERS *nt_hdr;
+    IMAGE_OPTIONAL_HEADER *opt_hdr;
+};
+
 #define WRAP_DRIVER_CLIENT_ID 1
 
 

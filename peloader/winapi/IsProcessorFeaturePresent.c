@@ -34,4 +34,4 @@ STATIC BOOL WINAPI IsProcessorFeaturePresent(DWORD ProcessorFeature)
     return FALSE;
 }
 
-DECLARE_CRT_EXPORT("IsProcessorFeaturePresent", IsProcessorFeaturePresent);
+DECLARE_CRT_EXPORT("IsProcessorFeaturePresent", IsProcessorFeaturePresent, 1);

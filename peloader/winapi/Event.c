@@ -15,7 +15,7 @@
 #include "util.h"
 #include "winstrings.h"
 
-extern void WINAPI SetLastError(DWORD dwErrCode);
+extern void WINAPI SetLastErrorLocal(DWORD dwErrCode);
 
 static HANDLE WINAPI CreateEventW(PVOID lpEventAttributes, BOOL bManualReset, BOOL bInitialState, PWCHAR lpName)
 {
@@ -31,7 +31,7 @@ static HANDLE WINAPI CreateEventW(PVOID lpEventAttributes, BOOL bManualReset, BO
 
     free(AnsiName);
 
-    SetLastError(0);
+    SetLastErrorLocal(0);
 
     return (HANDLE) 'EVNT';
 }
@@ -50,6 +50,23 @@ static BOOL WINAPI ResetEvent(HANDLE hEvent)
     return TRUE;
 }
 
-DECLARE_CRT_EXPORT("CreateEventW", CreateEventW);
-DECLARE_CRT_EXPORT("SetEvent", SetEvent);
-DECLARE_CRT_EXPORT("ResetEvent", ResetEvent);
+STATIC DWORD WINAPI EventSetInformation(HANDLE RegHandle,
+                                        EVENT_INFO_CLASS InformationClass,
+                                        PVOID EventInformation,
+                                        ULONG InformationLength) {
+    NOP_FILL();
+    DebugLog("");
+    return STATUS_SUCCESS;
+}
+
+STATIC ULONG WINAPI EventUnregister(HANDLE RegHandle) {
+    NOP_FILL();
+    DebugLog("");
+    return STATUS_SUCCESS;
+}
+
+DECLARE_CRT_EXPORT("CreateEventW", CreateEventW, 4);
+DECLARE_CRT_EXPORT("SetEvent", SetEvent, 1);
+DECLARE_CRT_EXPORT("ResetEvent", ResetEvent, 1);
+DECLARE_CRT_EXPORT("EventSetInformation", EventSetInformation, 4);
+DECLARE_CRT_EXPORT("EventUnregister", EventUnregister, 1);

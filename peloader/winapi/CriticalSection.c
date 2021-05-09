@@ -16,42 +16,48 @@
 STATIC VOID WINAPI DeleteCriticalSection(PVOID lpCriticalSection)
 {
     NOP_FILL();
+    DebugLog("");
     return;
 }
 
 STATIC VOID WINAPI EnterCriticalSection(PVOID lpCriticalSection)
 {
     NOP_FILL();
+    DebugLog("");
     return;
 }
 
 STATIC VOID WINAPI LeaveCriticalSection(PVOID lpCriticalSection)
 {
     NOP_FILL();
+    DebugLog("");
     return;
 }
 
 STATIC BOOL WINAPI InitializeCriticalSectionAndSpinCount(PVOID lpCriticalSection, DWORD dwSpinCount)
 {
     NOP_FILL();
+    DebugLog("");
     return TRUE;
 }
 
 STATIC BOOL WINAPI InitializeCriticalSectionEx(PVOID lpCriticalSection, DWORD dwSpinCount, DWORD Flags)
 {
     NOP_FILL();
+    DebugLog("");
     return TRUE;
 }
 
 STATIC VOID WINAPI InitializeCriticalSection(PVOID lpCriticalSection)
 {
     NOP_FILL();
+    DebugLog("");
     return;
 }
 
-DECLARE_CRT_EXPORT("DeleteCriticalSection", DeleteCriticalSection);
-DECLARE_CRT_EXPORT("LeaveCriticalSection", LeaveCriticalSection);
-DECLARE_CRT_EXPORT("EnterCriticalSection", EnterCriticalSection);
-DECLARE_CRT_EXPORT("InitializeCriticalSectionAndSpinCount", InitializeCriticalSectionAndSpinCount);
-DECLARE_CRT_EXPORT("InitializeCriticalSectionEx", InitializeCriticalSectionEx);
-DECLARE_CRT_EXPORT("InitializeCriticalSection", InitializeCriticalSection);
+DECLARE_CRT_EXPORT("DeleteCriticalSection", DeleteCriticalSection, 1);
+DECLARE_CRT_EXPORT("LeaveCriticalSection", LeaveCriticalSection, 1);
+DECLARE_CRT_EXPORT("EnterCriticalSection", EnterCriticalSection, 1);
+DECLARE_CRT_EXPORT("InitializeCriticalSectionAndSpinCount", InitializeCriticalSectionAndSpinCount, 2);
+DECLARE_CRT_EXPORT("InitializeCriticalSectionEx", InitializeCriticalSectionEx, 3);
+DECLARE_CRT_EXPORT("InitializeCriticalSection", InitializeCriticalSection, 1);

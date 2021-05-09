@@ -83,12 +83,14 @@ typedef struct _CERT_CONTEXT {
 static NTSTATUS WINAPI BCryptOpenAlgorithmProvider(PVOID phAlgorithm, PWCHAR pszAlgId, PWCHAR pszImplementation, DWORD dwFlags)
 {
     NOP_FILL();
+    DebugLog("");
     return STATUS_SUCCESS;
 }
 
 static NTSTATUS WINAPI BCryptCloseAlgorithmProvider(HANDLE hAlgorithm, ULONG dwFlags)
 {
     NOP_FILL();
+    DebugLog("");
     return STATUS_SUCCESS;
 }
 
@@ -154,6 +156,7 @@ static HANDLE WINAPI CertOpenStore(PCHAR lpszStoreProvider,
                                    PVOID pvPara)
 {
     NOP_FILL();
+    DebugLog("");
     return (HANDLE) 'STOR';
 }
 
@@ -204,6 +207,7 @@ static PVOID WINAPI CertFindCertificateInStore(HANDLE hCertStore,
 static BOOL WINAPI CertCloseStore(HANDLE hCertStore, DWORD dwFlags)
 {
     NOP_FILL();
+    DebugLog("");
     return TRUE;
 }
 
@@ -322,19 +326,19 @@ static BOOL WINAPI CryptDestroyHash(DWORD hHash)
     return TRUE;
 }
 
-DECLARE_CRT_EXPORT("CertCloseStore", CertCloseStore);
-DECLARE_CRT_EXPORT("CertFindCertificateInStore", CertFindCertificateInStore);
-DECLARE_CRT_EXPORT("CertFreeCertificateContext", CertFreeCertificateContext);
-DECLARE_CRT_EXPORT("CertOpenStore", CertOpenStore);
-DECLARE_CRT_EXPORT("CertStrToNameW", CertStrToNameW);
-DECLARE_CRT_EXPORT("CertVerifyCertificateChainPolicy", CertVerifyCertificateChainPolicy);
-DECLARE_CRT_EXPORT("CryptImportPublicKeyInfo", CryptImportPublicKeyInfo);
-DECLARE_CRT_EXPORT("CryptCreateHash", CryptCreateHash);
-DECLARE_CRT_EXPORT("BCryptOpenAlgorithmProvider", BCryptOpenAlgorithmProvider);
-DECLARE_CRT_EXPORT("BCryptCloseAlgorithmProvider", BCryptCloseAlgorithmProvider);
-DECLARE_CRT_EXPORT("BCryptGenRandom", BCryptGenRandom);
-DECLARE_CRT_EXPORT("CryptAcquireContextW", CryptAcquireContextW);
-DECLARE_CRT_EXPORT("CryptGetHashParam", CryptGetHashParam);
-DECLARE_CRT_EXPORT("CryptSetHashParam", CryptSetHashParam);
-DECLARE_CRT_EXPORT("CryptVerifySignatureW", CryptVerifySignatureW);
-DECLARE_CRT_EXPORT("CryptDestroyHash", CryptDestroyHash);
+DECLARE_CRT_EXPORT("CertCloseStore", CertCloseStore, 2);
+DECLARE_CRT_EXPORT("CertFindCertificateInStore", CertFindCertificateInStore, 6);
+DECLARE_CRT_EXPORT("CertFreeCertificateContext", CertFreeCertificateContext, 1);
+DECLARE_CRT_EXPORT("CertOpenStore", CertOpenStore, 5);
+DECLARE_CRT_EXPORT("CertStrToNameW", CertStrToNameW, 7);
+DECLARE_CRT_EXPORT("CertVerifyCertificateChainPolicy", CertVerifyCertificateChainPolicy, 4);
+DECLARE_CRT_EXPORT("CryptImportPublicKeyInfo", CryptImportPublicKeyInfo, 4);
+DECLARE_CRT_EXPORT("CryptCreateHash", CryptCreateHash, 5);
+DECLARE_CRT_EXPORT("BCryptOpenAlgorithmProvider", BCryptOpenAlgorithmProvider, 4);
+DECLARE_CRT_EXPORT("BCryptCloseAlgorithmProvider", BCryptCloseAlgorithmProvider, 2);
+DECLARE_CRT_EXPORT("BCryptGenRandom", BCryptGenRandom, 4);
+DECLARE_CRT_EXPORT("CryptAcquireContextW", CryptAcquireContextW, 5);
+DECLARE_CRT_EXPORT("CryptGetHashParam", CryptGetHashParam, 5);
+DECLARE_CRT_EXPORT("CryptSetHashParam", CryptSetHashParam, 4);
+DECLARE_CRT_EXPORT("CryptVerifySignatureW", CryptVerifySignatureW, 6);
+DECLARE_CRT_EXPORT("CryptDestroyHash", CryptDestroyHash, 1);

@@ -137,8 +137,8 @@
 #define KI_USER_SHARED_DATA 0xffdf0000
 #define MM_SHARED_USER_DATA_VA 0x7ffe0000
 
-typedef uint8_t         BOOLEAN, BOOL;
-typedef void            *PVOID;
+typedef uint8_t         BOOLEAN, BOOL, *PBOOL;
+typedef void            *PVOID, *LPVOID;
 typedef uint8_t         BYTE;
 typedef uint8_t         *PBYTE;
 typedef uint8_t         *LPBYTE;
@@ -148,7 +148,7 @@ typedef CHAR            *LPSTR;
 typedef const char      *LPCSTR;
 typedef uint16_t        WCHAR, *PWCHAR;
 typedef WCHAR           *LPWSTR;
-typedef const WCHAR     *LPCWSTR;
+typedef const WCHAR     *LPCWSTR, *LPCWCH;
 typedef WCHAR           *PWSTR;
 typedef uint8_t         UCHAR;
 typedef uint8_t         *PUCHAR;
@@ -158,11 +158,11 @@ typedef uint16_t        *PUSHORT;
 typedef uint16_t        WORD;
 typedef int32_t         INT;
 typedef uint32_t        UINT;
-typedef uint32_t        DWORD, *PDWORD;
+typedef uint32_t        DWORD, *PDWORD, *LPDWORD;
 typedef int32_t         LONG;
 typedef uint32_t        ULONG;
 typedef uint32_t        *PULONG;
-typedef int64_t         LONGLONG;
+typedef int64_t         LONGLONG, DWORD64;
 typedef uint64_t        ULONGLONG, *PULONGLONG;
 typedef uint64_t        ULONGULONG;
 typedef uint64_t        ULONG64;
@@ -1828,5 +1828,70 @@ typedef enum _HEAP_INFORMATION_CLASS {
     HeapCompatibilityInformation,
     HeapEnableTerminationOnCorruption
 } HEAP_INFORMATION_CLASS;
+
+typedef enum _EVENT_INFO_CLASS {
+    EventProviderBinaryTrackInfo,
+    EventProviderSetReserved1,
+    EventProviderSetTraits,
+    EventProviderUseDescriptorType,
+    MaxEventInfo
+} EVENT_INFO_CLASS;
+
+typedef enum _PROCESS_MITIGATION_POLICY {
+    ProcessDEPPolicy,
+    ProcessASLRPolicy,
+    ProcessDynamicCodePolicy,
+    ProcessStrictHandleCheckPolicy,
+    ProcessSystemCallDisablePolicy,
+    ProcessMitigationOptionsMask,
+    ProcessExtensionPointDisablePolicy,
+    ProcessControlFlowGuardPolicy,
+    ProcessSignaturePolicy,
+    ProcessFontDisablePolicy,
+    ProcessImageLoadPolicy,
+    ProcessSystemCallFilterPolicy,
+    ProcessPayloadRestrictionPolicy,
+    ProcessChildProcessPolicy,
+    ProcessSideChannelIsolationPolicy,
+    ProcessUserShadowStackPolicy,
+    MaxProcessMitigationPolicy
+} PROCESS_MITIGATION_POLICY, *PPROCESS_MITIGATION_POLICY;
+
+typedef enum _FILE_INFO_BY_HANDLE_CLASS {
+    FileBasicInfo,
+    FileStandardInfo,
+    FileNameInfo,
+    FileRenameInfo,
+    FileDispositionInfo,
+    FileAllocationInfo,
+    FileEndOfFileInfo,
+    FileStreamInfo,
+    FileCompressionInfo,
+    FileAttributeTagInfo,
+    FileIdBothDirectoryInfo,
+    FileIdBothDirectoryRestartInfo,
+    FileIoPriorityHintInfo,
+    FileRemoteProtocolInfo,
+    FileFullDirectoryInfo,
+    FileFullDirectoryRestartInfo,
+    FileStorageInfo,
+    FileAlignmentInfo,
+    FileIdInfo,
+    FileIdExtdDirectoryInfo,
+    FileIdExtdDirectoryRestartInfo,
+    FileDispositionInfoEx,
+    FileRenameInfoEx,
+    FileCaseSensitiveInfo,
+    FileNormalizedNameInfo,
+    MaximumFileInfoByHandleClass
+} FILE_INFO_BY_HANDLE_CLASS, *PFILE_INFO_BY_HANDLE_CLASS;
+
+#define CSTR_LESS_THAN        0
+#define CSTR_EQUAL            1
+#define CSTR_GREATER_THAN     2
+
+typedef union _RTL_RUN_ONCE {
+    PVOID Ptr;
+} RTL_RUN_ONCE, *PRTL_RUN_ONCE;
 
 #endif /* WINNT_TYPES_H */

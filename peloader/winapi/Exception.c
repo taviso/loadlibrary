@@ -65,8 +65,13 @@ static WINAPI PVOID RaiseException(DWORD dwExceptionCode, DWORD dwExceptionFlags
         LogMessage("%#x, %#x, %u, %p", dwExceptionCode, dwExceptionFlags, nNumberOfArguments, Arguments);
     }
 
+#ifdef __x86_64__
+// Fetch Exception List
+    asm("mov %%gs:0, %[list]" : [list] "=r"(ExceptionList));
+#else
     // Fetch Exception List
     asm("mov %%fs:0, %[list]" : [list] "=r"(ExceptionList));
+#endif
 
     DebugLog("C++ Exception %#x! ExceptionList %p, Dumping SEH Chain...", dwExceptionCode, ExceptionList);
 
@@ -175,4 +180,4 @@ static WINAPI void RtlUnwind(PEXCEPTION_FRAME TargetFrame, PVOID TargetIp, PEXCE
 
 DECLARE_CRT_EXPORT("RtlUnwind", RtlUnwind);
 #endif
-DECLARE_CRT_EXPORT("RaiseException", RaiseException);
+DECLARE_CRT_EXPORT("RaiseException", RaiseException, 4);

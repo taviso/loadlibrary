@@ -107,17 +107,47 @@ static HANDLE WINAPI GetModuleHandleA(PCHAR lpModuleName)
     return (HANDLE) NULL;
 }
 
+static BOOL WINAPI GetModuleHandleExA(DWORD dwFlags,
+                                      LPCSTR  lpModuleName,
+                                      HMODULE *phModule)
+{
+    NOP_FILL();
+    DebugLog("%p [%s]", lpModuleName, lpModuleName);
+
+    if (lpModuleName && memcmp(lpModuleName, "mpengine.dll", sizeof("mpengine.dll")) == 0)
+        *phModule = (HANDLE) 'MPEN';
+
+    if (lpModuleName && memcmp(lpModuleName, "bcrypt.dll", sizeof("bcrypt.dll")) == 0)
+        *phModule = (HANDLE) 'LOAD';
+
+    if (lpModuleName && memcmp(lpModuleName, "KERNEL32.DLL", sizeof("KERNEL32.DLL")) == 0)
+        *phModule = (HANDLE) 'KERN';
+
+    if (lpModuleName && memcmp(lpModuleName, "kernel32.dll", sizeof("kernel32.dll")) == 0)
+        *phModule = (HANDLE) 'KERN';
+
+    if (lpModuleName && memcmp(lpModuleName, "version.dll", sizeof("version.dll")) == 0)
+        *phModule = (HANDLE) 'VERS';
+
+    if (lpModuleName && memcmp(lpModuleName, "ntdll.dll", sizeof("ntdll.dll")) == 0)
+        *phModule = (HANDLE) 'NTDL';
+
+    *phModule = (HANDLE) NULL;
+    return true;
+}
+
 static VOID WINAPI FreeLibrary(PVOID hLibModule)
 {
     NOP_FILL();
     DebugLog("FreeLibrary(%p)", hLibModule);
 }
 
-DECLARE_CRT_EXPORT("FreeLibrary", FreeLibrary);
-DECLARE_CRT_EXPORT("LoadLibraryExW", LoadLibraryExW);
-DECLARE_CRT_EXPORT("LoadLibraryW", LoadLibraryW);
-DECLARE_CRT_EXPORT("GetProcAddress", GetProcAddress);
-DECLARE_CRT_EXPORT("GetModuleHandleW", GetModuleHandleW);
-DECLARE_CRT_EXPORT("GetModuleHandleA", GetModuleHandleA);
-DECLARE_CRT_EXPORT("GetModuleFileNameA", GetModuleFileNameA);
-DECLARE_CRT_EXPORT("GetModuleFileNameW", GetModuleFileNameW);
+DECLARE_CRT_EXPORT("FreeLibrary", FreeLibrary, 1);
+DECLARE_CRT_EXPORT("LoadLibraryExW", LoadLibraryExW, 3);
+DECLARE_CRT_EXPORT("LoadLibraryW", LoadLibraryW, 1);
+DECLARE_CRT_EXPORT("GetProcAddress", GetProcAddress, 2);
+DECLARE_CRT_EXPORT("GetModuleHandleW", GetModuleHandleW, 1);
+DECLARE_CRT_EXPORT("GetModuleHandleA", GetModuleHandleA, 1);
+DECLARE_CRT_EXPORT("GetModuleFileNameA", GetModuleFileNameA, 3);
+DECLARE_CRT_EXPORT("GetModuleFileNameW", GetModuleFileNameW, 3);
+DECLARE_CRT_EXPORT("GetModuleHandleExA", GetModuleHandleExA, 3);

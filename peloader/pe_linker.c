@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <err.h>
+#include <asm/prctl.h>
 
 #include "winnt_types.h"
 #include "pe_linker.h"
@@ -279,9 +280,6 @@ int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
                 }
                 else {
                         symname = RVA2VA(image, ((lookup_tbl[i] & ~IMAGE_ORDINAL_FLAG) + 2), char *);
-                }
-                if (strcmp(symname, "QueryPerformanceCounter") == 0) {
-                    printf("QueryPerformanceCounter found!");
                 }
                 if (get_export(symname, &adr) < 0) {
                         ERROR("unknown symbol: %s:%s", dll, symname);
@@ -700,6 +698,9 @@ bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
         .limit_in_pages     = 0,
         .seg_not_present    = 0,
         .useable            = 1,
+#ifdef __x86_64__
+        .lm                 = 1,
+#endif
     };
 
     if (ExceptionHandler) {
@@ -711,12 +712,20 @@ bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
         ThreadEnvironment.Tib.ExceptionList = &ExceptionFrame;
     }
 
-    if (syscall(__NR_set_thread_area, &pebdescriptor) != 0) {
+#ifdef __x86_64__
+    long set_tib_syscall_result = syscall(__NR_arch_prctl, ARCH_SET_GS, &ThreadEnvironment);
+#else
+    long set_tib_syscall_result = syscall(__NR_set_thread_area, &pebdescriptor);
+#endif
+    if (set_tib_syscall_result != 0) {
+        int error = errno;
+        l_error("Failed to set the thread area. Error: %u", error);
         return false;
     }
-
+#ifndef __x86_64__
     // Install descriptor
     asm("mov %[segment], %%fs" :: [segment] "r"(pebdescriptor.entry_number*8+3));
+#endif
 
     return true;
 }

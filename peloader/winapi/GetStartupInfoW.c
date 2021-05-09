@@ -39,6 +39,8 @@ STATIC void WINAPI GetStartupInfoA(LPSTARTUPINFO lpStartupInfo)
     memset(lpStartupInfo, 0, sizeof *lpStartupInfo);
 
     DebugLog("GetStartupInfoA(%p)", lpStartupInfo);
+
+    return;
 }
 
 
@@ -48,6 +50,8 @@ STATIC void WINAPI GetStartupInfoW(LPSTARTUPINFO lpStartupInfo)
     memset(lpStartupInfo, 0, sizeof *lpStartupInfo);
 
     DebugLog("GetStartupInfoW(%p)", lpStartupInfo);
+
+    return;
 }
 
 STATIC PVOID WINAPI GetCommandLineA(void)
@@ -64,7 +68,7 @@ STATIC PVOID WINAPI GetCommandLineW(void)
     return L"totallylegit.exe notfake very real";
 }
 
-DECLARE_CRT_EXPORT("GetStartupInfoA", GetStartupInfoA);
-DECLARE_CRT_EXPORT("GetStartupInfoW", GetStartupInfoW);
-DECLARE_CRT_EXPORT("GetCommandLineA", GetCommandLineA);
-DECLARE_CRT_EXPORT("GetCommandLineW", GetCommandLineW);
+DECLARE_CRT_EXPORT("GetStartupInfoA", GetStartupInfoA, 1);
+DECLARE_CRT_EXPORT("GetStartupInfoW", GetStartupInfoW, 1);
+DECLARE_CRT_EXPORT("GetCommandLineA", GetCommandLineA, 0);
+DECLARE_CRT_EXPORT("GetCommandLineW", GetCommandLineW, 0);

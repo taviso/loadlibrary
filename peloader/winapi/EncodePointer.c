@@ -19,7 +19,7 @@ STATIC PVOID WINAPI EncodePointer(PVOID Ptr)
     DebugLog("%p", Ptr);
 
     // Super secret high-security encryption algorithm.
-    return (PVOID)((DWORD)(Ptr) ^ ~0);
+    return (PVOID)((uintptr_t)(Ptr) ^ ~0);
 }
 
 STATIC PVOID WINAPI DecodePointer(PVOID Ptr)
@@ -27,9 +27,9 @@ STATIC PVOID WINAPI DecodePointer(PVOID Ptr)
     NOP_FILL();
     DebugLog("%p", Ptr);
 
-    return (PVOID)((DWORD)(Ptr) ^ ~0);
+    return (PVOID)((uintptr_t)(Ptr) ^ ~0);
 }
 
 
-DECLARE_CRT_EXPORT("EncodePointer", EncodePointer);
-DECLARE_CRT_EXPORT("DecodePointer", DecodePointer);
+DECLARE_CRT_EXPORT("EncodePointer", EncodePointer, 1);
+DECLARE_CRT_EXPORT("DecodePointer", DecodePointer, 1);

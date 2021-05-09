@@ -74,19 +74,41 @@ STATIC LONG WINAPI RegQueryInfoKeyW(
   PVOID    lpftLastWriteTime)
 {
     NOP_FILL();
-    DebugLog("");
+    DebugLog("%p %p %p %p %p %p %p %p %p %p %p %p", hKey, lpClass, lpcClass, lpReserved, lpcSubKeys, lpcMaxSubKeyLen, lpcMaxClassLen, lpcValues, lpcMaxValueNameLen, lpcMaxValueLen, lpcbSecurityDescriptor, lpftLastWriteTime);
 
+#ifdef __x86_64__
+    if (lpClass || lpcClass || lpReserved || lpcSubKeys || lpcMaxSubKeyLen || lpcMaxClassLen || lpftLastWriteTime) {
+        DebugLog("NOT SUPPORTED");
+        return -1;
+    }
+#else
     if (lpClass || lpcClass || lpReserved || lpcSubKeys || lpcMaxSubKeyLen || lpcMaxClassLen || lpcMaxValueLen || lpcbSecurityDescriptor || lpftLastWriteTime) {
         DebugLog("NOT SUPPORTED");
         return -1;
     }
+#endif
 
     switch ((DWORD) hKey) {
         case 'REG0':
+#ifdef __x86_64__
+            *lpcMaxValueLen = 0x94;
+            *lpcbSecurityDescriptor = 0x170;
+            break;
+#endif
         case 'REG1':
+#ifdef __x86_64__
+            *lpcMaxValueLen = 0x78;
+            *lpcbSecurityDescriptor = 0x184;
+            break;
+#endif
         case 'REG2':
+#ifdef __x86_64__
+            *lpcMaxValueLen = 0x38;
+            *lpcbSecurityDescriptor = 0xf8;
+#else
             *lpcValues = 1;
             *lpcMaxValueNameLen = 1024;
+#endif
             break;
         default:
             DebugLog("NOT SUPPROTED KEY");
@@ -200,10 +222,10 @@ STATIC LONG WINAPI RegCreateKeyExW(HANDLE hKey, PVOID lpSubKey, DWORD Reserved, 
 }
 
 
-DECLARE_CRT_EXPORT("RegOpenKeyExW", RegOpenKeyExW);
-DECLARE_CRT_EXPORT("RegCloseKey", RegCloseKey);
-DECLARE_CRT_EXPORT("RegQueryInfoKeyW", RegQueryInfoKeyW);
-DECLARE_CRT_EXPORT("NtEnumerateValueKey", NtEnumerateValueKey);
-DECLARE_CRT_EXPORT("NtQueryValueKey", NtQueryValueKey);
-DECLARE_CRT_EXPORT("RegCreateKeyExW", RegCreateKeyExW);
+DECLARE_CRT_EXPORT("RegOpenKeyExW", RegOpenKeyExW, 5);
+DECLARE_CRT_EXPORT("RegCloseKey", RegCloseKey, 1);
+DECLARE_CRT_EXPORT("RegQueryInfoKeyW", RegQueryInfoKeyW, 12);
+DECLARE_CRT_EXPORT("NtEnumerateValueKey", NtEnumerateValueKey, 6);
+DECLARE_CRT_EXPORT("NtQueryValueKey", NtQueryValueKey, 6);
+DECLARE_CRT_EXPORT("RegCreateKeyExW", RegCreateKeyExW, 9);
 

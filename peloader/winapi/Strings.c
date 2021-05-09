@@ -155,11 +155,29 @@ STATIC INT WINAPI UuidCreate(PBYTE Uuid)
     return 0;
 }
 
-DECLARE_CRT_EXPORT("MultiByteToWideChar", MultiByteToWideChar);
-DECLARE_CRT_EXPORT("WideCharToMultiByte", WideCharToMultiByte);
-DECLARE_CRT_EXPORT("GetStringTypeA", GetStringTypeA);
-DECLARE_CRT_EXPORT("GetStringTypeW", GetStringTypeW);
-DECLARE_CRT_EXPORT("RtlInitUnicodeString", RtlInitUnicodeString);
-DECLARE_CRT_EXPORT("UuidFromStringW", UuidFromStringW);
-DECLARE_CRT_EXPORT("UuidCreate", UuidCreate);
+STATIC int WINAPI CompareStringOrdinal(LPCWCH lpString1,
+                                       int cchCount1,
+                                       LPCWCH lpString2,
+                                       int cchCount2,
+                                       BOOL bIgnoreCase) {
+    NOP_FILL();
+    char *string1 = CreateAnsiFromWide(lpString1);
+    char *string2 = CreateAnsiFromWide(lpString2);
+    DebugLog("%p [%s] %hhx %p [%s] %hhx", lpString1, string1, cchCount1, lpString2, string2, cchCount2);
 
+    if (strlen(string1) < strlen(string2))
+        return CSTR_LESS_THAN;
+    else if (strlen(string1) == strlen(string2))
+        return CSTR_EQUAL;
+    else
+        return CSTR_GREATER_THAN;
+}
+
+DECLARE_CRT_EXPORT("MultiByteToWideChar", MultiByteToWideChar, 6);
+DECLARE_CRT_EXPORT("WideCharToMultiByte", WideCharToMultiByte, 8);
+DECLARE_CRT_EXPORT("GetStringTypeA", GetStringTypeA, 5);
+DECLARE_CRT_EXPORT("GetStringTypeW", GetStringTypeW, 4);
+DECLARE_CRT_EXPORT("RtlInitUnicodeString", RtlInitUnicodeString, 2);
+DECLARE_CRT_EXPORT("UuidFromStringW", UuidFromStringW, 2);
+DECLARE_CRT_EXPORT("UuidCreate", UuidCreate, 1);
+DECLARE_CRT_EXPORT("CompareStringOrdinal", CompareStringOrdinal, 5);
