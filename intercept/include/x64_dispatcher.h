@@ -4,6 +4,7 @@
 #ifndef LOADLIBRARY_X64_DISPATCHER_H
 #define LOADLIBRARY_X64_DISPATCHER_H
 
+void *x86_64_call_exported_function();
 void *nix_to_win();
 void *win_to_nix();
 void *win_to_nix_5();

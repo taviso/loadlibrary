@@ -12,11 +12,21 @@ SECTION .data
     index:   dd  0x0
 
 SECTION .text
+    GLOBAL x86_64_call_exported_function
     GLOBAL nix_to_win
     GLOBAL win_to_nix
     GLOBAL win_to_nix_5
     GLOBAL win_to_nix_6
 
+x86_64_call_exported_function:
+    mov rax, rdi
+    mov rdi, rsi
+    mov rsi, rdx
+    mov rdx, rcx
+    mov rcx, r8
+    mov r8, r9
+    mov r9, [rsp+0x8]
+    jmp nix_to_win
 
 nix_to_win:
     ;; pusha
