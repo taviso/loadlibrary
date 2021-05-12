@@ -290,14 +290,14 @@ win_to_nix_5:
     mov r8, QWORD [rsp+0x20]
 
     ;; skip slack space ;; + 5th and 6th args: (0x20) + arg5 (0x8) + arg6 (0x8) = 0x30
-    add rsp, 0x20
+    add rsp, 0x28
 
     call rax
     ;; store the result in the temporary buffer
     lea rbx, [rel temp_buffer]
     mov [rbx], rax
     ;; reset the stack to its original form (slack space ;; + r9 + r8)
-    sub rsp, 0x20
+    sub rsp, 0x28
 
     ;; take the array_ptr index and decrement it
     mov ecx, [rel index]
@@ -415,14 +415,14 @@ win_to_nix_6:
     mov r9, QWORD [rsp+0x28]
 
     ;; skip slack space ;; + 5th and 6th args: (0x20) + arg5 (0x8) + arg6 (0x8) = 0x30
-    add rsp, 0x20
+    add rsp, 0x30
 
     call rax
     ;; store the result in the temporary buffer
     lea rbx, [rel temp_buffer]
     mov [rbx], rax
     ;; reset the stack to its original form (slack space ;; + r9 + r8)
-    sub rsp, 0x20
+    sub rsp, 0x30
 
     ;; take the array_ptr index and decrement it
     mov ecx, [rel index]

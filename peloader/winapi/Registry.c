@@ -91,20 +91,20 @@ STATIC LONG WINAPI RegQueryInfoKeyW(
     switch ((DWORD) hKey) {
         case 'REG0':
 #ifdef __x86_64__
-            *lpcMaxValueLen = 0x94;
-            *lpcbSecurityDescriptor = 0x170;
+            *lpcValues = 0xc;
+            *lpcMaxValueNameLen = 0x1b;
             break;
 #endif
         case 'REG1':
 #ifdef __x86_64__
-            *lpcMaxValueLen = 0x78;
-            *lpcbSecurityDescriptor = 0x184;
+            *lpcValues = 0xb;
+            *lpcMaxValueNameLen = 0x26;
             break;
 #endif
         case 'REG2':
 #ifdef __x86_64__
-            *lpcMaxValueLen = 0x38;
-            *lpcbSecurityDescriptor = 0xf8;
+            *lpcValues = 0x4;
+            *lpcMaxValueNameLen = 0x11;
 #else
             *lpcValues = 1;
             *lpcMaxValueNameLen = 1024;

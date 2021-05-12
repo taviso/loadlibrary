@@ -19,7 +19,7 @@
 
 ZydisDecoder decoder;
 
-static void __attribute__((constructor)) init(void) {
+static void __attribute__((constructor(100))) init(void) {
     // Initialize Zydis disassemble
     ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_ADDRESS_WIDTH_64);
 }
@@ -36,7 +36,6 @@ bool disassemble(void *buffer, uint32_t *total_disassembled, ulong max_size, uin
 
         // Test if Zydis understood the instruction
         if (ZYAN_SUCCESS(ZydisDecoderDecodeBuffer(&decoder, buffer + offset, max_size, &instruction))) {
-
             // Valid, increment size.
             *total_disassembled += instruction.length;
 
@@ -127,9 +126,8 @@ bool create_fixup_area(P_REDIRECT function_redirect) {
             fixup_jmp = setup_call_to_dispatcher(function_redirect->fixup_area, call_to_dispatch,
                                                  function_redirect->dispatcher);
 
-            // Store the code clobbered from the hook to the fixup area
-            memcpy(fixup_jmp, function_redirect->trampoline_code,
-                   function_redirect->redirect_size);
+            // Store the code clobbered by the hook to the fixup area
+            memcpy(fixup_jmp, function_redirect->trampoline_code, function_redirect->redirect_size);
 
             // Restore the execution to the original function
             subhook_t hook = subhook_new((void *) fixup_jmp + function_redirect->redirect_size,

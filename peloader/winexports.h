@@ -7,7 +7,7 @@ extern struct hsearch_data crtexports;
 
 #ifdef __x86_64__
 #define DECLARE_CRT_EXPORT(_name, _func, _n_args)                                           \
-    static void __constructor __const__ ## _func (void)                                     \
+    static void __attribute__((constructor(101))) __const__ ## _func (void)                 \
     {                                                                                       \
         ENTRY e = { _name, _func }, *ep;                                                    \
         if (crtexports.table == NULL)                                                       \
