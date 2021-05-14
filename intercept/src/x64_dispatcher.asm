@@ -171,14 +171,14 @@ win_to_nix:
     mov rdx, r8
     mov rcx, r9
 
-    ;; skip slack space ;; + 5th and 6th args: (0x20) + arg5 (0x8) + arg6 (0x8) = 0x30
+    ;; skip slack space
     add rsp, 0x20
 
     call rax
     ;; store the result in the temporary buffer
     lea rbx, [rel temp_buffer]
     mov [rbx], rax
-    ;; reset the stack to its original form (slack space ;; + r9 + r8)
+    ;; reset the stack to its original form (slack space)
     sub rsp, 0x20
 
     ;; take the array_ptr index and decrement it
@@ -289,14 +289,14 @@ win_to_nix_5:
     mov rcx, r9
     mov r8, QWORD [rsp+0x20]
 
-    ;; skip slack space ;; + 5th and 6th args: (0x20) + arg5 (0x8) + arg6 (0x8) = 0x30
+    ;; skip slack space + 5th arg: (0x20) = 0x30
     add rsp, 0x28
 
     call rax
     ;; store the result in the temporary buffer
     lea rbx, [rel temp_buffer]
     mov [rbx], rax
-    ;; reset the stack to its original form (slack space ;; + r9 + r8)
+    ;; reset the stack to its original form (slack space + r8)
     sub rsp, 0x28
 
     ;; take the array_ptr index and decrement it
@@ -414,14 +414,14 @@ win_to_nix_6:
     mov r8, QWORD [rsp+0x20]
     mov r9, QWORD [rsp+0x28]
 
-    ;; skip slack space ;; + 5th and 6th args: (0x20) + arg5 (0x8) + arg6 (0x8) = 0x30
+    ;; skip slack space + 5th and 6th args: (0x20) + arg5 (0x8) + arg6 (0x8) = 0x30
     add rsp, 0x30
 
     call rax
     ;; store the result in the temporary buffer
     lea rbx, [rel temp_buffer]
     mov [rbx], rax
-    ;; reset the stack to its original form (slack space ;; + r9 + r8)
+    ;; reset the stack to its original form (slack space + r9 + r8)
     sub rsp, 0x30
 
     ;; take the array_ptr index and decrement it

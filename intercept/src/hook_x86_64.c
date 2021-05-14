@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include <sys/user.h>
 #include "Zydis/Zydis.h"
@@ -277,6 +278,9 @@ insert_function_redirect(void *function, int n_args, void *redirect, uint32_t fl
     // Clean up the left over slack bytes (not actually needed, as we're careful to
     // restore execution to the next valid instructions, but intended to make
     // sure we dont desync disassembly when debugging problems in kgdb).
+    long pagesize = sysconf(_SC_PAGESIZE);
+    void *page_address = (void *)((long)function+jmp64_size & ~(pagesize - 1));
+    mprotect(page_address, redirect_size - jmp64_size, PROT_READ | PROT_WRITE | PROT_EXEC);
     memset((void *) (function + jmp64_size),
            X86_OPCODE_NOP,
            redirect_size - jmp64_size);

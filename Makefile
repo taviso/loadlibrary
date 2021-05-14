@@ -1,7 +1,7 @@
-CFLAGS  = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -Iintercept/include -Ipeloader -mstackrealign
+CFLAGS  = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -Iintercept/include -Ipeloader -mstackrealign -mno-red-zone
 CPPFLAGS= -D_GNU_SOURCE -I.
 LDFLAGS = $(CFLAGS) -lm -Wl,--dynamic-list=exports.lst
-LDLIBS  = -Wl,--whole-archive peloader/libpeloader.a -Wl,intercept/libhook.a -Wl,intercept/libx64_dispatcher.a -Wl,intercept/libZydis.a,--whole-archive -Wl,intercept/libsubhook.a -Wl,--no-whole-archive
+LDLIBS  = -Wl,--whole-archive peloader/libpeloader.a -Wl,intercept/libhook.a -Wl,intercept/libx64_dispatcher.a -Wl,intercept/libZydis.a -Wl,intercept/libsubhook.a -Wl,--no-whole-archive
 
 .PHONY: clean peloader intercept
 
@@ -10,7 +10,6 @@ RELEASE_CPPFLAGS = -DNDEBUG
 DEBUG_CFLAGS 	 = -O0 -g
 
 TARGETS=mpclient | peloader
-MY_TARGETS=bdclient
 
 all: CFLAGS += $(RELEASE_CFLAGS)
 all: CPPFLAGS += $(RELEASE_CPPFLAGS)
@@ -37,17 +36,6 @@ peloader:
 peloader_x64:
 	make -C peloader debug ARCH=x64
 
-bdclient: CFLAGS += -m32
-bdclient: LDFLAGS += -m32
-bdclient: CMAKE_FLAGS += -DARCH:STRING=x86
-bdclient: bdclient.o bdlibrary.o | peloader intercept
-	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
-
-bdclient_x64: CFLAGS += -g -O0 -fPIC
-bdclient_x64: CMAKE_FLAGS = -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=Debug
-bdclient_x64: bdclient.o bdlibrary.o | peloader_x64 intercept
-	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
-
 mpclient: CFLAGS += -m32
 mpclient: LDFLAGS += -m32
 mpclient: CMAKE_FLAGS += -DARCH:STRING=x86
@@ -58,11 +46,6 @@ mpclient_x64: CFLAGS += -g -O0  -fPIC
 mpclient_x64: CMAKE_FLAGS = -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=Debug
 mpclient_x64: mpclient_x64.o | peloader_x64 intercept
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
-
-tests: CMAKE_FLAGS = -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=Debug
-tests: peloader_x64
-	cd tests; mkdir build; cd build; cmake $(CMAKE_FLAGS) ..; cd tests; make
-	cd tests; ./build/tests/check_hook; ./build/tests/check_peloader
 
 clean:
 	rm -rf a.out core *.o core.* vgcore.* gmon.out mpclient intercept/build intercept/*.a tests/build
