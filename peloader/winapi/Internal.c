@@ -32,16 +32,20 @@ NTSTATUS WINAPI LdrGetDllHandle(PWCHAR pwPath, PVOID unused, PUNICODE_STRING Mod
     return 0;
 }
 
-NTSTATUS WINAPI EtwRegister(PVOID ProvideId, PVOID EnableCallback, PVOID CallbackContext, PVOID RegHandle)
+NTSTATUS WINAPI EtwRegister(PVOID ProviderId,
+                            PVOID EnableCallback,
+                            PVOID CallbackContext,
+                            PQWORD RegHandle)
 {
     DebugLog("");
+    *RegHandle = 'ETW';
     return 0;
 }
 
-NTSTATUS WINAPI EtwUnregister(HANDLE RegHandle)
+NTSTATUS WINAPI EtwUnregister(QWORD RegHandle)
 {
-    DebugLog("");
-    return 0;
+    DebugLog("%llx", RegHandle);
+    return -1;
 }
 
 ULONG WINAPI EtwEventWrite(HANDLE RegHAndle, PVOID EventDescriptor, ULONG UserDataCount, PVOID UserData, PVOID a5)
@@ -113,3 +117,5 @@ DECLARE_CRT_EXPORT("LdrGetDllHandle", LdrGetDllHandle);
 DECLARE_CRT_EXPORT("LdrLoadDll", LdrLoadDll);
 DECLARE_CRT_EXPORT("LdrUnloadDll", LdrUnloadDll);
 DECLARE_CRT_EXPORT("LdrGetProcedureAddress", LdrGetProcedureAddress);
+DECLARE_CRT_EXPORT("EventRegister", EtwRegister);
+DECLARE_CRT_EXPORT("EventUnregister", EtwUnregister);

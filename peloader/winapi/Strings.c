@@ -18,11 +18,21 @@
 #define MB_ERR_INVALID_CHARS 8
 #define MB_PRECOMPOSED 1
 
-STATIC int WINAPI MultiByteToWideChar(UINT CodePage, DWORD  dwFlags, PCHAR lpMultiByteStr, int cbMultiByte, PUSHORT lpWideCharStr, int cchWideChar)
+STATIC int WINAPI MultiByteToWideChar(UINT CodePage,
+                                      DWORD dwFlags,
+                                      PCHAR lpMultiByteStr,
+                                      int cbMultiByte,
+                                      PUSHORT lpWideCharStr,
+                                      int cchWideChar)
 {
     size_t i;
 
-    DebugLog("%u, %#x, %p, %u, %p, %u", CodePage, dwFlags, lpMultiByteStr, cbMultiByte, lpWideCharStr, cchWideChar);
+    DebugLog("%u, %#x, %p, %u, %p, %u", CodePage,
+                                        dwFlags,
+                                        lpMultiByteStr,
+                                        cbMultiByte,
+                                        lpWideCharStr,
+                                        cchWideChar);
 
     if ((dwFlags & ~(MB_ERR_INVALID_CHARS | MB_PRECOMPOSED)) != 0) {
         LogMessage("Unsupported Conversion Flags %#x", dwFlags);
@@ -148,6 +158,64 @@ STATIC INT WINAPI UuidCreate(PBYTE Uuid)
     return 0;
 }
 
+#define CSTR_LESS_THAN    1
+#define CSTR_EQUAL        2
+#define CSTR_GREATER_THAN 3
+
+STATIC INT WINAPI CompareStringOrdinal(PVOID lpString1,
+                                       INT cchCount1,
+                                       PVOID lpString2,
+                                       INT cchCount2,
+                                       BOOL bIgnoreCase)
+{
+    int Result;
+    int Length;
+    PVOID lpt1;
+    PVOID lpt2;
+
+    DebugLog("%p, %d, %p, %d, %d", lpString1,
+                                   cchCount1,
+                                   lpString2,
+                                   cchCount2,
+                                   bIgnoreCase);
+
+    if (cchCount1 == -1)
+        cchCount1 = CountWideChars(lpString1);
+
+    if (cchCount2 == -1)
+        cchCount2 = CountWideChars(lpString2);
+
+    lpt1 = calloc(cchCount1 + 1, 2);
+    lpt2 = calloc(cchCount2 + 1, 2);
+
+    if (!lpt1 || !lpt2) {
+        // "The function returns 0 if it does not succeed."
+        free(lpt1);
+        free(lpt2);
+        return 0;
+    }
+
+    memcpy(lpt1, lpString1, cchCount1 * 2);
+    memcpy(lpt2, lpString2, cchCount2 * 2);
+
+    Result = bIgnoreCase
+        ? wcsicmp(lpt1, lpt2)
+        : wcscmp(lpt1, lpt2);
+
+    free(lpt1);
+    free(lpt2);
+
+    // I am not sure if this logic is correct, I just read the msdn page and
+    // wrote it blindly.
+
+    if (Result < 0)
+        return CSTR_LESS_THAN;
+    if (Result == 0)
+        return CSTR_EQUAL;
+
+    return CSTR_GREATER_THAN;
+}
+
 DECLARE_CRT_EXPORT("MultiByteToWideChar", MultiByteToWideChar);
 DECLARE_CRT_EXPORT("WideCharToMultiByte", WideCharToMultiByte);
 DECLARE_CRT_EXPORT("GetStringTypeA", GetStringTypeA);
@@ -155,4 +223,5 @@ DECLARE_CRT_EXPORT("GetStringTypeW", GetStringTypeW);
 DECLARE_CRT_EXPORT("RtlInitUnicodeString", RtlInitUnicodeString);
 DECLARE_CRT_EXPORT("UuidFromStringW", UuidFromStringW);
 DECLARE_CRT_EXPORT("UuidCreate", UuidCreate);
+DECLARE_CRT_EXPORT("CompareStringOrdinal", CompareStringOrdinal);
 
