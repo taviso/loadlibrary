@@ -147,7 +147,7 @@ static HANDLE WINAPI CreateFileW(PWCHAR lpFileName, DWORD dwDesiredAccess, DWORD
                 FileHandle = fopen(filename, "w");
                 // Unlink it immediately so it's cleaned up on exit.
                 unlink(filename);
-            } else if (strstr(filename, "61e7e6c8a020e2870cad2d105bbbdb94070e5e75")) {
+            } else if (strstr(filename, "mpcache-")) {
                 FileHandle = fopen(filename, "w");
             }
             else {

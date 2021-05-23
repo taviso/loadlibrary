@@ -75,7 +75,7 @@ bool disassemble(void *buffer, uint32_t *total_disassembled, ulong max_size, uin
 
 // Setup the call to the dispatcher in the fixup_area
 void *setup_call_to_dispatcher(mov_r64_abs_insn *fixup_area, uintptr_t call_to_dispatch, void *dispatcher) {
-    struct branch64 *fixup_jmp;
+    void *fixup_jmp;
 
     /* This moves the address of the user-supplied call
      * to dispatch
@@ -85,19 +85,18 @@ void *setup_call_to_dispatcher(mov_r64_abs_insn *fixup_area, uintptr_t call_to_d
     fixup_area->reg = 0xB8; // rax
     fixup_area->imm.i = call_to_dispatch;
 
-    /* Set a jmp to the dispatcher.
-     * [addr+0xb]:      jmp dispatcher
-     * WARNING: it seems like we can use a jmp near, relative, immediate here.
-     * But is it safe to assume the dispatcher will be *always* in a 4gb range?
-     * Or should we use a x64 jmp (push, mov, ret) also here?
-     */
+    // Set a x86_64 jmp to the dispatcher
     fixup_jmp = (void *) (fixup_area->data);
-    fixup_jmp->opcode = X86_64_OPCODE_JMP_NEAR;
-    fixup_jmp->i = (uintptr_t)(dispatcher)
-                   - (uintptr_t)(fixup_area)
-                   - (uintptr_t)(sizeof(mov_r64_abs_insn))
-                   - (uintptr_t)(sizeof(struct branch64));
-    return &fixup_jmp->data;
+
+    subhook_t hook = subhook_new(fixup_jmp,
+                                 (void *) dispatcher,
+                                 SUBHOOK_64BIT_OFFSET);
+    if (subhook_install(hook) != 0) {
+        printf("Cannot install the redirect to the dispatcher");
+        return NULL;
+    }
+
+    return (void *) ((uintptr_t) fixup_jmp + (uintptr_t) subhook_get_jmp_size(SUBHOOK_64BIT_OFFSET));
 }
 
 /* Setup the fixup area.
@@ -121,7 +120,7 @@ bool create_fixup_area(P_REDIRECT function_redirect) {
              */
             call_to_dispatch =
                     (uintptr_t)(function_redirect->fixup_area) + (uintptr_t)(sizeof(struct mov_r64_abs_insn)) +
-                    (uintptr_t)(sizeof(struct branch64));
+                    (uintptr_t)(subhook_get_jmp_size(SUBHOOK_64BIT_OFFSET));
 
             // Setup the call to the dispatcher
             fixup_jmp = setup_call_to_dispatcher(function_redirect->fixup_area, call_to_dispatch,
@@ -244,7 +243,7 @@ insert_function_redirect(void *function, int n_args, void *redirect, uint32_t fl
     }
 
     if (dispatcher == WIN2NIX || dispatcher == NIX2WIN) {
-        fixup_area_size += sizeof(struct mov_r64_abs_insn) + sizeof(struct branch64);
+        fixup_area_size += sizeof(struct mov_r64_abs_insn) + jmp64_size;
     }
 
     // Allocate the fixup_area
