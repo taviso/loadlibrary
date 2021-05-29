@@ -26,6 +26,7 @@ elseif(NOT ${ARCH} STREQUAL "x86")
 endif()
 
 include_directories("./include")
+include_directories("../log")
 
 # Disable build of tools and examples.
 option(ZYDIS_BUILD_TOOLS "" OFF)

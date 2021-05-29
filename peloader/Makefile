@@ -1,8 +1,8 @@
-CFLAGS    	 = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -I../include -mstackrealign -mno-red-zone
+CFLAGS    	 = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -I../include -I../log -mstackrealign -mno-red-zone
 CPPFLAGS  	 = -D_GNU_SOURCE -I. -I../intercept/include
 LDFLAGS   	 = $(CFLAGS) -lm
 ARCH	  	 = x86
-OBJECT_FILES = winstrings.o pe_linker.o crt.o log.o util.o extra.o file_mapping.o
+OBJECT_FILES = winstrings.o pe_linker.o crt.o util.o extra.o file_mapping.o
 
 
 ifeq ($(ARCH),x86)

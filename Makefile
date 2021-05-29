@@ -1,4 +1,4 @@
-CFLAGS  = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -Iintercept/include -Ipeloader -mstackrealign -mno-red-zone
+CFLAGS  = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -Iintercept/include -Ilog -Ipeloader -mstackrealign -mno-red-zone
 CPPFLAGS= -D_GNU_SOURCE -I.
 LDFLAGS = $(CFLAGS) -lm -Wl,--dynamic-list=exports.lst
 LDLIBS  = -Wl,--whole-archive peloader/libpeloader.a -Wl,intercept/libhook.a -Wl,intercept/libx64_dispatcher.a -Wl,intercept/libZydis.a -Wl,intercept/libsubhook.a -Wl,--no-whole-archive
@@ -44,7 +44,7 @@ mpclient: mpclient.o | peloader intercept
 
 mpclient_x64: CFLAGS += -g -O0  -fPIC
 mpclient_x64: CMAKE_FLAGS = -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=Debug
-mpclient_x64: mpclient_x64.o | peloader_x64 intercept
+mpclient_x64: mpclient_x64.o log/log.o | peloader_x64 intercept
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
 clean:

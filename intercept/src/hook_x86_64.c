@@ -9,6 +9,7 @@
 #include "Zydis/Zydis.h"
 #include "subhook.h"
 #include "hook.h"
+#include "log.h"
 #include "x64_dispatcher.h"
 
 // Routines to intercept or redirect routines (x86_64).
@@ -48,9 +49,9 @@ bool disassemble(void *buffer, uint32_t *total_disassembled, ulong max_size, uin
                  instruction.meta.category == ZYDIS_CATEGORY_UNCOND_BR ||
                  instruction.meta.category == ZYDIS_CATEGORY_RET) &&
                 flags != HOOK_REPLACE_FUNCTION) {
-                printf("error: refusing to redirect function %p due to early controlflow manipulation (+%u)\n",
-                       buffer,
-                       *total_disassembled);
+                l_error("Refusing to redirect function %p due to early controlflow manipulation (total bytes disassembled: +%u)",
+                        buffer,
+                        *total_disassembled);
 
                 return false;
             }
@@ -62,7 +63,7 @@ bool disassemble(void *buffer, uint32_t *total_disassembled, ulong max_size, uin
         }
 
         // Invalid instruction, abort.
-        printf("error: %s encountered an invalid instruction @%p+%u, so redirection was aborted\n",
+        l_error("%s encountered an invalid instruction @%p+%u, so redirection was aborted",
                __func__,
                buffer,
                *total_disassembled);
@@ -92,7 +93,7 @@ void *setup_call_to_dispatcher(mov_r64_abs_insn *fixup_area, uintptr_t call_to_d
                                  (void *) dispatcher,
                                  SUBHOOK_64BIT_OFFSET);
     if (subhook_install(hook) != 0) {
-        printf("Cannot install the redirect to the dispatcher");
+        l_error("Cannot install the redirect to the dispatcher");
         return NULL;
     }
 
@@ -126,6 +127,11 @@ bool create_fixup_area(P_REDIRECT function_redirect) {
             fixup_jmp = setup_call_to_dispatcher(function_redirect->fixup_area, call_to_dispatch,
                                                  function_redirect->dispatcher);
 
+            if (fixup_jmp == NULL) {
+                l_error("Failed to setup the call to the dispatcher.");
+                return false;
+            }
+
             // Store the code clobbered by the hook to the fixup area
             memcpy(fixup_jmp, function_redirect->trampoline_code, function_redirect->redirect_size);
 
@@ -135,7 +141,7 @@ bool create_fixup_area(P_REDIRECT function_redirect) {
                                          SUBHOOK_64BIT_OFFSET);
 
             if (subhook_install(hook) != 0) {
-                printf("Cannot install the redirect to the original function");
+                l_error("Cannot install the redirect to the original function");
                 return false;
             }
 
@@ -150,7 +156,7 @@ bool create_fixup_area(P_REDIRECT function_redirect) {
                 subhook_t nix2nix_hook = subhook_new(function_redirect->fixup_area, function_redirect->func,
                                                      SUBHOOK_64BIT_OFFSET);
                 if (subhook_install(nix2nix_hook) != 0) {
-                    printf("Failed to create the hook from %p win_to_nix %p", function_redirect->func,
+                    l_error("Failed to create the hook from %p win_to_nix %p", function_redirect->func,
                            function_redirect->fixup_area);
                     return false;
                 }
@@ -166,21 +172,21 @@ bool create_fixup_area(P_REDIRECT function_redirect) {
                 setup_call_to_dispatcher(function_redirect->fixup_area, call_to_dispatch,
                                          function_redirect->dispatcher);
             } else {
-                printf("Dispatcher type not implemented. Exit.");
+                l_error("Dispatcher type not implemented. Exit.");
                 return false;
             }
             break;
         case HOOK_DEFAULT:
             // TODO:
         default:
-            printf("Redirect type not implemented. Exit.");
+            l_error("Redirect type not implemented. Exit.");
             return false;
     }
 
     // Fix permissions on the function_redirect.
     if (mprotect((void *) ((uintptr_t) function_redirect->fixup_area & PAGE_MASK), PAGE_SIZE,
                  PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
-        printf("mprotect() failed on stub => %p (%m), try `sudo setenforce 0`\n", function_redirect->fixup_area);
+        l_error("mprotect() failed on stub => %p (%m), try `sudo setenforce 0`", function_redirect->fixup_area);
         return false;
     }
 
@@ -219,7 +225,7 @@ insert_function_redirect(void *function, int n_args, void *redirect, uint32_t fl
             selected_dispatcher = NULL;
             break;
         default:
-            printf("Unknown dispatcher. Exit");
+            l_error("Unknown dispatcher.");
             return false;
     }
 
@@ -238,7 +244,7 @@ insert_function_redirect(void *function, int n_args, void *redirect, uint32_t fl
     } else if (flags == CALLING_CONVENTION_SWITCH) {
         fixup_area_size = redirect_size + jmp64_size;
     } else {
-        printf("Redirect type not implemented. Exit.");
+        l_error("Redirect type not implemented.");
         return false;
     }
 
@@ -261,14 +267,14 @@ insert_function_redirect(void *function, int n_args, void *redirect, uint32_t fl
     function_redirect->dispatcher = selected_dispatcher;
 
     if (!create_fixup_area(function_redirect)) {
-        printf("Cannot setup the fixup area. Exit");
+        l_error("Cannot setup the fixup area.");
         return false;
     }
 
     // Create a x64 "push mov ret" hook from the function to the fixup_area
     subhook_t hook = subhook_new(function, fixup_area, SUBHOOK_64BIT_OFFSET);
     if (subhook_install(hook) != 0) {
-        printf("Cannot install the redirect on the given function (%p).", function);
+        l_error("Cannot install the redirect on the given function (%p).", function);
         return false;
     }
 
