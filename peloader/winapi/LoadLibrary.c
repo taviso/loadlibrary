@@ -142,12 +142,12 @@ static VOID WINAPI FreeLibrary(PVOID hLibModule)
     DebugLog("FreeLibrary(%p)", hLibModule);
 }
 
-DECLARE_CRT_EXPORT("FreeLibrary", FreeLibrary, 1);
-DECLARE_CRT_EXPORT("LoadLibraryExW", LoadLibraryExW, 3);
-DECLARE_CRT_EXPORT("LoadLibraryW", LoadLibraryW, 1);
-DECLARE_CRT_EXPORT("GetProcAddress", GetProcAddress, 2);
-DECLARE_CRT_EXPORT("GetModuleHandleW", GetModuleHandleW, 1);
-DECLARE_CRT_EXPORT("GetModuleHandleA", GetModuleHandleA, 1);
-DECLARE_CRT_EXPORT("GetModuleFileNameA", GetModuleFileNameA, 3);
-DECLARE_CRT_EXPORT("GetModuleFileNameW", GetModuleFileNameW, 3);
-DECLARE_CRT_EXPORT("GetModuleHandleExA", GetModuleHandleExA, 3);
+DECLARE_CRT_EXPORT("FreeLibrary", FreeLibrary);
+DECLARE_CRT_EXPORT("LoadLibraryExW", LoadLibraryExW);
+DECLARE_CRT_EXPORT("LoadLibraryW", LoadLibraryW);
+DECLARE_CRT_EXPORT("GetProcAddress", GetProcAddress);
+DECLARE_CRT_EXPORT("GetModuleHandleW", GetModuleHandleW);
+DECLARE_CRT_EXPORT("GetModuleHandleA", GetModuleHandleA);
+DECLARE_CRT_EXPORT("GetModuleFileNameA", GetModuleFileNameA);
+DECLARE_CRT_EXPORT("GetModuleFileNameW", GetModuleFileNameW);
+DECLARE_CRT_EXPORT("GetModuleHandleExA", GetModuleHandleExA);

@@ -5,17 +5,7 @@
 
 extern struct hsearch_data crtexports;
 
-#ifdef __x86_64__
-#define DECLARE_CRT_EXPORT(_name, _func, _n_args)                                           \
-    static void __attribute__((constructor(101))) __const__ ## _func (void)                 \
-    {                                                                                       \
-        ENTRY e = { _name, _func }, *ep;                                                    \
-        if (crtexports.table == NULL)                                                       \
-            hcreate_r(1024, &crtexports);                                                   \
-        hsearch_r(e, ENTER, &ep, &crtexports);                                              \
-        return;                                                                             \
-    }
-#else
+
 #define DECLARE_CRT_EXPORT(_name, _func)                 \
     static void __constructor __const__ ## _func (void)  \
     {                                                    \
@@ -25,7 +15,5 @@ extern struct hsearch_data crtexports;
         hsearch_r(e, ENTER, &ep, &crtexports);           \
         return;                                          \
     }
-#endif
-#else
-# warn winexports.h included twice
+
 #endif

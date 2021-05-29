@@ -30,5 +30,5 @@ VOID WINAPI SetLastError(DWORD dwErrCode)
     return;
 }
 
-DECLARE_CRT_EXPORT("GetLastError", GetLastError, 0);
-DECLARE_CRT_EXPORT("SetLastError", SetLastError, 1);
+DECLARE_CRT_EXPORT("GetLastError", GetLastError);
+DECLARE_CRT_EXPORT("SetLastError", SetLastError);

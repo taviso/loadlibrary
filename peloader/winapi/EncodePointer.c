@@ -31,5 +31,5 @@ STATIC PVOID WINAPI DecodePointer(PVOID Ptr)
 }
 
 
-DECLARE_CRT_EXPORT("EncodePointer", EncodePointer, 1);
-DECLARE_CRT_EXPORT("DecodePointer", DecodePointer, 1);
+DECLARE_CRT_EXPORT("EncodePointer", EncodePointer);
+DECLARE_CRT_EXPORT("DecodePointer", DecodePointer);

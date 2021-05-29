@@ -25,5 +25,5 @@ STATIC WINAPI BOOLEAN RtlDeleteFunctionTable(PVOID FunctionTable) {
     return true;
 }
 
-DECLARE_CRT_EXPORT("RtlAddFunctionTable", RtlAddFunctionTable, 3);
-DECLARE_CRT_EXPORT("RtlDeleteFunctionTable", RtlDeleteFunctionTable, 1);
+DECLARE_CRT_EXPORT("RtlAddFunctionTable", RtlAddFunctionTable);
+DECLARE_CRT_EXPORT("RtlDeleteFunctionTable", RtlDeleteFunctionTable);

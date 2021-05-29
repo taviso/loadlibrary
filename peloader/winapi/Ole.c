@@ -57,9 +57,9 @@ STATIC DWORD IIDFromString(PVOID a)
     return -1;
 }
 
-DECLARE_CRT_EXPORT("CoCreateGuid", CoCreateGuid, 1);
-DECLARE_CRT_EXPORT("CoCreateInstance", CoCreateInstance, 5);
-DECLARE_CRT_EXPORT("CoInitializeEx", CoInitializeEx, 2);
-DECLARE_CRT_EXPORT("CoSetProxyBlanket", CoSetProxyBlanket, 1);
-DECLARE_CRT_EXPORT("CoUninitialize", CoUninitialize, 1);
-DECLARE_CRT_EXPORT("IIDFromString", IIDFromString, 1);
+DECLARE_CRT_EXPORT("CoCreateGuid", CoCreateGuid);
+DECLARE_CRT_EXPORT("CoCreateInstance", CoCreateInstance);
+DECLARE_CRT_EXPORT("CoInitializeEx", CoInitializeEx);
+DECLARE_CRT_EXPORT("CoSetProxyBlanket", CoSetProxyBlanket);
+DECLARE_CRT_EXPORT("CoUninitialize", CoUninitialize);
+DECLARE_CRT_EXPORT("IIDFromString", IIDFromString);

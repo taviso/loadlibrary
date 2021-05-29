@@ -98,28 +98,28 @@ static WINAPI void WaitForThreadpoolWorkCallbacks(PVOID pwk, BOOL fCancelPending
 }
 
 
-DECLARE_CRT_EXPORT("CreateThreadPoolWait", CreateThreadPoolWait, 1);
-DECLARE_CRT_EXPORT("CreateThreadPool", CreateThreadPool, 1);
-DECLARE_CRT_EXPORT("InitializeConditionVariable", InitializeConditionVariable, 1);
-DECLARE_CRT_EXPORT("SleepConditionVariableCS", SleepConditionVariableCS, 3);
-DECLARE_CRT_EXPORT("WakeAllConditionVariable", WakeAllConditionVariable, 1);
+DECLARE_CRT_EXPORT("CreateThreadPoolWait", CreateThreadPoolWait);
+DECLARE_CRT_EXPORT("CreateThreadPool", CreateThreadPool);
+DECLARE_CRT_EXPORT("InitializeConditionVariable", InitializeConditionVariable);
+DECLARE_CRT_EXPORT("SleepConditionVariableCS", SleepConditionVariableCS);
+DECLARE_CRT_EXPORT("WakeAllConditionVariable", WakeAllConditionVariable);
 
-DECLARE_CRT_EXPORT("CreateThreadpoolTimer", CreateThreadpoolTimer, 3);
-DECLARE_CRT_EXPORT("CloseThreadpoolTimer", CloseThreadpoolTimer, 1);
-DECLARE_CRT_EXPORT("CreateThreadpoolWait", CreateThreadpoolWait, 0);
-DECLARE_CRT_EXPORT("SetThreadpoolWait", SetThreadpoolWait, 0);
-DECLARE_CRT_EXPORT("CloseThreadpoolWait", CloseThreadpoolWait, 0);
-DECLARE_CRT_EXPORT("CreateThreadpoolWork", CreateThreadpoolWork, 0);
-DECLARE_CRT_EXPORT("SubmitThreadpoolWork", SubmitThreadpoolWork, 0);
-DECLARE_CRT_EXPORT("CancelThreadpoolIo", CancelThreadpoolIo, 0);
-DECLARE_CRT_EXPORT("CloseThreadpool", CloseThreadpool, 0);
-DECLARE_CRT_EXPORT("CloseThreadpoolIo", CloseThreadpoolIo, 0);
-DECLARE_CRT_EXPORT("CloseThreadpoolWork", CloseThreadpoolWork, 1);
-DECLARE_CRT_EXPORT("CreateThreadpool", CreateThreadpool, 0);
-DECLARE_CRT_EXPORT("CreateThreadpoolIo", CreateThreadpoolIo, 0);
-DECLARE_CRT_EXPORT("SetThreadpoolThreadMaximum", SetThreadpoolThreadMaximum, 0);
-DECLARE_CRT_EXPORT("SetThreadpoolThreadMinimum", SetThreadpoolThreadMinimum, 0);
-DECLARE_CRT_EXPORT("StartThreadpoolIo", StartThreadpoolIo, 0);
-DECLARE_CRT_EXPORT("WaitForThreadpoolIoCallbacks", WaitForThreadpoolIoCallbacks, 0);
-DECLARE_CRT_EXPORT("WaitForThreadpoolWaitCallbacks", WaitForThreadpoolWaitCallbacks, 0);
-DECLARE_CRT_EXPORT("WaitForThreadpoolWorkCallbacks", WaitForThreadpoolWorkCallbacks, 2);
+DECLARE_CRT_EXPORT("CreateThreadpoolTimer", CreateThreadpoolTimer);
+DECLARE_CRT_EXPORT("CloseThreadpoolTimer", CloseThreadpoolTimer);
+DECLARE_CRT_EXPORT("CreateThreadpoolWait", CreateThreadpoolWait);
+DECLARE_CRT_EXPORT("SetThreadpoolWait", SetThreadpoolWait);
+DECLARE_CRT_EXPORT("CloseThreadpoolWait", CloseThreadpoolWait);
+DECLARE_CRT_EXPORT("CreateThreadpoolWork", CreateThreadpoolWork);
+DECLARE_CRT_EXPORT("SubmitThreadpoolWork", SubmitThreadpoolWork);
+DECLARE_CRT_EXPORT("CancelThreadpoolIo", CancelThreadpoolIo);
+DECLARE_CRT_EXPORT("CloseThreadpool", CloseThreadpool);
+DECLARE_CRT_EXPORT("CloseThreadpoolIo", CloseThreadpoolIo);
+DECLARE_CRT_EXPORT("CloseThreadpoolWork", CloseThreadpoolWork);
+DECLARE_CRT_EXPORT("CreateThreadpool", CreateThreadpool);
+DECLARE_CRT_EXPORT("CreateThreadpoolIo", CreateThreadpoolIo);
+DECLARE_CRT_EXPORT("SetThreadpoolThreadMaximum", SetThreadpoolThreadMaximum);
+DECLARE_CRT_EXPORT("SetThreadpoolThreadMinimum", SetThreadpoolThreadMinimum);
+DECLARE_CRT_EXPORT("StartThreadpoolIo", StartThreadpoolIo);
+DECLARE_CRT_EXPORT("WaitForThreadpoolIoCallbacks", WaitForThreadpoolIoCallbacks);
+DECLARE_CRT_EXPORT("WaitForThreadpoolWaitCallbacks", WaitForThreadpoolWaitCallbacks);
+DECLARE_CRT_EXPORT("WaitForThreadpoolWorkCallbacks", WaitForThreadpoolWorkCallbacks);

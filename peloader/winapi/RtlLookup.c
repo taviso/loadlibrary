@@ -34,4 +34,4 @@ STATIC WINAPI PVOID RtlPcToFileHeader(PVOID PcValue, PVOID *BaseOfImage) {
     return ImageBase;
 }
 
-DECLARE_CRT_EXPORT("RtlPcToFileHeader", RtlPcToFileHeader, 2);
+DECLARE_CRT_EXPORT("RtlPcToFileHeader", RtlPcToFileHeader);

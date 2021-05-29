@@ -158,17 +158,17 @@ STATIC PVOID WINAPI GlobalFree(PVOID hMem)
     return NULL;
 }
 
-DECLARE_CRT_EXPORT("HeapCreate", HeapCreate,3 );
-DECLARE_CRT_EXPORT("GetProcessHeap", GetProcessHeap, 0);
-DECLARE_CRT_EXPORT("HeapAlloc", HeapAlloc, 3);
-DECLARE_CRT_EXPORT("HeapFree", HeapFree, 3);
-DECLARE_CRT_EXPORT("RtlFreeHeap", RtlFreeHeap, 3);
-DECLARE_CRT_EXPORT("RtlSetHeapInformation", RtlSetHeapInformation,4);
-DECLARE_CRT_EXPORT("HeapSize", HeapSize, 3);
-DECLARE_CRT_EXPORT("HeapReAlloc", HeapReAlloc, 4);
-DECLARE_CRT_EXPORT("LocalAlloc", LocalAlloc, 2);
-DECLARE_CRT_EXPORT("LocalFree", LocalFree, 1);
-DECLARE_CRT_EXPORT("RtlCreateHeap", RtlCreateHeap, 6);
-DECLARE_CRT_EXPORT("RtlAllocateHeap", RtlAllocateHeap, 3);
-DECLARE_CRT_EXPORT("GlobalAlloc", GlobalAlloc, 2);
-DECLARE_CRT_EXPORT("GlobalFree", GlobalFree, 1);
+DECLARE_CRT_EXPORT("HeapCreate", HeapCreate);
+DECLARE_CRT_EXPORT("GetProcessHeap", GetProcessHeap);
+DECLARE_CRT_EXPORT("HeapAlloc", HeapAlloc);
+DECLARE_CRT_EXPORT("HeapFree", HeapFree);
+DECLARE_CRT_EXPORT("RtlFreeHeap", RtlFreeHeap);
+DECLARE_CRT_EXPORT("RtlSetHeapInformation", RtlSetHeapInformation);
+DECLARE_CRT_EXPORT("HeapSize", HeapSize);
+DECLARE_CRT_EXPORT("HeapReAlloc", HeapReAlloc);
+DECLARE_CRT_EXPORT("LocalAlloc", LocalAlloc);
+DECLARE_CRT_EXPORT("LocalFree", LocalFree);
+DECLARE_CRT_EXPORT("RtlCreateHeap", RtlCreateHeap);
+DECLARE_CRT_EXPORT("RtlAllocateHeap", RtlAllocateHeap);
+DECLARE_CRT_EXPORT("GlobalAlloc", GlobalAlloc);
+DECLARE_CRT_EXPORT("GlobalFree", GlobalFree);

@@ -106,5 +106,5 @@ STATIC PVOID WINAPI MapViewOfFile(HANDLE hFileMappingObject,
     return FileView;
 }
 
-DECLARE_CRT_EXPORT("CreateFileMappingW", CreateFileMappingW, 6);
-DECLARE_CRT_EXPORT("MapViewOfFile", MapViewOfFile, 5);
+DECLARE_CRT_EXPORT("CreateFileMappingW", CreateFileMappingW);
+DECLARE_CRT_EXPORT("MapViewOfFile", MapViewOfFile);

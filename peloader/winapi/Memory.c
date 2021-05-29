@@ -67,7 +67,7 @@ STATIC BOOL WINAPI VirtualFree(PVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType)
     return TRUE;
 }
 
-DECLARE_CRT_EXPORT("VirtualAlloc", VirtualAlloc, 4);
-DECLARE_CRT_EXPORT("VirtualProtect", VirtualProtect, 4);
-DECLARE_CRT_EXPORT("VirtualUnlock", VirtualUnlock, 2);
-DECLARE_CRT_EXPORT("VirtualFree", VirtualFree, 3);
+DECLARE_CRT_EXPORT("VirtualAlloc", VirtualAlloc);
+DECLARE_CRT_EXPORT("VirtualProtect", VirtualProtect);
+DECLARE_CRT_EXPORT("VirtualUnlock", VirtualUnlock);
+DECLARE_CRT_EXPORT("VirtualFree", VirtualFree);

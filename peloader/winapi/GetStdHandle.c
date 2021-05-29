@@ -46,5 +46,5 @@ STATIC DWORD WINAPI GetFileType(HANDLE hFile)
     return FILE_TYPE_CHAR;
 }
 
-DECLARE_CRT_EXPORT("GetStdHandle", GetStdHandle, 1);
-DECLARE_CRT_EXPORT("GetFileType", GetFileType, 1);
+DECLARE_CRT_EXPORT("GetStdHandle", GetStdHandle);
+DECLARE_CRT_EXPORT("GetFileType", GetFileType);

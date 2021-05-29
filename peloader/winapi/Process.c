@@ -54,7 +54,7 @@ STATIC BOOL WINAPI SetProcessInformation(HANDLE hProcess,
     return true;
 }
 
-DECLARE_CRT_EXPORT("QueryFullProcessImageNameW", QueryFullProcessImageNameW, 4);
-DECLARE_CRT_EXPORT("NtSetInformationProcess", NtSetInformationProcess, 4);
-DECLARE_CRT_EXPORT("GetProcessMitigationPolicy", GetProcessMitigationPolicy, 4);
-DECLARE_CRT_EXPORT("SetProcessInformation", SetProcessInformation, 4);
+DECLARE_CRT_EXPORT("QueryFullProcessImageNameW", QueryFullProcessImageNameW);
+DECLARE_CRT_EXPORT("NtSetInformationProcess", NtSetInformationProcess);
+DECLARE_CRT_EXPORT("GetProcessMitigationPolicy", GetProcessMitigationPolicy);
+DECLARE_CRT_EXPORT("SetProcessInformation", SetProcessInformation);

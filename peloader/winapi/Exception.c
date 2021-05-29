@@ -180,4 +180,4 @@ static WINAPI void RtlUnwind(PEXCEPTION_FRAME TargetFrame, PVOID TargetIp, PEXCE
 
 DECLARE_CRT_EXPORT("RtlUnwind", RtlUnwind);
 #endif
-DECLARE_CRT_EXPORT("RaiseException", RaiseException, 4);
+DECLARE_CRT_EXPORT("RaiseException", RaiseException);

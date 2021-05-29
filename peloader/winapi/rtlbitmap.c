@@ -1151,6 +1151,6 @@ NOP_FILL();
   return 0;
 }
 
-DECLARE_CRT_EXPORT("RtlFindClearBitsAndSet", RtlFindClearBitsAndSet, 3);
-DECLARE_CRT_EXPORT("RtlClearBits", RtlClearBits, 3);
-DECLARE_CRT_EXPORT("RtlAreBitsSet", RtlAreBitsSet, 3);
+DECLARE_CRT_EXPORT("RtlFindClearBitsAndSet", RtlFindClearBitsAndSet);
+DECLARE_CRT_EXPORT("RtlClearBits", RtlClearBits);
+DECLARE_CRT_EXPORT("RtlAreBitsSet", RtlAreBitsSet);

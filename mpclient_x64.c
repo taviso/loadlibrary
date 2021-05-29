@@ -50,7 +50,6 @@
 #include "streambuffer.h"
 #include "openscan.h"
 #include "hook.h"
-#include "x64_dispatcher.h"
 #include "include/mpclient.h"
 
 struct pe_image image = {
@@ -66,11 +65,10 @@ const struct rlimit kUsageLimits[] = {
     [RLIMIT_NOFILE] = { .rlim_cur = 32,         .rlim_max = 32 },
 };
 
-DWORD (* __rsignal)(PHANDLE KernelHandle, DWORD Code, PVOID Params, DWORD Size);
+DWORD WINAPI (* __rsignal)(PHANDLE KernelHandle, DWORD Code, PVOID Params, DWORD Size);
 
-static DWORD EngineScanCallback(PSCANSTRUCT Scan)
+static DWORD WINAPI EngineScanCallback(PSCANSTRUCT Scan)
 {
-    NOP_FILL();
     if (Scan->Flags & SCAN_MEMBERNAME) {
         LogMessage("Scanning archive member %s", Scan->VirusName);
     }
@@ -99,7 +97,7 @@ static DWORD EngineScanCallback(PSCANSTRUCT Scan)
     return 0;
 }
 
-static DWORD ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
+static DWORD WINAPI ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
 {
     NOP_FILL();
     fseek(this, Offset, SEEK_SET);
@@ -107,7 +105,7 @@ static DWORD ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, 
     return TRUE;
 }
 
-static DWORD GetStreamSize(PVOID this, PULONGLONG FileSize)
+static DWORD WINAPI GetStreamSize(PVOID this, PULONGLONG FileSize)
 {
     NOP_FILL();
     fseek(this, 0, SEEK_END);
@@ -115,7 +113,7 @@ static DWORD GetStreamSize(PVOID this, PULONGLONG FileSize)
     return TRUE;
 }
 
-static PWCHAR GetStreamName(PVOID this)
+static PWCHAR WINAPI GetStreamName(PVOID this)
 {
     NOP_FILL();
     return L"input";
@@ -204,8 +202,7 @@ int main(int argc, char **argv, char **envp)
     }
 
     // Call DllMain()
-    //P_REDIRECT entry_point = insert_function_redirect(image.entry, 3, NULL, CALLING_CONVENTION_SWITCH, NIX2WIN);
-    x86_64_call_exported_function(image.entry, (PVOID) 'MPENENGN', DLL_PROCESS_ATTACH, NULL);
+    image.entry((PVOID) 'MPENENGN', DLL_PROCESS_ATTACH, NULL);
 
     // Install usage limits to prevent system crash.
     setrlimit(RLIMIT_CORE, &kUsageLimits[RLIMIT_CORE]);
@@ -236,7 +233,7 @@ int main(int argc, char **argv, char **envp)
     BootParams.EngineConfig = &EngineConfig;
     KernelHandle = NULL;
 
-    if (x86_64_call_exported_function(__rsignal, &KernelHandle, RSIG_BOOTENGINE, &BootParams, sizeof BootParams) != 0) {
+    if (__rsignal(&KernelHandle, RSIG_BOOTENGINE, &BootParams, sizeof BootParams) != 0) {
         LogMessage("__rsignal(RSIG_BOOTENGINE) returned failure, missing definitions?");
         LogMessage("Make sure the VDM files and mpengine.dll are in the engine directory");
         return 1;
@@ -245,11 +242,6 @@ int main(int argc, char **argv, char **envp)
     ZeroMemory(&ScanParams, sizeof ScanParams);
     ZeroMemory(&ScanDescriptor, sizeof ScanDescriptor);
     ZeroMemory(&ScanReply, sizeof ScanReply);
-
-    P_REDIRECT engine_scan_callback_redirect = insert_function_redirect(EngineScanCallback, 1, NULL, CALLING_CONVENTION_SWITCH, WIN2NIX);
-    P_REDIRECT read_stream_redirect = insert_function_redirect(ReadStream, 5, NULL, CALLING_CONVENTION_SWITCH, WIN2NIX);
-    P_REDIRECT get_stream_size_redirect = insert_function_redirect(GetStreamSize, 2, NULL, CALLING_CONVENTION_SWITCH, WIN2NIX);
-    P_REDIRECT get_stream_name_redirect = insert_function_redirect(GetStreamName, 1, NULL, CALLING_CONVENTION_SWITCH, WIN2NIX);
 
     ScanParams.Descriptor        = &ScanDescriptor;
     ScanParams.ScanReply         = &ScanReply;
@@ -272,7 +264,7 @@ int main(int argc, char **argv, char **envp)
 
         LogMessage("Scanning %s...", *argv);
 
-        if (x86_64_call_exported_function(__rsignal, &KernelHandle, RSIG_SCAN_STREAMBUFFER, &ScanParams, sizeof ScanParams) != 0) {
+        if (__rsignal(&KernelHandle, RSIG_SCAN_STREAMBUFFER, &ScanParams, sizeof ScanParams) != 0) {
             LogMessage("__rsignal(RSIG_SCAN_STREAMBUFFER) returned failure, file unreadable?");
             return 1;
         }

@@ -123,14 +123,14 @@ STATIC BOOL WINAPI FileTimeToSystemTime(PFILETIME lpFileTime, PSYSTEMTIME lpSyst
     return FALSE;
 }
 
-DECLARE_CRT_EXPORT("GetSystemTime", GetSystemTime, 1);
-DECLARE_CRT_EXPORT("SystemTimeToFileTime", SystemTimeToFileTime, 2);
-DECLARE_CRT_EXPORT("GetSystemTimePreciseAsFileTime", GetSystemTimePreciseAsFileTime, 1);
-DECLARE_CRT_EXPORT("GetSystemTimeAsFileTime", GetSystemTimeAsFileTime, 1);
-DECLARE_CRT_EXPORT("QueryPerformanceCounter", QueryPerformanceCounter, 1);
-DECLARE_CRT_EXPORT("QueryPerformanceFrequency", QueryPerformanceFrequency, 1);
-DECLARE_CRT_EXPORT("GetTickCount", GetTickCount, 0);
-DECLARE_CRT_EXPORT("GetTickCount64", GetTickCount64, 0);
-DECLARE_CRT_EXPORT("GetProcessTimes", GetProcessTimes, 5);
-DECLARE_CRT_EXPORT("DosDateTimeToFileTime", DosDateTimeToFileTime, 3);
-DECLARE_CRT_EXPORT("FileTimeToSystemTime", FileTimeToSystemTime, 2);
+DECLARE_CRT_EXPORT("GetSystemTime", GetSystemTime);
+DECLARE_CRT_EXPORT("SystemTimeToFileTime", SystemTimeToFileTime);
+DECLARE_CRT_EXPORT("GetSystemTimePreciseAsFileTime", GetSystemTimePreciseAsFileTime);
+DECLARE_CRT_EXPORT("GetSystemTimeAsFileTime", GetSystemTimeAsFileTime);
+DECLARE_CRT_EXPORT("QueryPerformanceCounter", QueryPerformanceCounter);
+DECLARE_CRT_EXPORT("QueryPerformanceFrequency", QueryPerformanceFrequency);
+DECLARE_CRT_EXPORT("GetTickCount", GetTickCount);
+DECLARE_CRT_EXPORT("GetTickCount64", GetTickCount64);
+DECLARE_CRT_EXPORT("GetProcessTimes", GetProcessTimes);
+DECLARE_CRT_EXPORT("DosDateTimeToFileTime", DosDateTimeToFileTime);
+DECLARE_CRT_EXPORT("FileTimeToSystemTime", FileTimeToSystemTime);

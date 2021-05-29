@@ -65,8 +65,8 @@ STATIC ULONG WINAPI EventUnregister(HANDLE RegHandle) {
     return STATUS_SUCCESS;
 }
 
-DECLARE_CRT_EXPORT("CreateEventW", CreateEventW, 4);
-DECLARE_CRT_EXPORT("SetEvent", SetEvent, 1);
-DECLARE_CRT_EXPORT("ResetEvent", ResetEvent, 1);
-DECLARE_CRT_EXPORT("EventSetInformation", EventSetInformation, 4);
-DECLARE_CRT_EXPORT("EventUnregister", EventUnregister, 1);
+DECLARE_CRT_EXPORT("CreateEventW", CreateEventW);
+DECLARE_CRT_EXPORT("SetEvent", SetEvent);
+DECLARE_CRT_EXPORT("ResetEvent", ResetEvent);
+DECLARE_CRT_EXPORT("EventSetInformation", EventSetInformation);
+DECLARE_CRT_EXPORT("EventUnregister", EventUnregister);

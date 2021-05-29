@@ -55,9 +55,9 @@ STATIC VOID WINAPI InitializeCriticalSection(PVOID lpCriticalSection)
     return;
 }
 
-DECLARE_CRT_EXPORT("DeleteCriticalSection", DeleteCriticalSection, 1);
-DECLARE_CRT_EXPORT("LeaveCriticalSection", LeaveCriticalSection, 1);
-DECLARE_CRT_EXPORT("EnterCriticalSection", EnterCriticalSection, 1);
-DECLARE_CRT_EXPORT("InitializeCriticalSectionAndSpinCount", InitializeCriticalSectionAndSpinCount, 2);
-DECLARE_CRT_EXPORT("InitializeCriticalSectionEx", InitializeCriticalSectionEx, 3);
-DECLARE_CRT_EXPORT("InitializeCriticalSection", InitializeCriticalSection, 1);
+DECLARE_CRT_EXPORT("DeleteCriticalSection", DeleteCriticalSection);
+DECLARE_CRT_EXPORT("LeaveCriticalSection", LeaveCriticalSection);
+DECLARE_CRT_EXPORT("EnterCriticalSection", EnterCriticalSection);
+DECLARE_CRT_EXPORT("InitializeCriticalSectionAndSpinCount", InitializeCriticalSectionAndSpinCount);
+DECLARE_CRT_EXPORT("InitializeCriticalSectionEx", InitializeCriticalSectionEx);
+DECLARE_CRT_EXPORT("InitializeCriticalSection", InitializeCriticalSection);

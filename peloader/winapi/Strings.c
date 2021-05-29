@@ -173,11 +173,11 @@ STATIC int WINAPI CompareStringOrdinal(LPCWCH lpString1,
         return CSTR_GREATER_THAN;
 }
 
-DECLARE_CRT_EXPORT("MultiByteToWideChar", MultiByteToWideChar, 6);
-DECLARE_CRT_EXPORT("WideCharToMultiByte", WideCharToMultiByte, 8);
-DECLARE_CRT_EXPORT("GetStringTypeA", GetStringTypeA, 5);
-DECLARE_CRT_EXPORT("GetStringTypeW", GetStringTypeW, 4);
-DECLARE_CRT_EXPORT("RtlInitUnicodeString", RtlInitUnicodeString, 2);
-DECLARE_CRT_EXPORT("UuidFromStringW", UuidFromStringW, 2);
-DECLARE_CRT_EXPORT("UuidCreate", UuidCreate, 1);
-DECLARE_CRT_EXPORT("CompareStringOrdinal", CompareStringOrdinal, 5);
+DECLARE_CRT_EXPORT("MultiByteToWideChar", MultiByteToWideChar);
+DECLARE_CRT_EXPORT("WideCharToMultiByte", WideCharToMultiByte);
+DECLARE_CRT_EXPORT("GetStringTypeA", GetStringTypeA);
+DECLARE_CRT_EXPORT("GetStringTypeW", GetStringTypeW);
+DECLARE_CRT_EXPORT("RtlInitUnicodeString", RtlInitUnicodeString);
+DECLARE_CRT_EXPORT("UuidFromStringW", UuidFromStringW);
+DECLARE_CRT_EXPORT("UuidCreate", UuidCreate);
+DECLARE_CRT_EXPORT("CompareStringOrdinal", CompareStringOrdinal);

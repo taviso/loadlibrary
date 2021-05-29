@@ -28,4 +28,4 @@ STATIC WINAPI BOOL InitOnceBeginInitialize(LPINIT_ONCE lpInitOnce,
     return true;
 }
 
-DECLARE_CRT_EXPORT("InitOnceBeginInitialize", InitOnceBeginInitialize, 4);
+DECLARE_CRT_EXPORT("InitOnceBeginInitialize", InitOnceBeginInitialize);

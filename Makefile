@@ -1,7 +1,7 @@
 CFLAGS  = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -Iintercept/include -Ilog -Ipeloader -mstackrealign -mno-red-zone
 CPPFLAGS= -D_GNU_SOURCE -I.
 LDFLAGS = $(CFLAGS) -lm -Wl,--dynamic-list=exports.lst
-LDLIBS  = -Wl,--whole-archive peloader/libpeloader.a -Wl,intercept/libhook.a -Wl,intercept/libx64_dispatcher.a -Wl,intercept/libZydis.a -Wl,intercept/libsubhook.a -Wl,--no-whole-archive
+LDLIBS  = -Wl,--whole-archive peloader/libpeloader.a -Wl,intercept/libhook.a -Wl,intercept/libZydis.a -Wl,intercept/libsubhook.a -Wl,--no-whole-archive
 
 .PHONY: clean peloader intercept
 
@@ -28,7 +28,6 @@ intercept:
 	cp intercept/build/libhook.a intercept/libhook.a
 	cp intercept/build/zydis/libZydis.a intercept/libZydis.a
 	cp intercept/build/subhook/libsubhook.a intercept/libsubhook.a
-	cp intercept/build/libx64_dispatcher.a intercept/libx64_dispatcher.a
 
 peloader:
 	make -C peloader $(BUILD_TARGET)

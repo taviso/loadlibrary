@@ -1,18 +1,8 @@
 cmake_minimum_required(VERSION "3.13")
 project(hook C)
 
-# Set nasm environment
-set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
-set(CMAKE_ASM_NASM_LINK_EXECUTABLE "ld <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
-set(CMAKE_ASM_NASM_OBJECT_FORMAT elf64)
-set(DISPATCHER_ASM_FILE "${CMAKE_CURRENT_SOURCE_DIR}/src/x64_dispatcher.asm")
-set_source_files_properties(${DISPATCHER_ASM_FILE} PROPERTIES LANGUAGE ASM_NASM)
-
 enable_language(ASM_NASM)
 set(CAN_USE_ASSEMBLER TRUE)
-
-# create dispatcher static library
-add_library(x64_dispatcher ${DISPATCHER_ASM_FILE})
 
 # set arch variables (default x86)
 # to change the ARCH value to x64, pass -DARCH:STRING=x64 as argument to cmake command

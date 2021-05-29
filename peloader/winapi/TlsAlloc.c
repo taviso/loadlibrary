@@ -153,12 +153,12 @@ static BOOL WINAPI FlsFree(DWORD dwFlsIndex)
     return TlsFreeLocal(dwFlsIndex);
 }
 
-DECLARE_CRT_EXPORT("TlsFree", TlsFree, 1);
-DECLARE_CRT_EXPORT("TlsAlloc", TlsAlloc, 0);
-DECLARE_CRT_EXPORT("TlsSetValue", TlsSetValue, 2);
-DECLARE_CRT_EXPORT("TlsGetValue", TlsGetValue, 1);
+DECLARE_CRT_EXPORT("TlsFree", TlsFree);
+DECLARE_CRT_EXPORT("TlsAlloc", TlsAlloc);
+DECLARE_CRT_EXPORT("TlsSetValue", TlsSetValue);
+DECLARE_CRT_EXPORT("TlsGetValue", TlsGetValue);
 
-DECLARE_CRT_EXPORT("FlsFree", FlsFree, 1);
-DECLARE_CRT_EXPORT("FlsAlloc", FlsAlloc, 1);
-DECLARE_CRT_EXPORT("FlsSetValue", FlsSetValue, 2);
-DECLARE_CRT_EXPORT("FlsGetValue", FlsGetValue, 1);
+DECLARE_CRT_EXPORT("FlsFree", FlsFree);
+DECLARE_CRT_EXPORT("FlsAlloc", FlsAlloc);
+DECLARE_CRT_EXPORT("FlsSetValue", FlsSetValue);
+DECLARE_CRT_EXPORT("FlsGetValue", FlsGetValue);

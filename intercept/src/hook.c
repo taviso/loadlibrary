@@ -144,7 +144,7 @@ bool insert_function_redirect(void *function, void *redirect, uint32_t flags)
                         - (uintptr_t)(fixup)
                         - (uintptr_t)(sizeof(struct branch));
 
-    // Fix permissions on the _REDIRECT.
+    // Fix permissions on the redirect.
     if (mprotect((void *)((uintptr_t) fixup & PAGE_MASK), PAGE_SIZE, PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
         printf("mprotect() failed on stub => %p (%m), try `sudo setenforce 0`\n", fixup);
         return false;
@@ -161,7 +161,7 @@ bool insert_function_redirect(void *function, void *redirect, uint32_t flags)
                         - (uintptr_t)(restore)
                         - (uintptr_t)(sizeof(struct branch));
 
-    // Now I need to install the _REDIRECT, I also clobber any left over bytes
+    // Now I need to install the redirect, I also clobber any left over bytes
     // with x86 nops, so as not to disrupt disassemblers while debugging.
     callsite             = function;
 

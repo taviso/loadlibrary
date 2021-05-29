@@ -25,4 +25,4 @@ static BOOL WINAPI IsDebuggerPresent()
     return false;
 }
 
-DECLARE_CRT_EXPORT("IsDebuggerPresent", IsDebuggerPresent, 0);
+DECLARE_CRT_EXPORT("IsDebuggerPresent", IsDebuggerPresent);

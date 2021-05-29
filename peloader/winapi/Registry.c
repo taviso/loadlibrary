@@ -222,10 +222,10 @@ STATIC LONG WINAPI RegCreateKeyExW(HANDLE hKey, PVOID lpSubKey, DWORD Reserved, 
 }
 
 
-DECLARE_CRT_EXPORT("RegOpenKeyExW", RegOpenKeyExW, 5);
-DECLARE_CRT_EXPORT("RegCloseKey", RegCloseKey, 1);
-DECLARE_CRT_EXPORT("RegQueryInfoKeyW", RegQueryInfoKeyW, 12);
-DECLARE_CRT_EXPORT("NtEnumerateValueKey", NtEnumerateValueKey, 6);
-DECLARE_CRT_EXPORT("NtQueryValueKey", NtQueryValueKey, 6);
-DECLARE_CRT_EXPORT("RegCreateKeyExW", RegCreateKeyExW, 9);
+DECLARE_CRT_EXPORT("RegOpenKeyExW", RegOpenKeyExW);
+DECLARE_CRT_EXPORT("RegCloseKey", RegCloseKey);
+DECLARE_CRT_EXPORT("RegQueryInfoKeyW", RegQueryInfoKeyW);
+DECLARE_CRT_EXPORT("NtEnumerateValueKey", NtEnumerateValueKey);
+DECLARE_CRT_EXPORT("NtQueryValueKey", NtQueryValueKey);
+DECLARE_CRT_EXPORT("RegCreateKeyExW", RegCreateKeyExW);
 
