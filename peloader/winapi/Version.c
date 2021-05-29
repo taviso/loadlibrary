@@ -69,7 +69,7 @@ static VOID WINAPI GetSystemInfo(LPSYSTEM_INFO lpSystemInfo)
     lpSystemInfo->dwPageSize = 0x1000;
 }
 
-static DWORD GetSystemDefaultLCID(void)
+static DWORD WINAPI GetSystemDefaultLCID(void)
 {
     NOP_FILL();
     DebugLog("");

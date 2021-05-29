@@ -132,7 +132,11 @@
 #define wfastcall __attribute__((fastcall))
 #define STATIC static
 #define VOID void
+#ifdef __x86_64__
+#define WINAPI __attribute__((ms_abi))
+#else
 #define WINAPI __attribute__((__stdcall__))
+#endif
 
 #define KI_USER_SHARED_DATA 0xffdf0000
 #define MM_SHARED_USER_DATA_VA 0x7ffe0000

@@ -13,14 +13,6 @@
 
 STATIC DWORD LastError;
 
-void SetLastErrorLocal (DWORD dwErrCode)
-{
-    DebugLog("SetLastError(%#x)", dwErrCode);
-    LastError = dwErrCode;
-
-    return;
-}
-
 STATIC DWORD WINAPI GetLastError(void)
 {
     NOP_FILL();
@@ -29,7 +21,7 @@ STATIC DWORD WINAPI GetLastError(void)
     return LastError;
 }
 
-void WINAPI SetLastError(DWORD dwErrCode)
+VOID WINAPI SetLastError(DWORD dwErrCode)
 {
     NOP_FILL();
     DebugLog("SetLastError(%#x)", dwErrCode);

@@ -23,7 +23,7 @@ typedef struct _SYSTEMTIME {
   WORD wMilliseconds;
 } SYSTEMTIME, *PSYSTEMTIME;
 
-extern void WINAPI SetLastErrorLocal(DWORD dwErrCode);
+extern void WINAPI SetLastError(DWORD dwErrCode);
 
 // These routines are called to check if signing certificates have expired, so
 // should return similar values.
@@ -62,7 +62,7 @@ STATIC BOOL WINAPI QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount)
     struct timespec tm;
     DebugLog("");
 
-    SetLastErrorLocal(0);
+    SetLastError(0);
 
     if (clock_gettime(CLOCK_MONOTONIC_RAW, &tm) != 0)
         return FALSE;
@@ -96,7 +96,7 @@ STATIC BOOL WINAPI QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
 
     *lpFrequency = tm.tv_nsec;
 
-    SetLastErrorLocal(0);
+    SetLastError(0);
 
     return TRUE;
 }
@@ -104,7 +104,7 @@ STATIC BOOL WINAPI QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
 STATIC BOOL WINAPI GetProcessTimes(HANDLE hProcess, PFILETIME lpCreationTime, PFILETIME lpExitTime, PFILETIME lpKernelTime, PFILETIME lpUserTime)
 {
     NOP_FILL();
-    SetLastErrorLocal(0);
+    SetLastError(0);
     DebugLog("");
     return FALSE;
 }

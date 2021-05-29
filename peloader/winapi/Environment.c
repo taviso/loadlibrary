@@ -16,7 +16,7 @@
 
 #define ERROR_ENVVAR_NOT_FOUND 203
 
-extern void WINAPI SetLastErrorLocal(DWORD dwErrCode);
+extern void WINAPI SetLastError(DWORD dwErrCode);
 
 WCHAR EnvironmentStrings[] =
     L"ALLUSERSPROFILE=AllUsersProfile\0"
@@ -57,7 +57,7 @@ STATIC DWORD WINAPI GetEnvironmentVariableW(PWCHAR lpName, PVOID lpBuffer, DWORD
     } else if (strcmp(AnsiName, "MP_METASTORE_DISABLE") == 0) {
         memcpy(lpBuffer, L"1", sizeof(L"1"));
     } else {
-        SetLastErrorLocal(ERROR_ENVVAR_NOT_FOUND);
+        SetLastError(ERROR_ENVVAR_NOT_FOUND);
     }
 
     free(AnsiName);

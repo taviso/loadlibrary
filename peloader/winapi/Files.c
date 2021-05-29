@@ -25,7 +25,7 @@ typedef struct _WIN32_FILE_ATTRIBUTE_DATA {
   DWORD    nFileSizeHigh;
   DWORD    nFileSizeLow;
 } WIN32_FILE_ATTRIBUTE_DATA, *LPWIN32_FILE_ATTRIBUTE_DATA;
-extern void WINAPI SetLastErrorLocal(DWORD dwErrCode);
+extern void WINAPI SetLastError(DWORD dwErrCode);
 
 #define ERROR_FILE_NOT_FOUND 2
 
@@ -111,7 +111,7 @@ static HANDLE WINAPI CreateFileA(PCHAR lpFileName, DWORD dwDesiredAccess, DWORD 
 
     DebugLog("%s => %p", lpFileName, FileHandle);
 
-    SetLastErrorLocal(ERROR_FILE_NOT_FOUND);
+    SetLastError(ERROR_FILE_NOT_FOUND);
     return FileHandle ? FileHandle : INVALID_HANDLE_VALUE;
 }
 
@@ -162,7 +162,7 @@ static HANDLE WINAPI CreateFileW(PWCHAR lpFileName, DWORD dwDesiredAccess, DWORD
 
     free(filename);
 
-    SetLastErrorLocal(ERROR_FILE_NOT_FOUND);
+    SetLastError(ERROR_FILE_NOT_FOUND);
     return FileHandle ? FileHandle : INVALID_HANDLE_VALUE;
 }
 
@@ -269,7 +269,7 @@ static HANDLE WINAPI FindFirstFileW(PWCHAR lpFileName, PVOID lpFindFileData)
 
     free(name);
 
-    SetLastErrorLocal(ERROR_FILE_NOT_FOUND);
+    SetLastError(ERROR_FILE_NOT_FOUND);
 
     return INVALID_HANDLE_VALUE;
 }

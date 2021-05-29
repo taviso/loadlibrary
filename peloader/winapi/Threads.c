@@ -15,47 +15,47 @@
 #include "util.h"
 #include "winstrings.h"
 
-static __stdcall PVOID CreateThreadPoolWait(PVOID pwa)
+static WINAPI PVOID CreateThreadPoolWait(PVOID pwa)
 {
     NOP_FILL();
     DebugLog("");
     return (PVOID) 0x41414141;
 }
 
-static __stdcall PVOID CreateThreadPool(PVOID reserved)
+static WINAPI PVOID CreateThreadPool(PVOID reserved)
 {
     NOP_FILL();
     DebugLog("");
     return (PVOID) 0x41414141;
 }
 
-static __stdcall PVOID CreateThreadpoolTimer(PVOID pfnti, PVOID pv, PVOID pcbe)
+static WINAPI PVOID CreateThreadpoolTimer(PVOID pfnti, PVOID pv, PVOID pcbe)
 {
     NOP_FILL();
     DebugLog("");
     return (PVOID) 0x41414141;
 }
 
-static __stdcall PVOID CreateThreadpoolWork(PVOID pfnwk, PVOID pv, PVOID pcbe)
+static WINAPI PVOID CreateThreadpoolWork(PVOID pfnwk, PVOID pv, PVOID pcbe)
 {
     NOP_FILL();
     DebugLog("");
     return (PVOID) 0x41414141;
 }
 
-static __stdcall void CloseThreadpoolTimer(PVOID pti)
+static WINAPI void CloseThreadpoolTimer(PVOID pti)
 {
     NOP_FILL();
     DebugLog("%p", pti);
 }
 
-static __stdcall void InitializeConditionVariable(PVOID ConditionVariable)
+static WINAPI void InitializeConditionVariable(PVOID ConditionVariable)
 {
     NOP_FILL();
     DebugLog("%p", ConditionVariable);
 }
 
-static __stdcall BOOL SleepConditionVariableCS(PVOID ConditionVariable,
+static WINAPI BOOL SleepConditionVariableCS(PVOID ConditionVariable,
                                                PVOID CriticalSection,
                                                DWORD dwMilliseconds)
 {
@@ -64,34 +64,34 @@ static __stdcall BOOL SleepConditionVariableCS(PVOID ConditionVariable,
     return TRUE;
 }
 
-static __stdcall void WakeAllConditionVariable(PVOID ConditionVariable)
+static WINAPI void WakeAllConditionVariable(PVOID ConditionVariable)
 {
     NOP_FILL();
     DebugLog("%p", ConditionVariable);
 }
 
 
-static __stdcall PVOID CreateThreadpoolWait() { NOP_FILL(); DebugLog(""); return NULL; }
-static __stdcall PVOID SetThreadpoolWait() { NOP_FILL();DebugLog(""); return NULL; }
-static __stdcall PVOID SubmitThreadpoolWork() {NOP_FILL(); DebugLog(""); return NULL; }
-static __stdcall PVOID CancelThreadpoolIo() { NOP_FILL();DebugLog(""); return NULL; }
-static __stdcall PVOID CloseThreadpool() { NOP_FILL();DebugLog(""); return NULL; }
-static __stdcall PVOID CloseThreadpoolIo() { NOP_FILL();DebugLog(""); return NULL; }
-static __stdcall PVOID CloseThreadpoolWait() { NOP_FILL();DebugLog(""); return NULL; }
-static __stdcall void CloseThreadpoolWork(PVOID pwk)
+static WINAPI PVOID CreateThreadpoolWait() { NOP_FILL(); DebugLog(""); return NULL; }
+static WINAPI PVOID SetThreadpoolWait() { NOP_FILL();DebugLog(""); return NULL; }
+static WINAPI PVOID SubmitThreadpoolWork() {NOP_FILL(); DebugLog(""); return NULL; }
+static WINAPI PVOID CancelThreadpoolIo() { NOP_FILL();DebugLog(""); return NULL; }
+static WINAPI PVOID CloseThreadpool() { NOP_FILL();DebugLog(""); return NULL; }
+static WINAPI PVOID CloseThreadpoolIo() { NOP_FILL();DebugLog(""); return NULL; }
+static WINAPI PVOID CloseThreadpoolWait() { NOP_FILL();DebugLog(""); return NULL; }
+static WINAPI void CloseThreadpoolWork(PVOID pwk)
 {
     NOP_FILL();
     DebugLog("%p", pwk);
 }
-static __stdcall PVOID CreateThreadpool() { NOP_FILL();DebugLog(""); return NULL; }
-static __stdcall PVOID CreateThreadpoolIo() { NOP_FILL();DebugLog(""); return NULL; }
-static __stdcall PVOID SetThreadpoolThreadMaximum() { NOP_FILL();DebugLog(""); return NULL; }
-static __stdcall PVOID SetThreadpoolThreadMinimum() { NOP_FILL();DebugLog(""); return NULL; }
-static __stdcall PVOID StartThreadpoolIo() { NOP_FILL();DebugLog(""); return NULL; }
-static __stdcall PVOID WaitForThreadpoolIoCallbacks() { NOP_FILL();DebugLog(""); return NULL; }
-static __stdcall PVOID WaitForThreadpoolWaitCallbacks() { NOP_FILL();DebugLog(""); return NULL; }
+static WINAPI PVOID CreateThreadpool() { NOP_FILL();DebugLog(""); return NULL; }
+static WINAPI PVOID CreateThreadpoolIo() { NOP_FILL();DebugLog(""); return NULL; }
+static WINAPI PVOID SetThreadpoolThreadMaximum() { NOP_FILL();DebugLog(""); return NULL; }
+static WINAPI PVOID SetThreadpoolThreadMinimum() { NOP_FILL();DebugLog(""); return NULL; }
+static WINAPI PVOID StartThreadpoolIo() { NOP_FILL();DebugLog(""); return NULL; }
+static WINAPI PVOID WaitForThreadpoolIoCallbacks() { NOP_FILL();DebugLog(""); return NULL; }
+static WINAPI PVOID WaitForThreadpoolWaitCallbacks() { NOP_FILL();DebugLog(""); return NULL; }
 
-static __stdcall void WaitForThreadpoolWorkCallbacks(PVOID pwk, BOOL fCancelPendingCallbacks)
+static WINAPI void WaitForThreadpoolWorkCallbacks(PVOID pwk, BOOL fCancelPendingCallbacks)
 {
     NOP_FILL();
     DebugLog("%p %d", pwk, fCancelPendingCallbacks);
