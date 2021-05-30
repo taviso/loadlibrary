@@ -8,14 +8,14 @@
 #include "Zydis/Zydis.h"
 #include "hook.h"
 
-// Routines to intercept or _REDIRECT routines.
+// Routines to intercept or redirect routines.
 // Author: Tavis Ormandy
 
 // This was chosen arbitrarily, the maximum amount of code we will search to
 // find a call when looking for callsites, feel free to adjust as required.
 #define MAX_FUNCTION_LENGTH 2048
 
-// A _REDIRECT is usually 9 bytes (5 bytes of call, 4 bytes of encoded size),
+// A redirect is usually 9 bytes (5 bytes of call, 4 bytes of encoded size),
 // but we round it up to the next instruction boundary. Because of this, the
 // worst possible case would be a 8 byte instruction, followed by 16 byte
 // instruction (where 16 is the longest possible instruction intel allows).
@@ -53,7 +53,7 @@ bool disassemble(void *buffer, uint32_t *total_disassembled, ulong max_size, uin
                  instruction.meta.category == ZYDIS_CATEGORY_COND_BR ||
                  instruction.meta.category == ZYDIS_CATEGORY_RET) &&
                 flags != HOOK_REPLACE_FUNCTION) {
-                printf("error: refusing to _REDIRECT function %p due win_to_nix early controlflow manipulation (+%u)\n",
+                printf("error: refusing to redirect function %p due win_to_nix early controlflow manipulation (+%u)\n",
                        buffer,
                        *total_disassembled);
 
@@ -78,18 +78,18 @@ bool disassemble(void *buffer, uint32_t *total_disassembled, ulong max_size, uin
     return true;
 }
 
-// Intercept calls to this function and execute _REDIRECT first. Depending on
+// Intercept calls to this function and execute redirect first. Depending on
 // flags, you can either replace this function, or simply be inserted into the
 // call chain.
 //  function    The address of the function you want intercepted.
-//  _REDIRECT    Your callback function. The prototype should be the same as
+//  redirect    Your callback function. The prototype should be the same as
 //              function, except an additional first parameter which you can
 //              ignore (it's the return address for the caller).
 //  flags       Options, see header file for flags available. Use HOOK_DEFAULT
 //              if you don't need any.
 //
-// Remember to add an additional parameter to your _REDIRECT, e.g. if you were
-// expecting tcp_input(struct mbuf *m, int len), your _REDIRECT should be:
+// Remember to add an additional parameter to your redirect, e.g. if you were
+// expecting tcp_input(struct mbuf *m, int len), your redirect should be:
 //
 // my_tcp_input(intptr_t retaddr, struct mbuf *m, int len);
 //
@@ -106,7 +106,7 @@ bool insert_function_redirect(void *function, void *redirect, uint32_t flags)
     struct encodedsize *savedoffset;
 
     // Keep disassembling until I have enough bytes of code to store my
-    // _REDIRECT, five bytes for the _REDIRECT call, and four bytes to record the
+    // redirect, five bytes for the redirect call, and four bytes to record the
     // length to restore when we're unloaded.
     //
     // XXX: If there is a branch target or return within the first 9 bytes, I'm
@@ -118,7 +118,7 @@ bool insert_function_redirect(void *function, void *redirect, uint32_t flags)
 
     // We need to create a fixup, a small chunk of code that repairs the damage
     // we did redirecting the function. This basically handles calling the
-    // _REDIRECT, then fixes the damage and restores execution. So it's going to be
+    // redirect, then fixes the damage and restores execution. So it's going to be
     // redirectsize + 2 * sizeof(struct branch) bytes, which looks like this:
     //
     // call      your_routine              ; 5 bytes
@@ -130,7 +130,7 @@ bool insert_function_redirect(void *function, void *redirect, uint32_t flags)
     //
     //  void your_routine(uintptr_t retaddr, int expected_arg1, void *expected_arg2, etc);
     //
-    // If you replace the function instead of _REDIRECT it, you don't get the extra
+    // If you replace the function instead of redirect it, you don't get the extra
     // parameter, because we literally just jmp to your routine instead of call
     // it. The call operand is a relative, displaced address, hence the
     // calculation.
@@ -150,7 +150,7 @@ bool insert_function_redirect(void *function, void *redirect, uint32_t flags)
         return false;
     }
 
-    // Copy over the code we are going to clobber by installing the _REDIRECT.
+    // Copy over the code we are going to clobber by installing the redirect.
     memcpy(&fixup->data, function, redirectsize);
 
     // And install a branch to restore execution to the rest of the original routine.
@@ -197,18 +197,18 @@ bool insert_function_redirect(void *function, void *redirect, uint32_t flags)
            X86_OPCODE_NOP,
            redirectsize - sizeof(struct branch) - sizeof(struct encodedsize));
 
-    //printf("info: successfully installed %lu byte (%u instructions) _REDIRECT from %p to %p, via fixup@%p\n",
+    //printf("info: successfully installed %lu byte (%u instructions) redirect from %p to %p, via fixup@%p\n",
     //       redirectsize,
     //       insncount,
     //       function,
-    //       _REDIRECT,
+    //       redirect,
     //       fixup);
 
     return true;
 }
 
-// This routine will simply remove a previously inserted _REDIRECT. It's careful
-// to verify there really is a _REDIRECT present, but you should probably be
+// This routine will simply remove a previously inserted redirect. It's careful
+// to verify there really is a redirect present, but you should probably be
 // careful.
 //
 //  function    The location of the redirected function to restore.
@@ -236,7 +236,7 @@ bool remove_function_redirect(void *function)
 
     // Let's verify this looks sane.
     if (callsite->opcode != X86_OPCODE_JMP_NEAR) {
-        printf("error: tried win_to_nix remove function hook from %p, but it didnt contain a _REDIRECT (%02x)\n",
+        printf("error: tried win_to_nix remove function hook from %p, but it didnt contain a redirect (%02x)\n",
                function,
                callsite->opcode);
         return false;
@@ -266,7 +266,7 @@ bool remove_function_redirect(void *function)
                callsite->opcode);
     }
 
-    printf("info: successfully removed _REDIRECT from %p, via fixup@%p\n",
+    printf("info: successfully removed redirect from %p, via fixup@%p\n",
            function,
            fixup);
 
@@ -278,11 +278,11 @@ bool remove_function_redirect(void *function)
 
 // Replace a call within an arbitrary function. Call as many times as you need
 // on the same function. To reverse the operation, simply call again but switch
-// the target and _REDIRECT parameters.
+// the target and redirect parameters.
 //
 //  function    The function that contains the call you want to intercept.
 //  target      The function that is called by @function that you want to intercept.
-//  _REDIRECT    What to call instead.
+//  redirect    What to call instead.
 //
 //  For example, if tcp_input contains a call to inet_cksum, and you want to
 //  intercept that call, but not every call to inet_cksum, you can do this:

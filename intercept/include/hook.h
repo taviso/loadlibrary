@@ -10,9 +10,15 @@ enum ENUM_REDIRECT_FLAGS{
     HOOK_FASTCALL             = (1 << 1),     // Try to minimize damage to registers.
 };
 
+#ifdef __x86_64__
+subhook_t insert_function_redirect(void *function, void *target, uint32_t flags);
+bool remove_function_redirect(subhook_t hook);
+bool redirect_call_within_function(void *function, void *target, void *redirect);
+#else
 bool insert_function_redirect(void *function, void *target, uint32_t flags);
 bool remove_function_redirect(void *function);
 bool redirect_call_within_function(void *function, void *target, void *redirect);
+#endif
 
 // Convenient representation of an x86 near call. The immediate operand is the
 // relative, displaced branch target, thus actual address is something like:
