@@ -1,6 +1,6 @@
 CFLAGS  = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -Iintercept/include -Ilog -Ipeloader -mstackrealign -maccumulate-outgoing-args
 CPPFLAGS= -D_GNU_SOURCE -I.
-LDFLAGS = $(CFLAGS) -lm -Wl,--dynamic-list=exports.lst
+LDFLAGS = $(CFLAGS) -lm -Wl,--dynamic-list=exports.lst -ldl
 LDLIBS  = -Wl,--whole-archive peloader/libpeloader.a -Wl,intercept/libhook.a -Wl,intercept/libZydis.a -Wl,intercept/libsubhook.a -Wl,--no-whole-archive
 
 .PHONY: clean peloader intercept
@@ -9,12 +9,12 @@ RELEASE_CFLAGS 	 = -O3
 RELEASE_CPPFLAGS = -DNDEBUG
 DEBUG_CFLAGS 	 = -O0 -g
 
-TARGETS=mpclient | peloader
+TARGETS=mpclient mpclient_x64 | peloader
 
 all: CFLAGS += $(RELEASE_CFLAGS)
 all: CPPFLAGS += $(RELEASE_CPPFLAGS)
 all: BUILD_TARGET = "all"
-all: $(TARGETS) $(MY_TARGETS)
+all: $(TARGETS)
 	-mkdir -p faketemp
 
 debug: CFLAGS += $(DEBUG_CFLAGS)
@@ -44,6 +44,11 @@ mpclient: mpclient.o | peloader intercept
 mpclient_x64: CFLAGS += -g -O0  -fPIC
 mpclient_x64: CMAKE_FLAGS = -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=Debug
 mpclient_x64: mpclient_x64.o log/log.o | peloader_x64 intercept
+	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
+
+test_seh: CFLAGS += -g -O0  -fPIC
+test_seh: CMAKE_FLAGS = -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=Debug
+test_seh: test_seh.o log/log.o | peloader_x64 intercept
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
 clean:

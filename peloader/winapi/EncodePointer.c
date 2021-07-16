@@ -13,23 +13,20 @@
 #include "util.h"
 
 
-STATIC PVOID WINAPI EncodePointer(PVOID Ptr)
-{
-    NOP_FILL();
+STATIC PVOID WINAPI EncodePointer(PVOID Ptr) {
     DebugLog("%p", Ptr);
 
     // Super secret high-security encryption algorithm.
-    return (PVOID)((uintptr_t)(Ptr) ^ ~0);
+    return (PVOID) ((uintptr_t) (Ptr) ^ ~0);
 }
 
-STATIC PVOID WINAPI DecodePointer(PVOID Ptr)
-{
-    NOP_FILL();
+STATIC PVOID WINAPI DecodePointer(PVOID Ptr) {
     DebugLog("%p", Ptr);
 
-    return (PVOID)((uintptr_t)(Ptr) ^ ~0);
+    return (PVOID) ((uintptr_t) (Ptr) ^ ~0);
 }
 
 
 DECLARE_CRT_EXPORT("EncodePointer", EncodePointer);
+
 DECLARE_CRT_EXPORT("DecodePointer", DecodePointer);

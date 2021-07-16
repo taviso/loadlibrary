@@ -19,29 +19,22 @@
 extern void WINAPI SetLastError(DWORD dwErrCode);
 
 WCHAR EnvironmentStrings[] =
-    L"ALLUSERSPROFILE=AllUsersProfile\0"
-    L"ALLUSERSAPPDATA=AllUsersAppdata\0"
-;
+        L"ALLUSERSPROFILE=AllUsersProfile\0"
+        L"ALLUSERSAPPDATA=AllUsersAppdata\0";
 
-STATIC PVOID WINAPI GetEnvironmentStringsW(void)
-{
-    NOP_FILL();
+STATIC PVOID WINAPI GetEnvironmentStringsW(void) {
     DebugLog("");
 
     return EnvironmentStrings;
 }
 
-STATIC BOOL WINAPI FreeEnvironmentStringsW(PVOID lpszEnvironmentBlock)
-{
-    NOP_FILL();
+STATIC BOOL WINAPI FreeEnvironmentStringsW(PVOID lpszEnvironmentBlock) {
     DebugLog("%p", lpszEnvironmentBlock);
 
     return TRUE;
 }
 
-STATIC DWORD WINAPI GetEnvironmentVariableW(PWCHAR lpName, PVOID lpBuffer, DWORD nSize)
-{
-    NOP_FILL();
+STATIC DWORD WINAPI GetEnvironmentVariableW(PWCHAR lpName, PVOID lpBuffer, DWORD nSize) {
     char *AnsiName = CreateAnsiFromWide(lpName);
 
     DebugLog("%p [%s], %p, %u", lpName, AnsiName, lpBuffer, nSize);
@@ -65,24 +58,22 @@ STATIC DWORD WINAPI GetEnvironmentVariableW(PWCHAR lpName, PVOID lpBuffer, DWORD
 }
 
 // MPENGINE is very fussy about what ExpandEnvironmentStringsW returns.
-STATIC DWORD WINAPI ExpandEnvironmentStringsW(PWCHAR lpSrc, PWCHAR lpDst, DWORD nSize)
-{
-    NOP_FILL();
+STATIC DWORD WINAPI ExpandEnvironmentStringsW(PWCHAR lpSrc, PWCHAR lpDst, DWORD nSize) {
     PCHAR AnsiString = CreateAnsiFromWide(lpSrc);
     DWORD Result;
     struct {
-        PCHAR   Src;
-        PWCHAR  Dst;
+        PCHAR Src;
+        PWCHAR Dst;
     } KnownPaths[] = {
-        { "%ProgramFiles%", L"C:\\Program Files" },
-        { "%AllUsersProfile%", L"C:\\ProgramData" },
-        { "%PATH%", L"C:\\Path" },
-        { "%windir%", L"C:\\Windows" },
-        { "%ProgramFiles(x86)%", L"C:\\Program Files" },
-        { "%WINDIR%\\system32\\drivers", L"C:\\WINDOWS\\system32\\drivers" },
-        { "%windir%\\temp", L"C:\\WINDOWS\\temp" },
-        { "%CommonProgramFiles%", L"C:\\CommonProgramFiles" },
-        { NULL },
+            {"%ProgramFiles%",              L"C:\\Program Files"},
+            {"%AllUsersProfile%",           L"C:\\ProgramData"},
+            {"%PATH%",                      L"C:\\Path"},
+            {"%windir%",                    L"C:\\Windows"},
+            {"%ProgramFiles(x86)%",         L"C:\\Program Files"},
+            {"%WINDIR%\\system32\\drivers", L"C:\\WINDOWS\\system32\\drivers"},
+            {"%windir%\\temp",              L"C:\\WINDOWS\\temp"},
+            {"%CommonProgramFiles%",        L"C:\\CommonProgramFiles"},
+            {NULL},
     };
 
     DebugLog("%p [%s], %p, %u", lpSrc, AnsiString, lpDst, nSize);
@@ -108,20 +99,22 @@ STATIC DWORD WINAPI ExpandEnvironmentStringsW(PWCHAR lpSrc, PWCHAR lpDst, DWORD 
 
     return CountWideChars(lpSrc) + 1;
 
-finish:
+    finish:
     free(AnsiString);
     return Result;
 }
 
-static DWORD WINAPI GetEnvironmentVariableA(PCHAR lpName, PVOID lpBuffer, DWORD nSize)
-{
-    NOP_FILL();
+static DWORD WINAPI GetEnvironmentVariableA(PCHAR lpName, PVOID lpBuffer, DWORD nSize) {
     DebugLog("%s, %p, %u", lpName, lpBuffer, nSize);
     return 0;
 }
 
 DECLARE_CRT_EXPORT("GetEnvironmentStringsW", GetEnvironmentStringsW);
+
 DECLARE_CRT_EXPORT("FreeEnvironmentStringsW", FreeEnvironmentStringsW);
+
 DECLARE_CRT_EXPORT("GetEnvironmentVariableW", GetEnvironmentVariableW);
+
 DECLARE_CRT_EXPORT("ExpandEnvironmentStringsW", ExpandEnvironmentStringsW);
+
 DECLARE_CRT_EXPORT("GetEnvironmentVariableA", GetEnvironmentVariableA);

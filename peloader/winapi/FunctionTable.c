@@ -12,18 +12,17 @@
 #include "util.h"
 
 STATIC WINAPI BOOLEAN RtlAddFunctionTable(PVOID FunctionTable,
-                                     DWORD EntryCount,
-                                     DWORD64 BaseAddress) {
-    NOP_FILL();
+                                          DWORD EntryCount,
+                                          DWORD64 BaseAddress) {
     DebugLog("%p %hhx %p", FunctionTable, EntryCount, BaseAddress);
     return true;
 }
 
 STATIC WINAPI BOOLEAN RtlDeleteFunctionTable(PVOID FunctionTable) {
-    NOP_FILL();
     DebugLog("%p", FunctionTable);
     return true;
 }
 
 DECLARE_CRT_EXPORT("RtlAddFunctionTable", RtlAddFunctionTable);
+
 DECLARE_CRT_EXPORT("RtlDeleteFunctionTable", RtlDeleteFunctionTable);

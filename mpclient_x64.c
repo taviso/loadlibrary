@@ -50,7 +50,7 @@
 #include "streambuffer.h"
 #include "openscan.h"
 #include "hook.h"
-#include "include/mpclient.h"
+#include "mpclient.h"
 
 struct pe_image image = {
         .entry  = NULL,
@@ -99,7 +99,6 @@ static DWORD WINAPI EngineScanCallback(PSCANSTRUCT Scan)
 
 static DWORD WINAPI ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
 {
-    NOP_FILL();
     fseek(this, Offset, SEEK_SET);
     *SizeRead = fread(Buffer, 1, Size, this);
     return TRUE;
@@ -107,7 +106,6 @@ static DWORD WINAPI ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD
 
 static DWORD WINAPI GetStreamSize(PVOID this, PULONGLONG FileSize)
 {
-    NOP_FILL();
     fseek(this, 0, SEEK_END);
     *FileSize = ftell(this);
     return TRUE;
@@ -115,7 +113,6 @@ static DWORD WINAPI GetStreamSize(PVOID this, PULONGLONG FileSize)
 
 static PWCHAR WINAPI GetStreamName(PVOID this)
 {
-    NOP_FILL();
     return L"input";
 }
 
@@ -178,23 +175,10 @@ int main(int argc, char **argv, char **envp)
         errx(EXIT_FAILURE, "Failed to resolve mpengine entrypoint");
     }
 
-    //P_REDIRECT export_entry = insert_function_redirect(__rsignal, 4, NULL, CALLING_CONVENTION_SWITCH, NIX2WIN);
-
-    EXCEPTION_DISPOSITION ExceptionHandler(struct _EXCEPTION_RECORD *ExceptionRecord,
-            struct _EXCEPTION_FRAME *EstablisherFrame,
-            struct _CONTEXT *ContextRecord,
-            struct _EXCEPTION_FRAME **DispatcherContext)
-    {
-        LogMessage("Toplevel Exception Handler Caught Exception");
-        abort();
-    }
-
     VOID ResourceExhaustedHandler(int Signal)
     {
         errx(EXIT_FAILURE, "Resource Limits Exhausted, Signal %s", strsignal(Signal));
     }
-
-    setup_nt_threadinfo(ExceptionHandler);
 
     if (argc < 2) {
         LogMessage("usage: %s [filenames...]", *argv);

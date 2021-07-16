@@ -17,9 +17,7 @@
 
 extern void WINAPI SetLastError(DWORD dwErrCode);
 
-static HANDLE WINAPI CreateEventW(PVOID lpEventAttributes, BOOL bManualReset, BOOL bInitialState, PWCHAR lpName)
-{
-    NOP_FILL();
+static HANDLE WINAPI CreateEventW(PVOID lpEventAttributes, BOOL bManualReset, BOOL bInitialState, PWCHAR lpName) {
     char *AnsiName;
 #ifndef NDEBUG
     AnsiName = lpName ? CreateAnsiFromWide(lpName) : NULL;
@@ -36,16 +34,12 @@ static HANDLE WINAPI CreateEventW(PVOID lpEventAttributes, BOOL bManualReset, BO
     return (HANDLE) 'EVNT';
 }
 
-static BOOL WINAPI SetEvent(HANDLE hEvent)
-{
-    NOP_FILL();
+static BOOL WINAPI SetEvent(HANDLE hEvent) {
     DebugLog("%p", hEvent);
     return TRUE;
 }
 
-static BOOL WINAPI ResetEvent(HANDLE hEvent)
-{
-    NOP_FILL();
+static BOOL WINAPI ResetEvent(HANDLE hEvent) {
     DebugLog("%p", hEvent);
     return TRUE;
 }
@@ -54,19 +48,21 @@ STATIC DWORD WINAPI EventSetInformation(HANDLE RegHandle,
                                         EVENT_INFO_CLASS InformationClass,
                                         PVOID EventInformation,
                                         ULONG InformationLength) {
-    NOP_FILL();
     DebugLog("");
     return STATUS_SUCCESS;
 }
 
 STATIC ULONG WINAPI EventUnregister(HANDLE RegHandle) {
-    NOP_FILL();
     DebugLog("");
     return STATUS_SUCCESS;
 }
 
 DECLARE_CRT_EXPORT("CreateEventW", CreateEventW);
+
 DECLARE_CRT_EXPORT("SetEvent", SetEvent);
+
 DECLARE_CRT_EXPORT("ResetEvent", ResetEvent);
+
 DECLARE_CRT_EXPORT("EventSetInformation", EventSetInformation);
+
 DECLARE_CRT_EXPORT("EventUnregister", EventUnregister);

@@ -17,23 +17,17 @@
 
 #define HEAP_ZERO_MEMORY 8
 
-STATIC HANDLE WINAPI GetProcessHeap(void)
-{
-    NOP_FILL();
+STATIC HANDLE WINAPI GetProcessHeap(void) {
     DebugLog("");
     return (HANDLE) 'HEAP';
 }
 
-STATIC HANDLE WINAPI HeapCreate(DWORD flOptions, SIZE_T dwInitialSize, SIZE_T dwMaximumSize)
-{
-    NOP_FILL();
+STATIC HANDLE WINAPI HeapCreate(DWORD flOptions, SIZE_T dwInitialSize, SIZE_T dwMaximumSize) {
     DebugLog("%#x, %u, %u", flOptions, dwInitialSize, dwMaximumSize);
     return (HANDLE) 'HEAP';
 }
 
-PVOID WINAPI HeapAlloc(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes)
-{
-    NOP_FILL();
+PVOID WINAPI HeapAlloc(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes) {
     PVOID Buffer;
 
     //DebugLog("%p, %#x, %u", hHeap, dwFlags, dwBytes);
@@ -47,9 +41,7 @@ PVOID WINAPI HeapAlloc(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes)
     return Buffer;
 }
 
-BOOL WINAPI HeapFree(HANDLE hHeap, DWORD dwFlags, PVOID lpMem)
-{
-    NOP_FILL();
+BOOL WINAPI HeapFree(HANDLE hHeap, DWORD dwFlags, PVOID lpMem) {
     //DebugLog("%p, %#x, %p", hHeap, dwFlags, lpMem);
 
     free(lpMem);
@@ -57,9 +49,7 @@ BOOL WINAPI HeapFree(HANDLE hHeap, DWORD dwFlags, PVOID lpMem)
     return TRUE;
 }
 
-STATIC BOOL WINAPI RtlFreeHeap(PVOID HeapHandle, ULONG Flags, PVOID BaseAddress)
-{
-    NOP_FILL();
+STATIC BOOL WINAPI RtlFreeHeap(PVOID HeapHandle, ULONG Flags, PVOID BaseAddress) {
     DebugLog("%p, %#x, %p", HeapHandle, Flags, BaseAddress);
 
     free(BaseAddress);
@@ -67,23 +57,17 @@ STATIC BOOL WINAPI RtlFreeHeap(PVOID HeapHandle, ULONG Flags, PVOID BaseAddress)
     return TRUE;
 }
 
-STATIC SIZE_T WINAPI HeapSize(HANDLE hHeap, DWORD dwFlags, PVOID lpMem)
-{
-    NOP_FILL();
+STATIC SIZE_T WINAPI HeapSize(HANDLE hHeap, DWORD dwFlags, PVOID lpMem) {
     DebugLog("");
     return malloc_usable_size(lpMem);
 }
 
-STATIC PVOID WINAPI HeapReAlloc(HANDLE hHeap, DWORD dwFlags, PVOID lpMem, SIZE_T dwBytes)
-{
-    NOP_FILL();
+STATIC PVOID WINAPI HeapReAlloc(HANDLE hHeap, DWORD dwFlags, PVOID lpMem, SIZE_T dwBytes) {
     DebugLog("");
     return realloc(lpMem, dwBytes);
 }
 
-STATIC PVOID WINAPI LocalAlloc(UINT uFlags, SIZE_T uBytes)
-{
-    NOP_FILL();
+STATIC PVOID WINAPI LocalAlloc(UINT uFlags, SIZE_T uBytes) {
     PVOID Buffer = malloc(uBytes);
     assert(uFlags == 0);
 
@@ -92,9 +76,7 @@ STATIC PVOID WINAPI LocalAlloc(UINT uFlags, SIZE_T uBytes)
     return Buffer;
 }
 
-STATIC PVOID WINAPI LocalFree(PVOID hMem)
-{
-    NOP_FILL();
+STATIC PVOID WINAPI LocalFree(PVOID hMem) {
     DebugLog("%p", hMem);
     free(hMem);
     return NULL;
@@ -105,25 +87,21 @@ STATIC PVOID WINAPI RtlCreateHeap(ULONG Flags,
                                   SIZE_T ReserveSize,
                                   SIZE_T CommitSize,
                                   PVOID Lock,
-                                  PVOID Parameters)
-{
-    NOP_FILL();
+                                  PVOID Parameters) {
     DebugLog("%#x, %p, %#x, %#x, %p, %p",
-             Flags,
-             HeapBase,
-             ReserveSize,
-             CommitSize,
-             Lock,
-             Parameters);
+            Flags,
+            HeapBase,
+            ReserveSize,
+            CommitSize,
+            Lock,
+            Parameters);
 
     return (HANDLE) 'HEAP';
 }
 
 STATIC PVOID WINAPI RtlAllocateHeap(PVOID HeapHandle,
                                     ULONG Flags,
-                                    SIZE_T Size)
-{
-    NOP_FILL();
+                                    SIZE_T Size) {
     DebugLog("%p, %#x, %u", HeapHandle, Flags, Size);
 
     return malloc(Size);
@@ -132,16 +110,12 @@ STATIC PVOID WINAPI RtlAllocateHeap(PVOID HeapHandle,
 STATIC NTSTATUS WINAPI RtlSetHeapInformation(PVOID Heap,
                                              HEAP_INFORMATION_CLASS HeapInformationClass,
                                              PVOID HeapInformation,
-                                             SIZE_T HeapInformationLength)
-{
-    NOP_FILL();
+                                             SIZE_T HeapInformationLength) {
     DebugLog("%p, %d", Heap, HeapInformationLength);
     return 0;
 }
 
-STATIC PVOID WINAPI GlobalAlloc(UINT uFlags, SIZE_T uBytes)
-{
-    NOP_FILL();
+STATIC PVOID WINAPI GlobalAlloc(UINT uFlags, SIZE_T uBytes) {
     PVOID Buffer = malloc(uBytes);
     assert(uFlags == 0);
 
@@ -150,25 +124,36 @@ STATIC PVOID WINAPI GlobalAlloc(UINT uFlags, SIZE_T uBytes)
     return Buffer;
 }
 
-STATIC PVOID WINAPI GlobalFree(PVOID hMem)
-{
-    NOP_FILL();
+STATIC PVOID WINAPI GlobalFree(PVOID hMem) {
     DebugLog("%p", hMem);
     free(hMem);
     return NULL;
 }
 
 DECLARE_CRT_EXPORT("HeapCreate", HeapCreate);
+
 DECLARE_CRT_EXPORT("GetProcessHeap", GetProcessHeap);
+
 DECLARE_CRT_EXPORT("HeapAlloc", HeapAlloc);
+
 DECLARE_CRT_EXPORT("HeapFree", HeapFree);
+
 DECLARE_CRT_EXPORT("RtlFreeHeap", RtlFreeHeap);
+
 DECLARE_CRT_EXPORT("RtlSetHeapInformation", RtlSetHeapInformation);
+
 DECLARE_CRT_EXPORT("HeapSize", HeapSize);
+
 DECLARE_CRT_EXPORT("HeapReAlloc", HeapReAlloc);
+
 DECLARE_CRT_EXPORT("LocalAlloc", LocalAlloc);
+
 DECLARE_CRT_EXPORT("LocalFree", LocalFree);
+
 DECLARE_CRT_EXPORT("RtlCreateHeap", RtlCreateHeap);
+
 DECLARE_CRT_EXPORT("RtlAllocateHeap", RtlAllocateHeap);
+
 DECLARE_CRT_EXPORT("GlobalAlloc", GlobalAlloc);
+
 DECLARE_CRT_EXPORT("GlobalFree", GlobalFree);

@@ -2,6 +2,8 @@
 #define __UTIL_H
 #pragma once
 
+#include <ucontext.h>
+
 bool IsGdbPresent();
 
 #ifdef __linux__
@@ -28,8 +30,6 @@ static inline void *ZeroMemory(void *s, size_t n)
     return memset(s, 0, n);
 }
 
-#define NOP_FILL() __asm__ ("nop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop\nnop");
-
 union long_int64 {
     int64_t value;
     struct {
@@ -37,6 +37,8 @@ union long_int64 {
         int32_t high;
     };
 };
+
+void nix_2_ms_context_swap(ucontext_t *pNixContext, CONTEXT *pMSContext);
 
 #else
 # warning util.h included twice

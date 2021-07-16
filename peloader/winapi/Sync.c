@@ -21,7 +21,6 @@ STATIC WINAPI BOOL InitOnceBeginInitialize(LPINIT_ONCE lpInitOnce,
                                            DWORD dwFlags,
                                            PBOOL fPending,
                                            LPVOID *lpContext) {
-    NOP_FILL();
 
     DebugLog("%p %hhx %p %p", lpInitOnce, dwFlags, fPending, lpContext);
 

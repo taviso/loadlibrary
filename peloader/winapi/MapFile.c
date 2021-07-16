@@ -29,8 +29,7 @@ STATIC HANDLE WINAPI CreateFileMappingW(HANDLE hFile,
                                         DWORD flProtect,
                                         DWORD dwMaximumSizeHigh,
                                         DWORD dwMaximumSizeLow,
-                                        LPCWSTR lpName)
-{
+                                        LPCWSTR lpName) {
     union long_int64 file_size;
 
     char *file_name = CreateAnsiFromWide(lpName);
@@ -40,8 +39,7 @@ STATIC HANDLE WINAPI CreateFileMappingW(HANDLE hFile,
     if (dwMaximumSizeHigh != 0 || dwMaximumSizeLow != 0) {
         file_size.high = dwMaximumSizeHigh;
         file_size.low = dwMaximumSizeLow;
-    }
-    else {
+    } else {
         long curpos = ftell(hFile);
         fseek(hFile, 0, SEEK_END);
 
@@ -50,7 +48,7 @@ STATIC HANDLE WINAPI CreateFileMappingW(HANDLE hFile,
         fseek(hFile, curpos, SEEK_SET);
     }
 
-    MappedFileEntry *mapped_file_object = (MappedFileEntry*) calloc(1, sizeof(MappedFileEntry));
+    MappedFileEntry *mapped_file_object = (MappedFileEntry *) calloc(1, sizeof(MappedFileEntry));
 
     int fd = fileno(hFile);
     mapped_file_object->fd = fd;
@@ -81,14 +79,13 @@ STATIC PVOID WINAPI MapViewOfFile(HANDLE hFileMappingObject,
                                   DWORD dwDesiredAccess,
                                   DWORD dwFileOffsetHigh,
                                   DWORD dwFileOffsetLow,
-                                  SIZE_T dwNumberOfBytesToMap)
-{
+                                  SIZE_T dwNumberOfBytesToMap) {
     DebugLog("%p, %#x, %#x, %#x, %#x", hFileMappingObject, dwDesiredAccess, dwFileOffsetHigh, dwFileOffsetLow, dwNumberOfBytesToMap);
     union long_int64 file_offset;
     file_offset.high = dwFileOffsetHigh;
     file_offset.low = dwFileOffsetLow;
 
-    MappedFileEntry *MappedFile = (MappedFileEntry*) hFileMappingObject;
+    MappedFileEntry *MappedFile = (MappedFileEntry *) hFileMappingObject;
 
     PVOID FileView = malloc(dwNumberOfBytesToMap);
     if (dwNumberOfBytesToMap == 0) {
@@ -101,10 +98,11 @@ STATIC PVOID WINAPI MapViewOfFile(HANDLE hFileMappingObject,
         return NULL;
     }
 
-    memcpy(FileView, (void*)MappedFile->start + file_offset.value, dwNumberOfBytesToMap);
+    memcpy(FileView, (void *) MappedFile->start + file_offset.value, dwNumberOfBytesToMap);
 
     return FileView;
 }
 
 DECLARE_CRT_EXPORT("CreateFileMappingW", CreateFileMappingW);
+
 DECLARE_CRT_EXPORT("MapViewOfFile", MapViewOfFile);

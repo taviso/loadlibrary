@@ -16,9 +16,7 @@
 #define PF_FASTFAIL_AVAILABLE 23
 #define PF_MMX_INSTRUCTIONS_AVAILABLE 3
 
-STATIC BOOL WINAPI IsProcessorFeaturePresent(DWORD ProcessorFeature)
-{
-    NOP_FILL();
+STATIC BOOL WINAPI IsProcessorFeaturePresent(DWORD ProcessorFeature) {
     switch (ProcessorFeature) {
         case PF_XMMI64_INSTRUCTIONS_AVAILABLE:
         case PF_FLOATING_POINT_PRECISION_ERRATA:

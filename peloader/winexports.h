@@ -1,8 +1,6 @@
 #ifndef __WINEXPORTS_H
 #define __WINEXPORTS_H
 
-#include "hook.h"
-
 extern struct hsearch_data crtexports;
 
 

@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <ucontext.h>
 
 #include "winnt_types.h"
 #include "pe_linker.h"
@@ -18,9 +19,7 @@
 #include "util.h"
 #include "winstrings.h"
 
-static BOOL WINAPI IsDebuggerPresent()
-{
-    NOP_FILL();
+static BOOL WINAPI IsDebuggerPresent() {
     DebugLog("");
     return false;
 }

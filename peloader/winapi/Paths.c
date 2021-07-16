@@ -16,9 +16,7 @@
 
 static const uint16_t kTempPath[] = L".\\FAKETEMP\\";
 
-DWORD WINAPI GetTempPathW(DWORD nBufferLength, PVOID lpBuffer)
-{
-    NOP_FILL();
+DWORD WINAPI GetTempPathW(DWORD nBufferLength, PVOID lpBuffer) {
     DebugLog("%u, %p", nBufferLength, lpBuffer);
 
     memcpy(lpBuffer, kTempPath, sizeof(kTempPath));
@@ -26,9 +24,7 @@ DWORD WINAPI GetTempPathW(DWORD nBufferLength, PVOID lpBuffer)
     return sizeof(kTempPath) - 2;
 }
 
-DWORD WINAPI GetLogicalDrives(void)
-{
-    NOP_FILL();
+DWORD WINAPI GetLogicalDrives(void) {
     DebugLog("");
 
     return 1 << 2;
@@ -36,9 +32,7 @@ DWORD WINAPI GetLogicalDrives(void)
 
 #define DRIVE_FIXED 3
 
-UINT WINAPI GetDriveTypeW(PWCHAR lpRootPathName)
-{
-    NOP_FILL();
+UINT WINAPI GetDriveTypeW(PWCHAR lpRootPathName) {
     char *path = CreateAnsiFromWide(lpRootPathName);
     DebugLog("%p [%s]", lpRootPathName, path);
     free(path);
@@ -47,9 +41,7 @@ UINT WINAPI GetDriveTypeW(PWCHAR lpRootPathName)
 
 DWORD WINAPI GetLongPathNameA(LPCSTR lpszShortPath,
                               LPSTR lpszLongPath,
-                              DWORD cchBuffer)
-{
-    NOP_FILL();
+                              DWORD cchBuffer) {
     // For now we just return the 8.3 format path as the long path
     if (cchBuffer > strlen(lpszShortPath)) {
         memcpy(lpszLongPath, lpszShortPath, sizeof(lpszShortPath));
@@ -60,9 +52,7 @@ DWORD WINAPI GetLongPathNameA(LPCSTR lpszShortPath,
 
 DWORD WINAPI GetLongPathNameW(LPCWSTR lpszShortPath,
                               LPWSTR lpszLongPath,
-                              DWORD cchBuffer)
-{
-    NOP_FILL();
+                              DWORD cchBuffer) {
     // For now we just return the 8.3 format path as the long path
     if (cchBuffer > CountWideChars(lpszShortPath)) {
         memcpy(lpszLongPath, lpszShortPath, CountWideChars(lpszShortPath) * sizeof(WCHAR));
@@ -72,7 +62,11 @@ DWORD WINAPI GetLongPathNameW(LPCWSTR lpszShortPath,
 }
 
 DECLARE_CRT_EXPORT("GetTempPathW", GetTempPathW);
+
 DECLARE_CRT_EXPORT("GetLogicalDrives", GetLogicalDrives);
+
 DECLARE_CRT_EXPORT("GetDriveTypeW", GetDriveTypeW);
+
 DECLARE_CRT_EXPORT("GetLongPathNameA", GetLongPathNameA);
+
 DECLARE_CRT_EXPORT("GetLongPathNameW", GetLongPathNameW);

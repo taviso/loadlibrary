@@ -14,9 +14,9 @@
 #include "util.h"
 #include "strings.h"
 
-STATIC BOOL WINAPI DuplicateHandle(HANDLE hSourceProcessHandle, HANDLE hSourceHandle, HANDLE hTargetProcessHandle, PHANDLE lpTargetHandle, DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwOptions)
-{
-    NOP_FILL();
+STATIC BOOL WINAPI
+DuplicateHandle(HANDLE hSourceProcessHandle, HANDLE hSourceHandle, HANDLE hTargetProcessHandle, PHANDLE lpTargetHandle,
+                DWORD dwDesiredAccess, BOOL bInheritHandle, DWORD dwOptions) {
     DebugLog("%p, %p, %p, %p, %#x, %u, %#x", hSourceProcessHandle, hSourceHandle, hTargetProcessHandle, lpTargetHandle, dwDesiredAccess, bInheritHandle, dwOptions);
 
     // lol i dunno
@@ -24,13 +24,12 @@ STATIC BOOL WINAPI DuplicateHandle(HANDLE hSourceProcessHandle, HANDLE hSourceHa
     return TRUE;
 }
 
-STATIC UINT WINAPI SetHandleCount(UINT handleCount)
-{
-    NOP_FILL();
+STATIC UINT WINAPI SetHandleCount(UINT handleCount) {
     DebugLog("%u", handleCount);
     return handleCount;
 }
 
 
 DECLARE_CRT_EXPORT("DuplicateHandle", DuplicateHandle);
+
 DECLARE_CRT_EXPORT("SetHandleCount", SetHandleCount);

@@ -50,7 +50,7 @@
 #include "scanreply.h"
 #include "streambuffer.h"
 #include "openscan.h"
-#include "include/mpclient.h"
+#include "mpclient.h"
 
 struct pe_image image = {
         .entry  = NULL,

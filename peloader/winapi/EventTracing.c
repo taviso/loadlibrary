@@ -13,43 +13,39 @@
 #include "util.h"
 
 STATIC ULONG WINAPI RegisterTraceGuidsW(PVOID RequestAddress,
-                                 PVOID RequestContext,
-                                 PVOID ControlGuid,
-                                 ULONG GuidCount,
-                                 PVOID TraceGuidReg,
-                                 PVOID MofImagePath,
-                                 PVOID MofResourceName,
-                                 PVOID RegistrationHandle)
-{
-    NOP_FILL();
+                                        PVOID RequestContext,
+                                        PVOID ControlGuid,
+                                        ULONG GuidCount,
+                                        PVOID TraceGuidReg,
+                                        PVOID MofImagePath,
+                                        PVOID MofResourceName,
+                                        PVOID RegistrationHandle) {
     DebugLog("%p, %p, %p, %u, %p, %p, %p, %p",
-             RequestAddress,
-             RequestContext,
-             ControlGuid,
-             GuidCount,
-             TraceGuidReg,
-             MofImagePath,
-             MofResourceName,
-             RegistrationHandle);
+            RequestAddress,
+            RequestContext,
+            ControlGuid,
+            GuidCount,
+            TraceGuidReg,
+            MofImagePath,
+            MofResourceName,
+            RegistrationHandle);
 
     return STATUS_SUCCESS;
 }
 
-STATIC ULONG WINAPI UnregisterTraceGuids(HANDLE RegistrationHandle)
-{
-    NOP_FILL();
+STATIC ULONG WINAPI UnregisterTraceGuids(HANDLE RegistrationHandle) {
     DebugLog("%p", RegistrationHandle);
     return STATUS_SUCCESS;
 }
 
-static ULONG WINAPI EventActivityIdControl(ULONG ControlCode, LPGUID ActivityId)
-{
-    NOP_FILL();
+static ULONG WINAPI EventActivityIdControl(ULONG ControlCode, LPGUID ActivityId) {
     DebugLog("%u, %p", ControlCode, ActivityId);
     return STATUS_SUCCESS;
 };
 
 
 DECLARE_CRT_EXPORT("EventActivityIdControl", EventActivityIdControl);
+
 DECLARE_CRT_EXPORT("RegisterTraceGuidsW", RegisterTraceGuidsW);
+
 DECLARE_CRT_EXPORT("UnregisterTraceGuids", UnregisterTraceGuids);

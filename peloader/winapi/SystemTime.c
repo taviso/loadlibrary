@@ -13,14 +13,14 @@
 #include "util.h"
 
 typedef struct _SYSTEMTIME {
-  WORD wYear;
-  WORD wMonth;
-  WORD wDayOfWeek;
-  WORD wDay;
-  WORD wHour;
-  WORD wMinute;
-  WORD wSecond;
-  WORD wMilliseconds;
+    WORD wYear;
+    WORD wMonth;
+    WORD wDayOfWeek;
+    WORD wDay;
+    WORD wHour;
+    WORD wMinute;
+    WORD wSecond;
+    WORD wMilliseconds;
 } SYSTEMTIME, *PSYSTEMTIME;
 
 extern void WINAPI SetLastError(DWORD dwErrCode);
@@ -28,37 +28,27 @@ extern void WINAPI SetLastError(DWORD dwErrCode);
 // These routines are called to check if signing certificates have expired, so
 // should return similar values.
 
-STATIC VOID WINAPI GetSystemTime(PSYSTEMTIME lpSystemTime)
-{
-    NOP_FILL();
+STATIC VOID WINAPI GetSystemTime(PSYSTEMTIME lpSystemTime) {
     memset(lpSystemTime, 0, sizeof(SYSTEMTIME));
     return;
 }
 
-STATIC BOOL WINAPI SystemTimeToFileTime(SYSTEMTIME *lpSystemTime, PFILETIME lpFileTime)
-{
-    NOP_FILL();
+STATIC BOOL WINAPI SystemTimeToFileTime(SYSTEMTIME *lpSystemTime, PFILETIME lpFileTime) {
     memset(lpFileTime, 0, sizeof(FILETIME));
     return TRUE;
 }
 
-STATIC VOID WINAPI GetSystemTimePreciseAsFileTime(PFILETIME lpSystemTimeAsFileTime)
-{
-    NOP_FILL();
+STATIC VOID WINAPI GetSystemTimePreciseAsFileTime(PFILETIME lpSystemTimeAsFileTime) {
     memset(lpSystemTimeAsFileTime, 0, sizeof(FILETIME));
     return;
 }
 
-STATIC VOID WINAPI GetSystemTimeAsFileTime(PVOID lpSystemTimeAsFileTime)
-{
-    NOP_FILL();
+STATIC VOID WINAPI GetSystemTimeAsFileTime(PVOID lpSystemTimeAsFileTime) {
     memset(lpSystemTimeAsFileTime, 0, sizeof(FILETIME));
     return;
 }
 
-STATIC BOOL WINAPI QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount)
-{
-    NOP_FILL();
+STATIC BOOL WINAPI QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount) {
     struct timespec tm;
     DebugLog("");
 
@@ -72,21 +62,15 @@ STATIC BOOL WINAPI QueryPerformanceCounter(LARGE_INTEGER *lpPerformanceCount)
     return TRUE;
 }
 
-STATIC DWORD WINAPI GetTickCount(VOID)
-{
-    NOP_FILL();
+STATIC DWORD WINAPI GetTickCount(VOID) {
     return 0;
 }
 
-STATIC ULONGLONG WINAPI GetTickCount64(VOID)
-{
-    NOP_FILL();
+STATIC ULONGLONG WINAPI GetTickCount64(VOID) {
     return 0;
 }
 
-STATIC BOOL WINAPI QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
-{
-    NOP_FILL();
+STATIC BOOL WINAPI QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency) {
     struct timespec tm;
 
     DebugLog("");
@@ -101,36 +85,42 @@ STATIC BOOL WINAPI QueryPerformanceFrequency(LARGE_INTEGER *lpFrequency)
     return TRUE;
 }
 
-STATIC BOOL WINAPI GetProcessTimes(HANDLE hProcess, PFILETIME lpCreationTime, PFILETIME lpExitTime, PFILETIME lpKernelTime, PFILETIME lpUserTime)
-{
-    NOP_FILL();
+STATIC BOOL WINAPI
+GetProcessTimes(HANDLE hProcess, PFILETIME lpCreationTime, PFILETIME lpExitTime, PFILETIME lpKernelTime,
+                PFILETIME lpUserTime) {
     SetLastError(0);
     DebugLog("");
     return FALSE;
 }
 
-STATIC BOOL WINAPI DosDateTimeToFileTime(WORD wFatDate, WORD wFatTime, PFILETIME lpFileTime)
-{
-    NOP_FILL();
+STATIC BOOL WINAPI DosDateTimeToFileTime(WORD wFatDate, WORD wFatTime, PFILETIME lpFileTime) {
     DebugLog("");
     return FALSE;
 }
 
-STATIC BOOL WINAPI FileTimeToSystemTime(PFILETIME lpFileTime, PSYSTEMTIME lpSystemTime)
-{
-    NOP_FILL();
+STATIC BOOL WINAPI FileTimeToSystemTime(PFILETIME lpFileTime, PSYSTEMTIME lpSystemTime) {
     DebugLog("");
     return FALSE;
 }
 
 DECLARE_CRT_EXPORT("GetSystemTime", GetSystemTime);
+
 DECLARE_CRT_EXPORT("SystemTimeToFileTime", SystemTimeToFileTime);
+
 DECLARE_CRT_EXPORT("GetSystemTimePreciseAsFileTime", GetSystemTimePreciseAsFileTime);
+
 DECLARE_CRT_EXPORT("GetSystemTimeAsFileTime", GetSystemTimeAsFileTime);
+
 DECLARE_CRT_EXPORT("QueryPerformanceCounter", QueryPerformanceCounter);
+
 DECLARE_CRT_EXPORT("QueryPerformanceFrequency", QueryPerformanceFrequency);
+
 DECLARE_CRT_EXPORT("GetTickCount", GetTickCount);
+
 DECLARE_CRT_EXPORT("GetTickCount64", GetTickCount64);
+
 DECLARE_CRT_EXPORT("GetProcessTimes", GetProcessTimes);
+
 DECLARE_CRT_EXPORT("DosDateTimeToFileTime", DosDateTimeToFileTime);
+
 DECLARE_CRT_EXPORT("FileTimeToSystemTime", FileTimeToSystemTime);

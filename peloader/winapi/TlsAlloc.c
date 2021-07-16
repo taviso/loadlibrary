@@ -21,8 +21,7 @@ extern uintptr_t LocalStorage[1024];
 extern PFLS_CALLBACK_FUNCTION FlsCallbacks[1024];
 
 
-STATIC DWORD TlsAllocLocal(void)
-{
+STATIC DWORD WINAPI TlsAlloc(void) {
     if (TlsIndex >= ARRAY_SIZE(LocalStorage) - 1) {
         DebugLog("TlsAlloc() => %#x", TlsIndex);
         return TLS_OUT_OF_INDEXES;
@@ -31,8 +30,7 @@ STATIC DWORD TlsAllocLocal(void)
     return TlsIndex++;
 }
 
-STATIC BOOL TlsSetValueLocal(DWORD dwTlsIndex, PVOID lpTlsValue)
-{
+STATIC BOOL WINAPI TlsSetValue(DWORD dwTlsIndex, PVOID lpTlsValue) {
     DebugLog("TlsSetValue(%u, %p)", dwTlsIndex, lpTlsValue);
 
     if (dwTlsIndex < ARRAY_SIZE(LocalStorage)) {
@@ -44,8 +42,7 @@ STATIC BOOL TlsSetValueLocal(DWORD dwTlsIndex, PVOID lpTlsValue)
     return FALSE;
 }
 
-STATIC DWORD TlsGetValueLocal(DWORD dwTlsIndex)
-{
+STATIC PVOID WINAPI TlsGetValue(DWORD dwTlsIndex) {
     if (dwTlsIndex < ARRAY_SIZE(LocalStorage)) {
         return LocalStorage[dwTlsIndex];
     }
@@ -53,9 +50,7 @@ STATIC DWORD TlsGetValueLocal(DWORD dwTlsIndex)
     return 0;
 }
 
-STATIC BOOL TlsFreeLocal(DWORD dwTlsIndex)
-{
-    NOP_FILL();
+STATIC BOOL WINAPI TlsFree(DWORD dwTlsIndex) {
     if (dwTlsIndex < ARRAY_SIZE(LocalStorage)) {
         LocalStorage[dwTlsIndex] = (uintptr_t) NULL;
         return TRUE;
@@ -64,101 +59,56 @@ STATIC BOOL TlsFreeLocal(DWORD dwTlsIndex)
     return FALSE;
 }
 
-
-STATIC DWORD WINAPI TlsAlloc(void)
-{
-    NOP_FILL();
-    if (TlsIndex >= ARRAY_SIZE(LocalStorage) - 1) {
-        DebugLog("TlsAlloc() => %#x", TlsIndex);
-        return TLS_OUT_OF_INDEXES;
-    }
-
-    return TlsIndex++;
-}
-
-STATIC BOOL WINAPI TlsSetValue(DWORD dwTlsIndex, PVOID lpTlsValue)
-{
-    NOP_FILL();
-    DebugLog("TlsSetValue(%u, %p)", dwTlsIndex, lpTlsValue);
-
-    if (dwTlsIndex < ARRAY_SIZE(LocalStorage)) {
-        LocalStorage[dwTlsIndex] = (uintptr_t) (lpTlsValue);
-        return TRUE;
-    }
-
-    DebugLog("dwTlsIndex higher than current maximum");
-    return FALSE;
-}
-
-STATIC DWORD WINAPI TlsGetValue(DWORD dwTlsIndex)
-{
-    NOP_FILL();
-    if (dwTlsIndex < ARRAY_SIZE(LocalStorage)) {
-        return LocalStorage[dwTlsIndex];
-    }
-
-    return 0;
-}
-
-STATIC BOOL WINAPI TlsFree(DWORD dwTlsIndex)
-{
-    NOP_FILL();
-    if (dwTlsIndex < ARRAY_SIZE(LocalStorage)) {
-        LocalStorage[dwTlsIndex] = (uintptr_t) NULL;
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-static DWORD WINAPI FlsAlloc(PVOID lpCallback)
-{
-    NOP_FILL();
+static DWORD WINAPI FlsAlloc(PVOID lpCallback) {
     DWORD Result;
     DebugLog("%p", lpCallback);
 
     // The primary API difference is the availability of callbacks for fibers.
-    if ((Result = TlsAllocLocal()) != TLS_OUT_OF_INDEXES) {
+    if ((Result = TlsAlloc()) != TLS_OUT_OF_INDEXES) {
         FlsCallbacks[Result] = lpCallback;
     }
 
     return Result;
 }
 
-static DWORD WINAPI FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
-{
-    NOP_FILL();
+static DWORD WINAPI FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData) {
     DebugLog("%#x, %p", dwFlsIndex, lpFlsData);
 
-    return TlsSetValueLocal(dwFlsIndex, lpFlsData);
+    return TlsSetValue(dwFlsIndex, lpFlsData);
 }
 
-static DWORD WINAPI FlsGetValue(DWORD dwFlsIndex)
-{
-    NOP_FILL();
+static PVOID WINAPI FlsGetValue(DWORD dwFlsIndex) {
     DebugLog("%#x", dwFlsIndex);
 
-    return TlsGetValueLocal(dwFlsIndex);
+    if (dwFlsIndex < ARRAY_SIZE(LocalStorage)) {
+        return LocalStorage[dwFlsIndex];
+    }
+
+    return 0;
 }
 
-static BOOL WINAPI FlsFree(DWORD dwFlsIndex)
-{
-    NOP_FILL();
+static BOOL WINAPI FlsFree(DWORD dwFlsIndex) {
     DebugLog("%#x", dwFlsIndex);
 
     if (FlsCallbacks[dwFlsIndex]) {
-        FlsCallbacks[dwFlsIndex]((PVOID)(TlsGetValue(dwFlsIndex)));
+        FlsCallbacks[dwFlsIndex]((PVOID) (TlsGetValue(dwFlsIndex)));
     }
 
-    return TlsFreeLocal(dwFlsIndex);
+    return TlsFree(dwFlsIndex);
 }
 
 DECLARE_CRT_EXPORT("TlsFree", TlsFree);
+
 DECLARE_CRT_EXPORT("TlsAlloc", TlsAlloc);
+
 DECLARE_CRT_EXPORT("TlsSetValue", TlsSetValue);
+
 DECLARE_CRT_EXPORT("TlsGetValue", TlsGetValue);
 
 DECLARE_CRT_EXPORT("FlsFree", FlsFree);
+
 DECLARE_CRT_EXPORT("FlsAlloc", FlsAlloc);
+
 DECLARE_CRT_EXPORT("FlsSetValue", FlsSetValue);
+
 DECLARE_CRT_EXPORT("FlsGetValue", FlsGetValue);

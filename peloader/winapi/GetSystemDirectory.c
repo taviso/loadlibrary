@@ -14,9 +14,7 @@
 
 static uint16_t SystemDirectory[] = L"C:\\SYSTEM32\\";
 
-STATIC UINT WINAPI GetSystemDirectoryW(PWCHAR Buffer, UINT uSize)
-{
-    NOP_FILL();
+STATIC UINT WINAPI GetSystemDirectoryW(PWCHAR Buffer, UINT uSize) {
     DebugLog("%p, %u", Buffer, uSize);
 
     // Srsly?!
@@ -28,9 +26,7 @@ STATIC UINT WINAPI GetSystemDirectoryW(PWCHAR Buffer, UINT uSize)
     }
 }
 
-STATIC UINT WINAPI GetSystemWindowsDirectoryW(PWCHAR Buffer, UINT uSize)
-{
-    NOP_FILL();
+STATIC UINT WINAPI GetSystemWindowsDirectoryW(PWCHAR Buffer, UINT uSize) {
     DebugLog("%p, %u", Buffer, uSize);
 
     // Srsly?!
@@ -42,14 +38,14 @@ STATIC UINT WINAPI GetSystemWindowsDirectoryW(PWCHAR Buffer, UINT uSize)
     }
 }
 
-STATIC UINT WINAPI GetSystemWow64DirectoryW(PWCHAR lpBuffer, UINT uSize)
-{
-    NOP_FILL();
+STATIC UINT WINAPI GetSystemWow64DirectoryW(PWCHAR lpBuffer, UINT uSize) {
     DebugLog("%p, %u", lpBuffer, uSize);
     return 0;
 }
 
 
 DECLARE_CRT_EXPORT("GetSystemDirectoryW", GetSystemDirectoryW);
+
 DECLARE_CRT_EXPORT("GetSystemWindowsDirectoryW", GetSystemWindowsDirectoryW);
+
 DECLARE_CRT_EXPORT("GetSystemWow64DirectoryW", GetSystemWow64DirectoryW);

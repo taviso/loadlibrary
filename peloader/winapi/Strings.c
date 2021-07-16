@@ -18,9 +18,9 @@
 #define MB_ERR_INVALID_CHARS 8
 #define MB_PRECOMPOSED 1
 
-STATIC int WINAPI MultiByteToWideChar(UINT CodePage, DWORD  dwFlags, PCHAR lpMultiByteStr, int cbMultiByte, PUSHORT lpWideCharStr, int cchWideChar)
-{
-    NOP_FILL();
+STATIC int WINAPI
+MultiByteToWideChar(UINT CodePage, DWORD dwFlags, PCHAR lpMultiByteStr, int cbMultiByte, PUSHORT lpWideCharStr,
+                    int cchWideChar) {
     size_t i;
 
     DebugLog("%u, %#x, %p, %u, %p, %u", CodePage, dwFlags, lpMultiByteStr, cbMultiByte, lpWideCharStr, cchWideChar);
@@ -60,9 +60,9 @@ STATIC int WINAPI MultiByteToWideChar(UINT CodePage, DWORD  dwFlags, PCHAR lpMul
     return i;
 }
 
-STATIC int WINAPI WideCharToMultiByte(UINT CodePage, DWORD dwFlags, PVOID lpWideCharStr, int cchWideChar, PVOID lpMultiByteStr, int cbMultiByte, PVOID lpDefaultChar, PVOID lpUsedDefaultChar)
-{
-    NOP_FILL();
+STATIC int WINAPI
+WideCharToMultiByte(UINT CodePage, DWORD dwFlags, PVOID lpWideCharStr, int cchWideChar, PVOID lpMultiByteStr,
+                    int cbMultiByte, PVOID lpDefaultChar, PVOID lpUsedDefaultChar) {
     char *ansi = NULL;
 
     DebugLog("%u, %#x, %p, %d, %p, %d, %p, %p", CodePage, dwFlags, lpWideCharStr, cchWideChar, lpMultiByteStr, cbMultiByte, lpDefaultChar, lpUsedDefaultChar);
@@ -98,9 +98,7 @@ STATIC int WINAPI WideCharToMultiByte(UINT CodePage, DWORD dwFlags, PVOID lpWide
     return 0;
 }
 
-STATIC BOOL WINAPI GetStringTypeA(DWORD locale, DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc, PUSHORT lpCharType)
-{
-    NOP_FILL();
+STATIC BOOL WINAPI GetStringTypeA(DWORD locale, DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc, PUSHORT lpCharType) {
     DebugLog("%u, %u, %p, %d, %p", locale, dwInfoType, lpSrcStr, cchSrc, lpCharType);
 
     memset(lpCharType, 1, cchSrc * sizeof(USHORT));
@@ -109,9 +107,7 @@ STATIC BOOL WINAPI GetStringTypeA(DWORD locale, DWORD dwInfoType, PUSHORT lpSrcS
 }
 
 
-STATIC BOOL WINAPI GetStringTypeW(DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc, PUSHORT lpCharType)
-{
-    NOP_FILL();
+STATIC BOOL WINAPI GetStringTypeW(DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc, PUSHORT lpCharType) {
     DebugLog("%u, %p, %d, %p", dwInfoType, lpSrcStr, cchSrc, lpCharType);
 
     memset(lpCharType, 1, cchSrc * sizeof(USHORT));
@@ -119,17 +115,13 @@ STATIC BOOL WINAPI GetStringTypeW(DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc
     return FALSE;
 }
 
-STATIC VOID WINAPI RtlInitUnicodeString(PUNICODE_STRING DestinationString, PWCHAR SourceString)
-{
-    NOP_FILL();
+STATIC VOID WINAPI RtlInitUnicodeString(PUNICODE_STRING DestinationString, PWCHAR SourceString) {
     DestinationString->Length = CountWideChars(SourceString) * 2;
     DestinationString->MaximumLength = DestinationString->Length;
     DestinationString->Buffer = SourceString;
 }
 
-STATIC PVOID WINAPI UuidFromStringW(PUSHORT StringUuid, PBYTE Uuid)
-{
-    NOP_FILL();
+STATIC PVOID WINAPI UuidFromStringW(PUSHORT StringUuid, PBYTE Uuid) {
     int i;
 
     DebugLog("%S, %p", StringUuid, Uuid);
@@ -141,9 +133,7 @@ STATIC PVOID WINAPI UuidFromStringW(PUSHORT StringUuid, PBYTE Uuid)
     return 0;
 }
 
-STATIC INT WINAPI UuidCreate(PBYTE Uuid)
-{
-    NOP_FILL();
+STATIC INT WINAPI UuidCreate(PBYTE Uuid) {
     int i;
 
     DebugLog("%p", Uuid);
@@ -160,7 +150,6 @@ STATIC int WINAPI CompareStringOrdinal(LPCWCH lpString1,
                                        LPCWCH lpString2,
                                        int cchCount2,
                                        BOOL bIgnoreCase) {
-    NOP_FILL();
     char *string1 = CreateAnsiFromWide(lpString1);
     char *string2 = CreateAnsiFromWide(lpString2);
     DebugLog("%p [%s] %hhx %p [%s] %hhx", lpString1, string1, cchCount1, lpString2, string2, cchCount2);
@@ -174,10 +163,17 @@ STATIC int WINAPI CompareStringOrdinal(LPCWCH lpString1,
 }
 
 DECLARE_CRT_EXPORT("MultiByteToWideChar", MultiByteToWideChar);
+
 DECLARE_CRT_EXPORT("WideCharToMultiByte", WideCharToMultiByte);
+
 DECLARE_CRT_EXPORT("GetStringTypeA", GetStringTypeA);
+
 DECLARE_CRT_EXPORT("GetStringTypeW", GetStringTypeW);
+
 DECLARE_CRT_EXPORT("RtlInitUnicodeString", RtlInitUnicodeString);
+
 DECLARE_CRT_EXPORT("UuidFromStringW", UuidFromStringW);
+
 DECLARE_CRT_EXPORT("UuidCreate", UuidCreate);
+
 DECLARE_CRT_EXPORT("CompareStringOrdinal", CompareStringOrdinal);
