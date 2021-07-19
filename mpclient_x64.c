@@ -43,18 +43,18 @@
 #include "pe_linker.h"
 #include "ntoskernel.h"
 #include "util.h"
-#include "hook.h"
 #include "log.h"
 #include "rsignal.h"
 #include "engineboot.h"
 #include "scanreply.h"
 #include "streambuffer.h"
 #include "openscan.h"
+#include "hook.h"
 #include "mpclient.h"
 
 struct pe_image image = {
         .entry  = NULL,
-        .name   = "engine/mpengine.dll",
+        .name   = "engine/x64/mpengine.dll",
 };
 
 // Any usage limits to prevent bugs disrupting system.
@@ -65,9 +65,9 @@ const struct rlimit kUsageLimits[] = {
     [RLIMIT_NOFILE] = { .rlim_cur = 32,         .rlim_max = 32 },
 };
 
-DWORD (* __rsignal)(PHANDLE KernelHandle, DWORD Code, PVOID Params, DWORD Size);
+DWORD WINAPI (* __rsignal)(PHANDLE KernelHandle, DWORD Code, PVOID Params, DWORD Size);
 
-static DWORD EngineScanCallback(PSCANSTRUCT Scan)
+static DWORD WINAPI EngineScanCallback(PSCANSTRUCT Scan)
 {
     if (Scan->Flags & SCAN_MEMBERNAME) {
         LogMessage("Scanning archive member %s", Scan->VirusName);
@@ -97,21 +97,21 @@ static DWORD EngineScanCallback(PSCANSTRUCT Scan)
     return 0;
 }
 
-static DWORD ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
+static DWORD WINAPI ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
 {
     fseek(this, Offset, SEEK_SET);
     *SizeRead = fread(Buffer, 1, Size, this);
     return TRUE;
 }
 
-static DWORD GetStreamSize(PVOID this, PULONGLONG FileSize)
+static DWORD WINAPI GetStreamSize(PVOID this, PULONGLONG FileSize)
 {
     fseek(this, 0, SEEK_END);
     *FileSize = ftell(this);
     return TRUE;
 }
 
-static PWCHAR GetStreamName(PVOID this)
+static PWCHAR WINAPI GetStreamName(PVOID this)
 {
     return L"input";
 }
@@ -150,7 +150,7 @@ int main(int argc, char **argv, char **envp)
     PeHeader    = (PIMAGE_NT_HEADERS)(image.image + DosHeader->e_lfanew);
 
     // Load any additional exports.
-    if (!process_extra_exports(image.image, PeHeader->OptionalHeader.BaseOfCode, "engine/mpengine.map")) {
+    if (!process_extra_exports(image.image, PeHeader->OptionalHeader.BaseOfCode, "engine/x64/mpengine.map")) {
 #ifndef NDEBUG
         LogMessage("The map file wasn't found, symbols wont be available");
 #endif
@@ -175,24 +175,18 @@ int main(int argc, char **argv, char **envp)
         errx(EXIT_FAILURE, "Failed to resolve mpengine entrypoint");
     }
 
-    EXCEPTION_DISPOSITION ExceptionHandler(struct _EXCEPTION_RECORD *ExceptionRecord,
-            struct _EXCEPTION_FRAME *EstablisherFrame,
-            struct _CONTEXT *ContextRecord,
-            struct _EXCEPTION_FRAME **DispatcherContext)
-    {
-        LogMessage("Toplevel Exception Handler Caught Exception");
-        abort();
-    }
-
     VOID ResourceExhaustedHandler(int Signal)
     {
         errx(EXIT_FAILURE, "Resource Limits Exhausted, Signal %s", strsignal(Signal));
     }
 
-    setup_nt_threadinfo(ExceptionHandler);
+    if (argc < 2) {
+        LogMessage("usage: %s [filenames...]", *argv);
+        return 1;
+    }
 
     // Call DllMain()
-    image.entry((PVOID) 'MPEN', DLL_PROCESS_ATTACH, NULL);
+    image.entry((PVOID) 'MPENENGN', DLL_PROCESS_ATTACH, NULL);
 
     // Install usage limits to prevent system crash.
     setrlimit(RLIMIT_CORE, &kUsageLimits[RLIMIT_CORE]);
@@ -214,7 +208,7 @@ int main(int argc, char **argv, char **envp)
 
     BootParams.ClientVersion = BOOTENGINE_PARAMS_VERSION;
     BootParams.Attributes    = BOOT_ATTR_NORMAL;
-    BootParams.SignatureLocation = L"engine";
+    BootParams.SignatureLocation = L"engine\\x64";
     BootParams.ProductName = L"Legitimate Antivirus";
     EngineConfig.QuarantineLocation = L"quarantine";
     EngineConfig.Inclusions = L"*.*";
@@ -240,11 +234,6 @@ int main(int argc, char **argv, char **envp)
     ScanDescriptor.Read          = ReadStream;
     ScanDescriptor.GetSize       = GetStreamSize;
     ScanDescriptor.GetName       = GetStreamName;
-
-    if (argc < 2) {
-        LogMessage("usage: %s [filenames...]", *argv);
-        return 1;
-    }
 
     // Enable Instrumentation.
     InstrumentationCallback(image.image, image.size);

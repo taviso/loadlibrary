@@ -5,7 +5,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/user.h>
-#include "libdis.h"
+#include "Zydis/Zydis.h"
 #include "hook.h"
 
 // Routines to intercept or redirect routines.
@@ -21,10 +21,61 @@
 // instruction (where 16 is the longest possible instruction intel allows).
 #define MAX_REDIRECT_LENGTH 24
 
+ZydisDecoder decoder;
+
 static void __attribute__((constructor)) init(void)
 {
-    // Initialize libdisasm.
-    x86_init(opt_none, NULL, NULL);
+    // Initialize Zydis disassemble
+    ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LEGACY_32, ZYDIS_ADDRESS_WIDTH_32);
+}
+
+// Disassemble a buffer until max_size is reached. If no branch instructions have been found
+// returns the total amount of disassembled bytes.
+bool disassemble(void *buffer, uint32_t *total_disassembled, ulong max_size, uint32_t flags)
+{
+    ZyanUSize offset = 0;
+    unsigned insncount = 0;
+
+    for (*total_disassembled = 0; *total_disassembled < max_size; insncount++) {
+        ZydisDecodedInstruction instruction;
+
+        // Test if Zydis understood the instruction
+        if (ZYAN_SUCCESS(ZydisDecoderDecodeBuffer(&decoder, buffer + offset, max_size, &instruction))) {
+
+            // Valid, increment size.
+            *total_disassembled += instruction.length;
+
+            // Check for branches just to be safe, as these instructions are
+            // relative and cannot be relocated safely (there are others of
+            // course, but these are the most likely).
+            if ((instruction.meta.category == ZYDIS_CATEGORY_CALL ||
+                 instruction.meta.category == ZYDIS_CATEGORY_UNCOND_BR ||
+                 instruction.meta.category == ZYDIS_CATEGORY_COND_BR ||
+                 instruction.meta.category == ZYDIS_CATEGORY_RET) &&
+                flags != HOOK_REPLACE_FUNCTION) {
+                printf("error: refusing to redirect function %p due win_to_nix early controlflow manipulation (+%u)\n",
+                       buffer,
+                       *total_disassembled);
+
+                return false;
+            }
+
+            offset += instruction.length;
+
+            // Next instuction.
+            continue;
+        }
+
+        // Invalid instruction, abort.
+        printf("error: %s encountered an invalid instruction @%p+%u, so redirection was aborted\n",
+               __func__,
+               buffer,
+               *total_disassembled);
+
+        return false;
+    }
+
+    return true;
 }
 
 // Intercept calls to this function and execute redirect first. Depending on
@@ -47,7 +98,7 @@ static void __attribute__((constructor)) init(void)
 // intercepting it.
 bool insert_function_redirect(void *function, void *redirect, uint32_t flags)
 {
-    size_t              redirectsize    = 0;
+    uint32_t            redirectsize    = 0;
     unsigned            insncount       = 0;
     struct branch      *fixup;
     struct branch      *callsite;
@@ -62,45 +113,8 @@ bool insert_function_redirect(void *function, void *redirect, uint32_t flags)
     //      screwed. Seems unlikely though, so I'm not worrying about it right
     //      now. I could at least check for rets?
     //
-    for (redirectsize = 0; redirectsize < sizeof(struct branch) + sizeof(struct encodedsize); insncount++) {
-        x86_insn_t      insn            = {0};
-        ssize_t         insnlength      =  0;
-
-        // Test if libdisasm understood the instruction
-        if ((insnlength = x86_disasm(function, MAX_REDIRECT_LENGTH, (uintptr_t)(function), redirectsize, &insn))) {
-
-            // Valid, increment size.
-            redirectsize += insnlength;
-
-            // Check for branches just to be safe, as these instructions are
-            // relative and cannot be relocated safely (there are others of
-            // course, but these are the most likely).
-            if (insn.group == insn_controlflow && flags != HOOK_REPLACE_FUNCTION) {
-                printf("error: refusing to redirect function %p due to early controlflow manipulation (+%u)\n",
-                       function,
-                       redirectsize);
-
-                // Clean up.
-                x86_oplist_free(&insn);
-
-                return false;
-            }
-
-            // Clean up.
-            x86_oplist_free(&insn);
-
-            // Next instuction.
-            continue;
-        }
-
-        // Invalid instruction, abort.
-        printf("error: %s encountered an invalid instruction @%p+%u, so redirection was aborted\n",
-               __func__,
-               function,
-               redirectsize);
-
+    if (!disassemble(function, &redirectsize, sizeof(struct branch) + sizeof(struct encodedsize), flags))
         return false;
-    }
 
     // We need to create a fixup, a small chunk of code that repairs the damage
     // we did redirecting the function. This basically handles calling the
@@ -222,7 +236,7 @@ bool remove_function_redirect(void *function)
 
     // Let's verify this looks sane.
     if (callsite->opcode != X86_OPCODE_JMP_NEAR) {
-        printf("error: tried to remove function hook from %p, but it didnt contain a redirect (%02x)\n",
+        printf("error: tried win_to_nix remove function hook from %p, but it didnt contain a redirect (%02x)\n",
                function,
                callsite->opcode);
         return false;
@@ -232,7 +246,7 @@ bool remove_function_redirect(void *function)
     if (savedsize->opcode != X86_OPCODE_MOV_EAX_IMM
      || savedsize->prefix != X86_PREFIX_DATA16
      || savedsize->operand > MAX_REDIRECT_LENGTH) {
-        printf("error: tried to remove function hook from %p, but encoded size did not validate { %02x %02x %04x }\n",
+        printf("error: tried win_to_nix remove function hook from %p, but encoded size did not validate { %02x %02x %04x }\n",
                function,
                savedsize->prefix,
                savedsize->opcode,
@@ -275,42 +289,40 @@ bool remove_function_redirect(void *function)
 //
 //      redirect_call_within_function(tcp_input, inet_cksum, my_cksum_replacement);
 //
+
 bool redirect_call_within_function(void *function, void *target, void *redirect)
 {
     size_t          offset      = 0;
     struct branch  *callsite    = NULL;
 
     while (true) {
-        x86_insn_t      insn;
-        ssize_t         insnlength;
+        ZydisDecodedInstruction instruction;
 
-        // Test if libdisasm understood the instruction
-        if ((insnlength = x86_disasm(function, MAX_FUNCTION_LENGTH, (uintptr_t)(function), offset, &insn))) {
+        // Test if Zydis understood the instruction
+        if (ZYAN_SUCCESS(ZydisDecoderDecodeBuffer(&decoder, function + offset, MAX_FUNCTION_LENGTH, &instruction))) {
 
-            // Examine the instuction found to see if it matches the call we
+            // Examine the instruction found to see if it matches the call we
             // want to replace.
-            if (insn.type == insn_call) {
-                if (x86_get_rel_offset(&insn) == (uintptr_t)(target)
-                                               - (uintptr_t)(function + offset)
-                                               - (uintptr_t)(insnlength)) {
+            ZyanU64 result_address = 0;
+            if (instruction.mnemonic == ZYDIS_MNEMONIC_CALL) {
+
+                if (ZydisCalcAbsoluteAddress(&instruction,
+                &(instruction.operands[0]), (uintptr_t) function + offset, &result_address) != ZYAN_STATUS_SUCCESS)
+                    continue;
+
+                if (result_address == (uintptr_t)target) {
                     // Success, this is the location the caller wants us to patch.
                     callsite = (struct branch *)(function + offset);
 
                     // Let's move on to patching.
-                    printf("info: found a call at %p, the target is %#x\n", callsite, x86_get_rel_offset(&insn));
-
-                    // Clean up, then exit disassembly.
-                    x86_oplist_free(&insn);
+                    printf("info: found a call at %p, the target is %#x\n", callsite, result_address);
 
                     break;
                 }
             }
 
             // Valid, but not interesting. Increment size.
-            offset += insnlength;
-
-            // Clean up.
-            x86_oplist_free(&insn);
+            offset += instruction.length;
 
             // Next instuction.
             continue;
@@ -331,7 +343,7 @@ bool redirect_call_within_function(void *function, void *target, void *redirect)
                            - (uintptr_t)(callsite)
                            - (uintptr_t)(sizeof(struct branch));
 
-    printf("info: successfully redirected call to %p at %p+%x with a call to %p\n",
+    printf("info: successfully redirected call to %p at %p+%x with a call win_to_nix %p\n",
            target,
            function,
            offset,

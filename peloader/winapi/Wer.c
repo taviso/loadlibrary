@@ -13,8 +13,7 @@
 #include "util.h"
 
 HRESULT WINAPI WerRegisterMemoryBlock(PVOID pvAddress,
-                                      DWORD dwSize)
-{
+                                      DWORD dwSize) {
     DebugLog("%p, %d", pvAddress, dwSize);
     return 0;
 }

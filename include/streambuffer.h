@@ -92,21 +92,21 @@ enum {
 };
 
 typedef struct _STREAMBUFFER_DESCRIPTOR {
-    PVOID  UserPtr;
-    DWORD  (* Read)(PVOID this, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead);
-    DWORD  (* Write)(PVOID this, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD TotalWritten);
-    DWORD  (* GetSize)(PVOID this, uint64_t *FileSize);
-    DWORD  (* SetSize)(PVOID this, uint64_t *FileSize);
-    PWCHAR (* GetName)(PVOID this);
-    DWORD  (* SetAttributes)(PVOID this, DWORD Attribute, PVOID Data, DWORD DataSize);
-    DWORD  (* GetAttributes)(PVOID this, DWORD Attribute, PVOID Data, DWORD DataSize, PDWORD DataSizeWritten);
+    FILE   *UserPtr;
+    DWORD  (* Read)(FILE *fp, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead);
+    DWORD  (* Write)(FILE *fp, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD TotalWritten);
+    DWORD  (* GetSize)(FILE *fp, uint64_t *FileSize);
+    DWORD  (* SetSize)(FILE *fp, uint64_t *FileSize);
+    PWCHAR (* GetName)(FILE *fp);
+    DWORD  (* SetAttributes)(FILE *fp, DWORD Attribute, PVOID Data, DWORD DataSize);
+    DWORD  (* GetAttributes)(FILE *fp, DWORD Attribute, PVOID Data, DWORD DataSize, PDWORD DataSizeWritten);
 } STREAMBUFFER_DESCRIPTOR, *PSTREAMBUFFER_DESCRIPTOR;
 
 typedef struct _SCANSTREAM_PARAMS {
-    PSTREAMBUFFER_DESCRIPTOR    Descriptor;
-    PSCAN_REPLY                 ScanReply;
-    DWORD                       UnknownB;
-    DWORD                       UnknownC;
+    PSTREAMBUFFER_DESCRIPTOR      Descriptor;
+    PSCAN_REPLY                   ScanReply;
+    ULONG64                       UnknownB;
+    ULONG64                       UnknownC;
 } SCANSTREAM_PARAMS, *PSCANSTREAM_PARAMS;
 
 #pragma pack(pop)

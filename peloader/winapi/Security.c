@@ -12,8 +12,7 @@
 #include "winexports.h"
 #include "util.h"
 
-BOOL WINAPI LookupPrivilegeValueW(PVOID lpSystemName, PVOID lpName, PVOID lpLuid)
-{
+BOOL WINAPI LookupPrivilegeValueW(PVOID lpSystemName, PVOID lpName, PVOID lpLuid) {
     DebugLog("%p, %p, %p", lpSystemName, lpName, lpLuid);
 
     return FALSE;

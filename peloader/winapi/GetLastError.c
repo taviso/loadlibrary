@@ -13,18 +13,19 @@
 
 STATIC DWORD LastError;
 
-STATIC DWORD WINAPI GetLastError(void)
-{
+STATIC DWORD WINAPI GetLastError(void) {
     DebugLog("GetLastError() => %#x", LastError);
 
     return LastError;
 }
 
-void WINAPI SetLastError(DWORD dwErrCode)
-{
-    //DebugLog("SetLastError(%#x)", dwErrCode);
+VOID WINAPI SetLastError(DWORD dwErrCode) {
+    DebugLog("SetLastError(%#x)", dwErrCode);
     LastError = dwErrCode;
+
+    return;
 }
 
 DECLARE_CRT_EXPORT("GetLastError", GetLastError);
+
 DECLARE_CRT_EXPORT("SetLastError", SetLastError);

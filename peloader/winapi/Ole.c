@@ -14,46 +14,45 @@
 #include "util.h"
 #include "strings.h"
 
-STATIC DWORD WINAPI CoCreateGuid(PVOID pguid)
-{
+STATIC DWORD WINAPI CoCreateGuid(PVOID pguid) {
     DebugLog("%p", pguid);
     memcpy(pguid, "GUIDGUIDGUIDGUIDGUIDGUIDGUIDGUID", 16);
     return 0;
 }
 
-STATIC DWORD CoCreateInstance(PVOID rclsid, PVOID pUnkOuter, DWORD dwClsContext, PVOID riid, PVOID *ppv)
-{
+STATIC DWORD CoCreateInstance(PVOID rclsid, PVOID pUnkOuter, DWORD dwClsContext, PVOID riid, PVOID *ppv) {
     DebugLog("%p, %p, %u, %p, %p", rclsid, pUnkOuter, dwClsContext, riid, ppv);
     return -1;
 }
 
-STATIC DWORD CoInitializeEx(PVOID pvReserved, DWORD dCwoInit)
-{
+STATIC DWORD CoInitializeEx(PVOID pvReserved, DWORD dCwoInit) {
     DebugLog("%p, %u", pvReserved, dCwoInit);
     return -1;
 }
 
-STATIC DWORD CoSetProxyBlanket(PVOID a)
-{
+STATIC DWORD CoSetProxyBlanket(PVOID a) {
     DebugLog("");
     return -1;
 }
 
-STATIC DWORD CoUninitialize(PVOID a)
-{
+STATIC DWORD CoUninitialize(PVOID a) {
     DebugLog("");
     return -1;
 }
 
-STATIC DWORD IIDFromString(PVOID a)
-{
+STATIC DWORD IIDFromString(PVOID a) {
     DebugLog("");
     return -1;
 }
 
 DECLARE_CRT_EXPORT("CoCreateGuid", CoCreateGuid);
+
 DECLARE_CRT_EXPORT("CoCreateInstance", CoCreateInstance);
+
 DECLARE_CRT_EXPORT("CoInitializeEx", CoInitializeEx);
+
 DECLARE_CRT_EXPORT("CoSetProxyBlanket", CoSetProxyBlanket);
+
 DECLARE_CRT_EXPORT("CoUninitialize", CoUninitialize);
+
 DECLARE_CRT_EXPORT("IIDFromString", IIDFromString);

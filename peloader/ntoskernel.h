@@ -39,22 +39,22 @@ struct wrap_export {
 /* map name s to f - if f is different from s */
 #define WIN_SYMBOL_MAP(s, f)
 
-struct pe_image {
-        char name[128];
-        BOOL WINAPI (*entry)(PVOID hinstDLL, DWORD fdwReason, PVOID lpvReserved);
-        void *image;
-        int size;
-        int type;
-
-        IMAGE_NT_HEADERS *nt_hdr;
-        IMAGE_OPTIONAL_HEADER *opt_hdr;
-};
-
 struct ntos_work_item {
         struct nt_list list;
         void *arg1;
         void *arg2;
         NTOS_WORK_FUNC func;
+};
+
+struct pe_image {
+    char name[128];
+    BOOL WINAPI (*entry)(PVOID hinstDLL, DWORD fdwReason, PVOID lpvReserved);
+    void *image;
+    int size;
+    int type;
+
+    IMAGE_NT_HEADERS *nt_hdr;
+    IMAGE_OPTIONAL_HEADER *opt_hdr;
 };
 
 #define WRAP_DRIVER_CLIENT_ID 1

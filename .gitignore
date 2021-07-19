@@ -5,7 +5,9 @@
 *.vdm
 *.exe
 mpclient
+mpclient_x64
 avscript
 eicar.com
 .gradle/
 .idea/
+mpcache-*
