@@ -195,15 +195,9 @@ PRUNTIME_FUNCTION RtlLookupFunctionTable(DWORD64 ControlPc,
 
 STATIC
 
-PRUNTIME_FUNCTION LookupPeloaderFunction(DWORD64 ControlPc) {
+BOOL LookupPeloaderFunction(DWORD64 ControlPc, PRUNTIME_FUNCTION FunctionEntry) {
     Dl_info *info;
     int dladdr_result;
-    // TODO: free it somewhere
-    PRUNTIME_FUNCTION FunctionEntry = (PRUNTIME_FUNCTION) malloc(sizeof(RUNTIME_FUNCTION));
-
-    if (!FunctionEntry) {
-        return NULL;
-    }
 
     /* Check if we are unwinding a libpeloader function */
     if (ControlPc >= (DWORD64) &__start_RtlExecuteHandlerForExceptionSection &&
@@ -211,7 +205,7 @@ PRUNTIME_FUNCTION LookupPeloaderFunction(DWORD64 ControlPc) {
         FunctionEntry->BeginAddress = (uintptr_t) &__start_RtlExecuteHandlerForExceptionSection;
         FunctionEntry->EndAddress = (uintptr_t) &__stop_RtlExecuteHandlerForExceptionSection;
         FunctionEntry->UnwindData = RTL_EXECUTE_HANDLER_FOR_EXCEPTION;
-        return FunctionEntry;
+        return TRUE;
     }
 
     if (ControlPc >= (DWORD64) &__start_RtlDispatchExceptionSection &&
@@ -219,7 +213,7 @@ PRUNTIME_FUNCTION LookupPeloaderFunction(DWORD64 ControlPc) {
         FunctionEntry->BeginAddress = (uintptr_t) &__start_RtlDispatchExceptionSection;
         FunctionEntry->EndAddress = (uintptr_t) &__stop_RtlDispatchExceptionSection;
         FunctionEntry->UnwindData = RTL_DISPATCH_EXCEPTION;
-        return FunctionEntry;
+        return TRUE;
     }
 
     if (ControlPc >= (DWORD64) &__start_RaiseExceptionSection &&
@@ -227,7 +221,7 @@ PRUNTIME_FUNCTION LookupPeloaderFunction(DWORD64 ControlPc) {
         FunctionEntry->BeginAddress = (uintptr_t) &__start_RaiseExceptionSection;
         FunctionEntry->EndAddress = (uintptr_t) &__stop_RaiseExceptionSection;
         FunctionEntry->UnwindData = RAISE_EXCEPTION;
-        return FunctionEntry;
+        return TRUE;
     }
 
     /*
@@ -241,11 +235,11 @@ PRUNTIME_FUNCTION LookupPeloaderFunction(DWORD64 ControlPc) {
         FunctionEntry->EndAddress = 0;
         FunctionEntry->UnwindData = MAIN_FUNCTION;
         free(info);
-        return FunctionEntry;
+        return TRUE;
     }
 
     free(info);
-    return NULL;
+    return FALSE;
 }
 
 // Shamelessly copy-pasted from ReactOs and re-adapted
@@ -257,14 +251,20 @@ PRUNTIME_FUNCTION RtlLookupFunctionEntry(DWORD64 ControlPc,
                                          PDWORD64 ImageBase,
                                          PUNWIND_HISTORY_TABLE HistoryTable) {
     DebugLog("%p, %p", ControlPc, ImageBase);
-    PRUNTIME_FUNCTION FunctionTable, FunctionEntry, PeloaderFunctionEntry;
+    PRUNTIME_FUNCTION FunctionTable, PDataFunctionEntry;
+    BOOL PeloaderFunctionEntryFound;
     ULONG TableLength;
     ULONG IndexLo, IndexHi, IndexMid;
 
-    PeloaderFunctionEntry = LookupPeloaderFunction(ControlPc);
+    PRUNTIME_FUNCTION FunctionEntry = (PRUNTIME_FUNCTION) malloc(sizeof(RUNTIME_FUNCTION));
+    if (!FunctionEntry) {
+        return NULL;
+    }
 
-    if (PeloaderFunctionEntry != NULL) {
-        return PeloaderFunctionEntry;
+    PeloaderFunctionEntryFound = LookupPeloaderFunction(ControlPc, FunctionEntry);
+
+    if (PeloaderFunctionEntryFound) {
+        return FunctionEntry;
     }
 
     /* Find the corresponding table */
@@ -283,16 +283,19 @@ PRUNTIME_FUNCTION RtlLookupFunctionEntry(DWORD64 ControlPc,
     IndexHi = TableLength;
     while (IndexHi > IndexLo) {
         IndexMid = (IndexLo + IndexHi) / 2;
-        FunctionEntry = &FunctionTable[IndexMid];
+        PDataFunctionEntry = &FunctionTable[IndexMid];
 
-        if (ControlPc < FunctionEntry->BeginAddress) {
+        if (ControlPc < PDataFunctionEntry->BeginAddress) {
             /* Continue search in lower half */
             IndexHi = IndexMid;
-        } else if (ControlPc >= FunctionEntry->EndAddress) {
+        } else if (ControlPc >= PDataFunctionEntry->EndAddress) {
             /* Continue search in upper half */
             IndexLo = IndexMid + 1;
         } else {
             /* ControlPc is within limits, return entry */
+            FunctionEntry->BeginAddress = PDataFunctionEntry->BeginAddress;
+            FunctionEntry->EndAddress = PDataFunctionEntry->EndAddress;
+            FunctionEntry->UnwindData = PDataFunctionEntry->UnwindData;
             return FunctionEntry;
         }
     }
@@ -649,12 +652,17 @@ RtlExecuteHandlerForException(PEXCEPTION_RECORD pFunction,
                               PCONTEXT lpContext,
                               PDISPATCHER_CONTEXT lpDispatcherContext) {
     DebugLog("");
+    EXCEPTION_DISPOSITION ExceptionDisposition;
     // Store the return address in the CONTEXT structure (useful during the unwinding)
     PCONTEXT pContext = MSContextPtrs[RTL_EXECUTE_HANDLER_FOR_EXCEPTION];
     pContext->Rip = (DWORD64) __builtin_return_address(0);
 
     PDISPATCHER_CONTEXT DispatcherContext = lpDispatcherContext;
-    return DispatcherContext->LanguageHandler(pFunction, EstablisherFrame, lpContext, lpDispatcherContext);
+
+    ExceptionDisposition = DispatcherContext->LanguageHandler(pFunction, EstablisherFrame, lpContext, lpDispatcherContext);
+    free(DispatcherContext->FunctionEntry);
+
+    return ExceptionDisposition;
 }
 
 STATIC WINAPI
@@ -909,7 +917,7 @@ BOOL RtlUnwindEx(
 
 STATIC WINAPI
 
-BOOL __attribute__ ((section ("RtlDispatchExceptionSection")))
+BOOL __attribute__ ((noinline, section ("RtlDispatchExceptionSection")))
 RtlDispatchException(PEXCEPTION_RECORD ExceptionRecord, CONTEXT *pContext) {
     DWORD64 ImageBase;
     PVOID HandlerData;
@@ -989,14 +997,12 @@ RtlDispatchException(PEXCEPTION_RECORD ExceptionRecord, CONTEXT *pContext) {
                                                  EXCEPTION_COLLIDED_UNWIND);
 
         }
-        // We should never get here.
-        __debugbreak();
     }
 }
 
 STATIC WINAPI
 
-PVOID __attribute__ ((section ("RaiseExceptionSection")))
+PVOID __attribute__ ((noinline, section ("RaiseExceptionSection")))
 RaiseException(DWORD dwExceptionCode, DWORD dwExceptionFlags, DWORD nNumberOfArguments, PVOID Arguments) {
     uintptr_t ControlPc;
     uintptr_t CallerFrame;
