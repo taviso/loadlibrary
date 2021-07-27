@@ -65,6 +65,7 @@ bool IsGdbPresent()
     return result;
 }
 
+#ifdef __x86_64__
 static void swap_fp_register(PM128A MSFpReg, struct _libc_xmmreg *NixFpReg) {
     memcpy(&(MSFpReg->Low), &NixFpReg[0], 4);
     memcpy(((uint32_t *) &MSFpReg->Low) + 1, &NixFpReg[1], 4);
@@ -157,4 +158,4 @@ void nix_2_ms_context_swap(ucontext_t *pNixContext, CONTEXT *pMSContext) {
                      &(pNixContext->uc_mcontext.fpregs->_xmm[15]));
 
 }
-
+#endif

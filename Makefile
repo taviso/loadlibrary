@@ -30,7 +30,7 @@ intercept:
 	cp intercept/build/subhook/libsubhook.a intercept/libsubhook.a
 
 peloader:
-	make -C peloader $(BUILD_TARGET)
+	make -C peloader ARCH=x86
 
 peloader_x64:
 	make -C peloader debug ARCH=x64
@@ -38,7 +38,7 @@ peloader_x64:
 mpclient: CFLAGS += -m32
 mpclient: LDFLAGS += -m32
 mpclient: CMAKE_FLAGS += -DARCH:STRING=x86
-mpclient: mpclient.o | peloader intercept
+mpclient: mpclient.o log/log.o | peloader intercept
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
 mpclient_x64: CFLAGS += -g -O0  -fPIC
@@ -52,6 +52,6 @@ test_seh: test_seh.o log/log.o | peloader_x64 intercept
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
 
 clean:
-	rm -rf a.out core *.o core.* vgcore.* gmon.out mpclient intercept/build intercept/*.a tests/build
+	rm -rf a.out core *.o core.* vgcore.* gmon.out mpclient intercept/build intercept/*.a tests/build log/log.o
 	make -C peloader clean
 	rm -rf faketemp
