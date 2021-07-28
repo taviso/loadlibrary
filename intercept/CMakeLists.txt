@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION "3.13")
 project(hook C)
 
-enable_language(ASM_NASM)
-set(CAN_USE_ASSEMBLER TRUE)
-
 # set arch variables (default x86)
 # to change the ARCH value to x64, pass -DARCH:STRING=x64 as argument to cmake command
 set(ARCH "x86" CACHE STRING "user-specified architecture")
