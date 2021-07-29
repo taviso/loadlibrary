@@ -27,6 +27,7 @@
 /*
  * File formats definitions
  */
+
 typedef struct _IMAGE_DOS_HEADER {
     WORD  e_magic;      /* 00: MZ Header signature */
     WORD  e_cblp;       /* 02: Bytes on last page of file */
@@ -48,8 +49,6 @@ typedef struct _IMAGE_DOS_HEADER {
     WORD  e_res2[10];   /* 28: Reserved words */
     DWORD e_lfanew;     /* 3c: Offset to extended header */
 } IMAGE_DOS_HEADER, *PIMAGE_DOS_HEADER;
-
-struct pe_image;
 
 #define IMAGE_DOS_SIGNATURE    0x5A4D     /* MZ   */
 #define IMAGE_OS2_SIGNATURE    0x454E     /* NE   */
@@ -365,8 +364,14 @@ typedef struct _IMAGE_OPTIONAL_HEADER64 {
   IMAGE_DATA_DIRECTORY DataDirectory[IMAGE_NUMBEROF_DIRECTORY_ENTRIES];
 } IMAGE_OPTIONAL_HEADER64, *PIMAGE_OPTIONAL_HEADER64;
 
+
+#if __x86_64__
+typedef IMAGE_OPTIONAL_HEADER64 IMAGE_OPTIONAL_HEADER;
+typedef PIMAGE_OPTIONAL_HEADER64 PIMAGE_OPTIONAL_HEADER;
+#else
 typedef IMAGE_OPTIONAL_HEADER32 IMAGE_OPTIONAL_HEADER;
 typedef PIMAGE_OPTIONAL_HEADER32 PIMAGE_OPTIONAL_HEADER;
+#endif
 
 typedef struct _IMAGE_NT_HEADERS32 {
   DWORD Signature; /* "PE"\0\0 */       /* 0x00 */
@@ -380,8 +385,13 @@ typedef struct _IMAGE_NT_HEADERS64 {
   IMAGE_OPTIONAL_HEADER64 OptionalHeader;       /* 0x18 */
 } IMAGE_NT_HEADERS64, *PIMAGE_NT_HEADERS64;
 
+#if __x86_64__
+typedef IMAGE_NT_HEADERS64 IMAGE_NT_HEADERS;
+typedef PIMAGE_NT_HEADERS64 PIMAGE_NT_HEADERS;
+#else
 typedef IMAGE_NT_HEADERS32 IMAGE_NT_HEADERS;
 typedef PIMAGE_NT_HEADERS32 PIMAGE_NT_HEADERS;
+#endif
 
 #define IMAGE_SIZEOF_SHORT_NAME 8
 
@@ -1091,14 +1101,21 @@ struct user_desc {
     unsigned int  limit_in_pages : 1;
     unsigned int  seg_not_present : 1;
     unsigned int  useable : 1;
+#ifdef __x86_64__
+    unsigned int  lm : 1;
+#endif
 };
 
 #define LDT_READ 0
 #define LDT_WRITE 1
 
+struct pe_image;
+
 bool pe_load_library(const char *filename, void **image, size_t *size);
-void * get_export_address(const char *name);
+
+void *get_export_address(const char *name);
 int link_pe_images(struct pe_image *pe_image, unsigned short n);
+bool pe_unload_library(struct pe_image pe);
 int get_export(const char *name, void *func);
 int get_data_export(char *name, uint32_t base, void *result);
 bool setup_nt_threadinfo(PEXCEPTION_HANDLER handler);
@@ -1106,5 +1123,9 @@ bool setup_kuser_shared_data(void);
 bool process_extra_exports(void *imagebase, size_t base, const char *filename);
 
 extern PKUSER_SHARED_DATA SharedUserData;
+
+int check_nt_hdr(IMAGE_NT_HEADERS *nt_hdr);
+int read_exports(struct pe_image *pe);
+int fixup_imports(void *image, IMAGE_NT_HEADERS *nt_hdr);
 
 #endif

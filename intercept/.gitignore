@@ -1,0 +1,4 @@
+build*/
+cmake-build*
+Makefile
+Testing

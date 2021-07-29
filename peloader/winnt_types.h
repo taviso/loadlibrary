@@ -62,6 +62,10 @@
 #define STATUS_DEVICE_NOT_CONNECTED     0xC000009D
 
 #define STATUS_BUFFER_OVERFLOW          0x80000005
+#define STATUS_LONG_JUMP                0x80000026
+#define STATUS_UNWIND_CONSOLIDATE       0x80000029
+#define STATUS_UNWIND                   0xC0000027
+
 
 #define SL_PENDING_RETURNED             0x01
 #define SL_INVOKE_ON_CANCEL             0x20
@@ -132,44 +136,49 @@
 #define wfastcall __attribute__((fastcall))
 #define STATIC static
 #define VOID void
+#ifdef __x86_64__
+#define WINAPI __attribute__((ms_abi))
+#else
 #define WINAPI __attribute__((__stdcall__))
+#endif
 
 #define KI_USER_SHARED_DATA 0xffdf0000
 #define MM_SHARED_USER_DATA_VA 0x7ffe0000
 
-typedef uint8_t         BOOLEAN, BOOL;
-typedef void            *PVOID;
-typedef uint8_t         BYTE;
-typedef uint8_t         *PBYTE;
-typedef uint8_t         *LPBYTE;
-typedef int8_t          CHAR;
-typedef char            *PCHAR;
-typedef wchar_t         WCHAR;
-typedef CHAR            *LPSTR;
-typedef const char      *LPCSTR;
-typedef WCHAR           *LPWSTR;
-typedef const WCHAR     *LPCWSTR;
-typedef WCHAR           *PWSTR;
-typedef uint8_t         UCHAR;
-typedef uint8_t         *PUCHAR;
-typedef uint16_t        SHORT;
-typedef uint16_t        USHORT;
-typedef uint16_t        *PUSHORT;
-typedef uint16_t        WORD;
-typedef int32_t         INT;
-typedef uint32_t        UINT;
-typedef uint32_t        DWORD, *PDWORD;
-typedef int32_t         LONG;
-typedef uint32_t        ULONG;
-typedef uint32_t        *PULONG;
-typedef int64_t         LONGLONG;
-typedef uint64_t        ULONGLONG, *PULONGLONG;
-typedef uint64_t        ULONGULONG;
-typedef uint64_t        ULONG64;
-typedef uint64_t        QWORD, *PQWORD;
-typedef uint16_t        WCHAR, *PWCHAR;
-typedef HANDLE          *PHANDLE;
-typedef LONG            HRESULT;
+typedef uint8_t BOOLEAN, BOOL, *PBOOL, UBYTE;
+typedef void *PVOID, *LPVOID;
+typedef uint8_t BYTE;
+typedef uint8_t *PBYTE;
+typedef uint8_t *LPBYTE;
+typedef int8_t CHAR;
+typedef char *PCHAR;
+typedef CHAR *LPSTR;
+typedef const char *LPCSTR;
+typedef uint16_t WCHAR, *PWCHAR;
+typedef WCHAR *LPWSTR;
+typedef const WCHAR *LPCWSTR, *LPCWCH;
+typedef WCHAR *PWSTR;
+typedef uint8_t UCHAR;
+typedef uint8_t *PUCHAR;
+typedef uint16_t SHORT;
+typedef uint16_t USHORT;
+typedef uint16_t *PUSHORT;
+typedef uint16_t WORD;
+typedef int32_t INT;
+typedef uint32_t UINT;
+typedef uint32_t DWORD, *PDWORD, *LPDWORD;
+typedef DWORD *DWORD_PTR;
+typedef int32_t LONG;
+typedef uint32_t ULONG;
+typedef uint32_t *PULONG;
+typedef int64_t LONGLONG, DWORD64, *PDWORD64;
+typedef uint64_t ULONGLONG, *PULONGLONG;
+typedef ULONGLONG DWORDLONG;
+typedef uint64_t ULONGULONG;
+typedef uint64_t ULONG64, *PULONG64;
+typedef uint64_t QWORD, *PQWORD;
+typedef HANDLE *PHANDLE;
+typedef LONG HRESULT;
 
 typedef CHAR CCHAR;
 typedef SHORT CSHORT;
@@ -197,110 +206,114 @@ typedef ULONG SECURITY_INFORMATION;
 #define NT_SUCCESS(status) ((NTSTATUS)(status) >= 0)
 
 typedef struct _FILETIME {
-  DWORD dwLowDateTime;
-  DWORD dwHighDateTime;
+    DWORD dwLowDateTime;
+    DWORD dwHighDateTime;
 } FILETIME, *PFILETIME;
 
 typedef struct ansi_string {
-        USHORT length;
-        USHORT max_length;
-        char *buf;
+    USHORT length;
+    USHORT max_length;
+    char *buf;
 } ANSI_STRING, *PANSI_STRING;
 
 typedef struct unicode_string {
-        USHORT Length;
-        USHORT MaximumLength;
-        wchar_t *Buffer;
+    USHORT Length;
+    USHORT MaximumLength;
+    wchar_t *Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
 
 struct nt_slist {
-        struct nt_slist *next;
+    struct nt_slist *next;
 };
 
 union nt_slist_head {
-        ULONGLONG align;
-        struct {
-                struct nt_slist *next;
-                USHORT depth;
-                USHORT sequence;
-        };
+    ULONGLONG align;
+    struct {
+        struct nt_slist *next;
+        USHORT depth;
+        USHORT sequence;
+    };
 };
 typedef union nt_slist_head nt_slist_header;
 
 struct nt_list {
-        struct nt_list *next;
-        struct nt_list *prev;
+    struct nt_list *next;
+    struct nt_list *prev;
 };
 
 typedef ULONG_PTR NT_SPIN_LOCK;
 
-enum kdpc_importance {LowImportance, MediumImportance, HighImportance};
+enum kdpc_importance {
+    LowImportance, MediumImportance, HighImportance
+};
 
 struct kdpc;
+
 typedef void (*DPC)(struct kdpc *kdpc, void *ctx, void *arg1,
                     void *arg2) wstdcall;
+
 struct kdpc {
-        SHORT type;
-        UCHAR nr_cpu;
-        UCHAR importance;
-        struct nt_list list;
-        DPC func;
-        void *ctx;
-        void *arg1;
-        void *arg2;
-        union {
-                NT_SPIN_LOCK *lock;
-                /* 'lock' is not used; 'queued' represents whether
-                 * kdpc is queued or not */
-                int queued;
-        };
+    SHORT type;
+    UCHAR nr_cpu;
+    UCHAR importance;
+    struct nt_list list;
+    DPC func;
+    void *ctx;
+    void *arg1;
+    void *arg2;
+    union {
+        NT_SPIN_LOCK *lock;
+        /* 'lock' is not used; 'queued' represents whether
+         * kdpc is queued or not */
+        int queued;
+    };
 };
 
 enum pool_type {
-        NonPagedPool, PagedPool, NonPagedPoolMustSucceed, DontUseThisType,
-        NonPagedPoolCacheAligned, PagedPoolCacheAligned,
-        NonPagedPoolCacheAlignedMustS, MaxPoolType,
-        NonPagedPoolSession = 32,
-        PagedPoolSession = NonPagedPoolSession + 1,
-        NonPagedPoolMustSucceedSession = PagedPoolSession + 1,
-        DontUseThisTypeSession = NonPagedPoolMustSucceedSession + 1,
-        NonPagedPoolCacheAlignedSession = DontUseThisTypeSession + 1,
-        PagedPoolCacheAlignedSession = NonPagedPoolCacheAlignedSession + 1,
-        NonPagedPoolCacheAlignedMustSSession = PagedPoolCacheAlignedSession + 1
+    NonPagedPool, PagedPool, NonPagedPoolMustSucceed, DontUseThisType,
+    NonPagedPoolCacheAligned, PagedPoolCacheAligned,
+    NonPagedPoolCacheAlignedMustS, MaxPoolType,
+    NonPagedPoolSession = 32,
+    PagedPoolSession = NonPagedPoolSession + 1,
+    NonPagedPoolMustSucceedSession = PagedPoolSession + 1,
+    DontUseThisTypeSession = NonPagedPoolMustSucceedSession + 1,
+    NonPagedPoolCacheAlignedSession = DontUseThisTypeSession + 1,
+    PagedPoolCacheAlignedSession = NonPagedPoolCacheAlignedSession + 1,
+    NonPagedPoolCacheAlignedMustSSession = PagedPoolCacheAlignedSession + 1
 };
 
 enum memory_caching_type_orig {
-        MmFrameBufferCached = 2
+    MmFrameBufferCached = 2
 };
 
 enum memory_caching_type {
-        MmNonCached = FALSE, MmCached = TRUE,
-        MmWriteCombined = MmFrameBufferCached, MmHardwareCoherentCached,
-        MmNonCachedUnordered, MmUSWCCached, MmMaximumCacheType
+    MmNonCached = FALSE, MmCached = TRUE,
+    MmWriteCombined = MmFrameBufferCached, MmHardwareCoherentCached,
+    MmNonCachedUnordered, MmUSWCCached, MmMaximumCacheType
 };
 
 enum lock_operation {
-        IoReadAccess, IoWriteAccess, IoModifyAccess
+    IoReadAccess, IoWriteAccess, IoModifyAccess
 };
 
 enum mode {
-        KernelMode, UserMode, MaximumMode
+    KernelMode, UserMode, MaximumMode
 };
 
 struct mdl {
-        struct mdl *next;
-        CSHORT size;
-        CSHORT flags;
-        /* NdisFreeBuffer doesn't pass pool, so we store pool in
-         * unused field 'process' */
-        union {
-                void *process;
-                void *pool;
-        };
-        void *mappedsystemva;
-        void *startva;
-        ULONG bytecount;
-        ULONG byteoffset;
+    struct mdl *next;
+    CSHORT size;
+    CSHORT flags;
+    /* NdisFreeBuffer doesn't pass pool, so we store pool in
+     * unused field 'process' */
+    union {
+        void *process;
+        void *pool;
+    };
+    void *mappedsystemva;
+    void *startva;
+    ULONG bytecount;
+    ULONG byteoffset;
 };
 
 #define MDL_MAPPED_TO_SYSTEM_VA         0x0001
@@ -344,74 +357,74 @@ do {                                                                    \
 } while (0)
 
 struct kdevice_queue_entry {
-        struct nt_list list;
-        ULONG sort_key;
-        BOOLEAN inserted;
+    struct nt_list list;
+    ULONG sort_key;
+    BOOLEAN inserted;
 };
 
 struct kdevice_queue {
-        USHORT type;
-        USHORT size;
-        struct nt_list list;
-        NT_SPIN_LOCK lock;
-        BOOLEAN busy;
+    USHORT type;
+    USHORT size;
+    struct nt_list list;
+    NT_SPIN_LOCK lock;
+    BOOLEAN busy;
 };
 
 struct wait_context_block {
-        struct kdevice_queue_entry wait_queue_entry;
-        void *device_routine;
-        void *device_context;
-        ULONG num_regs;
-        void *device_object;
-        void *current_irp;
-        void *buffer_chaining_dpc;
+    struct kdevice_queue_entry wait_queue_entry;
+    void *device_routine;
+    void *device_context;
+    ULONG num_regs;
+    void *device_object;
+    void *current_irp;
+    void *buffer_chaining_dpc;
 };
 
 struct wait_block {
-        struct nt_list list;
-        struct task_struct *thread;
-        void *object;
-        int *wait_done;
-        USHORT wait_key;
-        USHORT wait_type;
+    struct nt_list list;
+    struct task_struct *thread;
+    void *object;
+    int *wait_done;
+    USHORT wait_key;
+    USHORT wait_type;
 };
 
 struct dispatcher_header {
-        UCHAR type;
-        UCHAR absolute;
-        UCHAR size;
-        UCHAR inserted;
-        LONG signal_state;
-        struct nt_list wait_blocks;
+    UCHAR type;
+    UCHAR absolute;
+    UCHAR size;
+    UCHAR inserted;
+    LONG signal_state;
+    struct nt_list wait_blocks;
 };
 
 enum event_type {
-        NotificationEvent,
-        SynchronizationEvent,
+    NotificationEvent,
+    SynchronizationEvent,
 };
 
 enum timer_type {
-        NotificationTimer = NotificationEvent,
-        SynchronizationTimer = SynchronizationEvent,
+    NotificationTimer = NotificationEvent,
+    SynchronizationTimer = SynchronizationEvent,
 };
 
 enum dh_type {
-        NotificationObject = NotificationEvent,
-        SynchronizationObject = SynchronizationEvent,
-        MutexObject,
-        SemaphoreObject,
-        ThreadObject,
+    NotificationObject = NotificationEvent,
+    SynchronizationObject = SynchronizationEvent,
+    MutexObject,
+    SemaphoreObject,
+    ThreadObject,
 };
 
 enum wait_type {
-        WaitAll, WaitAny
+    WaitAll, WaitAny
 };
 
 /* objects that use dispatcher_header have it as the first field, so
  * whenever we need to initialize dispatcher_header, we can convert
  * that object into a nt_event and access dispatcher_header */
 struct nt_event {
-        struct dispatcher_header dh;
+    struct dispatcher_header dh;
 };
 
 struct wrap_timer;
@@ -419,47 +432,47 @@ struct wrap_timer;
 #define WRAP_TIMER_MAGIC 47697249
 
 struct nt_timer {
-        struct dispatcher_header dh;
-        /* We can't fit Linux timer in this structure. Instead of
-         * padding the nt_timer structure, we replace due_time field
-         * with *wrap_timer and allocate memory for it when nt_timer is
-         * initialized */
-        union {
-                ULONGLONG due_time;
-                struct wrap_timer *wrap_timer;
-        };
-        struct nt_list nt_timer_list;
-        struct kdpc *kdpc;
-        union {
-                LONG period;
-                LONG wrap_timer_magic;
-        };
+    struct dispatcher_header dh;
+    /* We can't fit Linux timer in this structure. Instead of
+     * padding the nt_timer structure, we replace due_time field
+     * with *wrap_timer and allocate memory for it when nt_timer is
+     * initialized */
+    union {
+        ULONGLONG due_time;
+        struct wrap_timer *wrap_timer;
+    };
+    struct nt_list nt_timer_list;
+    struct kdpc *kdpc;
+    union {
+        LONG period;
+        LONG wrap_timer_magic;
+    };
 };
 
 struct nt_mutex {
-        struct dispatcher_header dh;
-        struct nt_list list;
-        struct task_struct *owner_thread;
-        BOOLEAN abandoned;
-        BOOLEAN apc_disable;
+    struct dispatcher_header dh;
+    struct nt_list list;
+    struct task_struct *owner_thread;
+    BOOLEAN abandoned;
+    BOOLEAN apc_disable;
 };
 
 struct nt_semaphore {
-        struct dispatcher_header dh;
-        LONG limit;
+    struct dispatcher_header dh;
+    LONG limit;
 };
 
 struct nt_thread {
-        struct dispatcher_header dh;
-        /* the rest in Windows is a long structure; since this
-         * structure is opaque to drivers, we just define what we
-         * need */
-        int pid;
-        NTSTATUS status;
-        struct task_struct *task;
-        struct nt_list irps;
-        NT_SPIN_LOCK lock;
-        KPRIORITY prio;
+    struct dispatcher_header dh;
+    /* the rest in Windows is a long structure; since this
+     * structure is opaque to drivers, we just define what we
+     * need */
+    int pid;
+    NTSTATUS status;
+    struct task_struct *task;
+    struct nt_list irps;
+    NT_SPIN_LOCK lock;
+    KPRIORITY prio;
 };
 
 #define set_object_type(dh, type)       ((dh)->type = (type))
@@ -482,48 +495,48 @@ struct dev_obj_ext;
 struct driver_object;
 
 struct device_object {
-        CSHORT type;
-        USHORT size;
-        LONG ref_count;
-        struct driver_object *drv_obj;
-        struct device_object *next;
-        struct device_object *attached;
-        struct irp *current_irp;
-        void *io_timer;
-        ULONG flags;
-        ULONG characteristics;
-        void *vpb;
-        void *dev_ext;
-        CCHAR stack_count;
-        union {
-                struct nt_list queue_list;
-                struct wait_context_block wcb;
-        } queue;
-        ULONG align_req;
-        struct kdevice_queue dev_queue;
-        struct kdpc dpc;
-        ULONG active_threads;
-        void *security_desc;
-        struct nt_event lock;
-        USHORT sector_size;
-        USHORT spare1;
-        struct dev_obj_ext *dev_obj_ext;
-        void *reserved;
+    CSHORT type;
+    USHORT size;
+    LONG ref_count;
+    struct driver_object *drv_obj;
+    struct device_object *next;
+    struct device_object *attached;
+    struct irp *current_irp;
+    void *io_timer;
+    ULONG flags;
+    ULONG characteristics;
+    void *vpb;
+    void *dev_ext;
+    CCHAR stack_count;
+    union {
+        struct nt_list queue_list;
+        struct wait_context_block wcb;
+    } queue;
+    ULONG align_req;
+    struct kdevice_queue dev_queue;
+    struct kdpc dpc;
+    ULONG active_threads;
+    void *security_desc;
+    struct nt_event lock;
+    USHORT sector_size;
+    USHORT spare1;
+    struct dev_obj_ext *dev_obj_ext;
+    void *reserved;
 };
 
 struct dev_obj_ext {
-        CSHORT type;
-        CSHORT size;
-        struct device_object *dev_obj;
-        struct device_object *attached_to;
+    CSHORT type;
+    CSHORT size;
+    struct device_object *dev_obj;
+    struct device_object *attached_to;
 };
 
 struct io_status_block {
-        union {
-                NTSTATUS status;
-                void *pointer;
-        };
-        ULONG_PTR info;
+    union {
+        NTSTATUS status;
+        void *pointer;
+    };
+    ULONG_PTR info;
 };
 
 
@@ -535,70 +548,74 @@ typedef NTSTATUS driver_dispatch_t(struct device_object *dev_obj,
                                    struct irp *irp) wstdcall;
 
 struct driver_object {
-        CSHORT type;
-        CSHORT size;
-        struct device_object *dev_obj;
-        ULONG flags;
-        void *start;
-        ULONG driver_size;
-        void *section;
-        struct driver_extension *drv_ext;
-        struct unicode_string name;
-        struct unicode_string *hardware_database;
-        void *fast_io_dispatch;
-        void *init;
-        void *start_io;
-        void (*unload)(struct driver_object *driver) wstdcall;
-        driver_dispatch_t *major_func[IRP_MJ_MAXIMUM_FUNCTION + 1];
+    CSHORT type;
+    CSHORT size;
+    struct device_object *dev_obj;
+    ULONG flags;
+    void *start;
+    ULONG driver_size;
+    void *section;
+    struct driver_extension *drv_ext;
+    struct unicode_string name;
+    struct unicode_string *hardware_database;
+    void *fast_io_dispatch;
+    void *init;
+    void *start_io;
+
+    void (*unload)(struct driver_object *driver) wstdcall;
+
+    driver_dispatch_t *major_func[IRP_MJ_MAXIMUM_FUNCTION + 1];
 };
 
 struct driver_extension {
-        struct driver_object *drv_obj;
-        NTSTATUS (*add_device)(struct driver_object *drv_obj,
-                               struct device_object *dev_obj);
-        ULONG count;
-        struct unicode_string service_key_name;
-        struct nt_list custom_ext;
+    struct driver_object *drv_obj;
+
+    NTSTATUS (*add_device)(struct driver_object *drv_obj,
+                           struct device_object *dev_obj);
+
+    ULONG count;
+    struct unicode_string service_key_name;
+    struct nt_list custom_ext;
 };
 
 struct custom_ext {
-        struct nt_list list;
-        void *client_id;
+    struct nt_list list;
+    void *client_id;
 };
 
 struct wrap_bin_file;
 
 struct file_object {
-        CSHORT type;
-        CSHORT size;
-        struct device_object *dev_obj;
-        void *volume_parameter_block;
-        void *fs_context;
-        void *fs_context2;
-        void *section_object_pointer;
-        void *private_cache_map;
-        NTSTATUS final_status;
-        union {
-                struct file_object *related_file_object;
-                struct wrap_bin_file *wrap_bin_file;
-        };
-        BOOLEAN lock_operation;
-        BOOLEAN delete_pending;
-        BOOLEAN read_access;
-        BOOLEAN write_access;
-        BOOLEAN delete_access;
-        BOOLEAN shared_read;
-        BOOLEAN shared_write;
-        BOOLEAN shared_delete;
-        ULONG flags;
-        struct unicode_string _name_;
-        LARGE_INTEGER current_byte_offset;
-        ULONG waiters;
-        ULONG busy;
-        void *last_lock;
-        struct nt_event lock;
-        struct nt_event event;
-        void *completion_context;
+    CSHORT type;
+    CSHORT size;
+    struct device_object *dev_obj;
+    void *volume_parameter_block;
+    void *fs_context;
+    void *fs_context2;
+    void *section_object_pointer;
+    void *private_cache_map;
+    NTSTATUS final_status;
+    union {
+        struct file_object *related_file_object;
+        struct wrap_bin_file *wrap_bin_file;
+    };
+    BOOLEAN lock_operation;
+    BOOLEAN delete_pending;
+    BOOLEAN read_access;
+    BOOLEAN write_access;
+    BOOLEAN delete_access;
+    BOOLEAN shared_read;
+    BOOLEAN shared_write;
+    BOOLEAN shared_delete;
+    ULONG flags;
+    struct unicode_string _name_;
+    LARGE_INTEGER current_byte_offset;
+    ULONG waiters;
+    ULONG busy;
+    void *last_lock;
+    struct nt_event lock;
+    struct nt_event event;
+    void *completion_context;
 };
 
 #define POINTER_ALIGN
@@ -606,54 +623,56 @@ struct file_object {
 #define CACHE_ALIGN __attribute__((aligned(128)))
 
 enum system_power_state {
-        PowerSystemUnspecified = 0,
-        PowerSystemWorking, PowerSystemSleeping1, PowerSystemSleeping2,
-        PowerSystemSleeping3, PowerSystemHibernate, PowerSystemShutdown,
-        PowerSystemMaximum,
+    PowerSystemUnspecified = 0,
+    PowerSystemWorking, PowerSystemSleeping1, PowerSystemSleeping2,
+    PowerSystemSleeping3, PowerSystemHibernate, PowerSystemShutdown,
+    PowerSystemMaximum,
 };
 
 enum device_power_state {
-        PowerDeviceUnspecified = 0,
-        PowerDeviceD0, PowerDeviceD1, PowerDeviceD2, PowerDeviceD3,
-        PowerDeviceMaximum,
+    PowerDeviceUnspecified = 0,
+    PowerDeviceD0, PowerDeviceD1, PowerDeviceD2, PowerDeviceD3,
+    PowerDeviceMaximum,
 };
 
 union power_state {
-        enum system_power_state system_state;
-        enum device_power_state device_state;
+    enum system_power_state system_state;
+    enum device_power_state device_state;
 };
 
 enum power_state_type {
-        SystemPowerState = 0, DevicePowerState,
+    SystemPowerState = 0, DevicePowerState,
 };
 
 enum power_action {
-        PowerActionNone = 0,
-        PowerActionReserved, PowerActionSleep, PowerActionHibernate,
-        PowerActionShutdown, PowerActionShutdownReset, PowerActionShutdownOff,
-        PowerActionWarmEject,
+    PowerActionNone = 0,
+    PowerActionReserved, PowerActionSleep, PowerActionHibernate,
+    PowerActionShutdown, PowerActionShutdownReset, PowerActionShutdownOff,
+    PowerActionWarmEject,
 };
 
 typedef struct guid {
-        ULONG data1;
-        USHORT data2;
-        USHORT data3;
-        UCHAR data4[8];
+    ULONG data1;
+    USHORT data2;
+    USHORT data3;
+    UCHAR data4[8];
 } GUID, *PGUID, *LPGUID;
 
 struct nt_interface {
-        USHORT size;
-        USHORT version;
-        void *context;
-        void (*reference)(void *context) wstdcall;
-        void (*dereference)(void *context) wstdcall;
+    USHORT size;
+    USHORT version;
+    void *context;
+
+    void (*reference)(void *context) wstdcall;
+
+    void (*dereference)(void *context) wstdcall;
 };
 
 enum interface_type {
-        InterfaceTypeUndefined = -1, Internal, Isa, Eisa, MicroChannel,
-        TurboChannel, PCIBus, VMEBus, NuBus, PCMCIABus, CBus, MPIBus,
-        MPSABus, ProcessorInternal, InternalPowerBus, PNPISABus,
-        PNPBus, MaximumInterfaceType,
+    InterfaceTypeUndefined = -1, Internal, Isa, Eisa, MicroChannel,
+    TurboChannel, PCIBus, VMEBus, NuBus, PCMCIABus, CBus, MPIBus,
+    MPSABus, ProcessorInternal, InternalPowerBus, PNPISABus,
+    PNPBus, MaximumInterfaceType,
 };
 
 #define CmResourceTypeNull              0
@@ -672,8 +691,8 @@ enum interface_type {
 #define CmResourceTypeMfCardConfig      131
 
 enum cm_share_disposition {
-        CmResourceShareUndetermined = 0, CmResourceShareDeviceExclusive,
-        CmResourceShareDriverExclusive, CmResourceShareShared
+    CmResourceShareUndetermined = 0, CmResourceShareDeviceExclusive,
+    CmResourceShareDriverExclusive, CmResourceShareShared
 };
 
 #define CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE   0
@@ -707,105 +726,105 @@ enum cm_share_disposition {
 
 #define MAX_RESOURCES 20
 
-#pragma pack(push,4)
+#pragma pack(push, 4)
 struct cm_partial_resource_descriptor {
-        UCHAR type;
-        UCHAR share;
-        USHORT flags;
-        union {
-                struct {
-                        PHYSICAL_ADDRESS start;
-                        ULONG length;
-                } generic;
-                struct {
-                        PHYSICAL_ADDRESS start;
-                        ULONG length;
-                } port;
-                struct {
-                        ULONG level;
-                        ULONG vector;
-                        KAFFINITY affinity;
-                } interrupt;
-                struct {
-                        PHYSICAL_ADDRESS start;
-                        ULONG length;
-                } memory;
-                struct {
-                        ULONG channel;
-                        ULONG port;
-                        ULONG reserved1;
-                } dma;
-                struct {
-                        ULONG data[3];
-                } device_private;
-                struct {
-                        ULONG start;
-                        ULONG length;
-                        ULONG reserved;
-                } bus_number;
-                struct {
-                        ULONG data_size;
-                        ULONG reserved1;
-                        ULONG reserved2;
-                } device_specific_data;
-        } u;
+    UCHAR type;
+    UCHAR share;
+    USHORT flags;
+    union {
+        struct {
+            PHYSICAL_ADDRESS start;
+            ULONG length;
+        } generic;
+        struct {
+            PHYSICAL_ADDRESS start;
+            ULONG length;
+        } port;
+        struct {
+            ULONG level;
+            ULONG vector;
+            KAFFINITY affinity;
+        } interrupt;
+        struct {
+            PHYSICAL_ADDRESS start;
+            ULONG length;
+        } memory;
+        struct {
+            ULONG channel;
+            ULONG port;
+            ULONG reserved1;
+        } dma;
+        struct {
+            ULONG data[3];
+        } device_private;
+        struct {
+            ULONG start;
+            ULONG length;
+            ULONG reserved;
+        } bus_number;
+        struct {
+            ULONG data_size;
+            ULONG reserved1;
+            ULONG reserved2;
+        } device_specific_data;
+    } u;
 };
 #pragma pack(pop)
 
 struct cm_partial_resource_list {
-        USHORT version;
-        USHORT revision;
-        ULONG count;
-        struct cm_partial_resource_descriptor partial_descriptors[1];
+    USHORT version;
+    USHORT revision;
+    ULONG count;
+    struct cm_partial_resource_descriptor partial_descriptors[1];
 };
 
 struct cm_full_resource_descriptor {
-        enum interface_type interface_type;
-        ULONG bus_number;
-        struct cm_partial_resource_list partial_resource_list;
+    enum interface_type interface_type;
+    ULONG bus_number;
+    struct cm_partial_resource_list partial_resource_list;
 };
 
 struct cm_resource_list {
-        ULONG count;
-        struct cm_full_resource_descriptor list[1];
+    ULONG count;
+    struct cm_full_resource_descriptor list[1];
 };
 
 enum file_info_class {
-        FileDirectoryInformation = 1,
-        FileBasicInformation = 4,
-        FileStandardInformation = 5,
-        FileNameInformation = 9,
-        FilePositionInformation = 14,
-        FileAlignmentInformation = 17,
-        FileNetworkOpenInformation = 34,
-        FileAttributeTagInformation = 35,
-        FileMaximumInformation = 41,
+    FileDirectoryInformation = 1,
+    FileBasicInformation = 4,
+    FileStandardInformation = 5,
+    FileNameInformation = 9,
+    FilePositionInformation = 14,
+    FileAlignmentInformation = 17,
+    FileNetworkOpenInformation = 34,
+    FileAttributeTagInformation = 35,
+    FileMaximumInformation = 41,
 };
 
 enum fs_info_class {
-        FileFsVolumeInformation = 1,
-        /* ... */
-        FileFsMaximumInformation = 9,
+    FileFsVolumeInformation = 1,
+    /* ... */
+    FileFsMaximumInformation = 9,
 };
 
 enum device_relation_type {
-        BusRelations, EjectionRelations, PowerRelations, RemovalRelations,
-        TargetDeviceRelation, SingleBusRelations,
+    BusRelations, EjectionRelations, PowerRelations, RemovalRelations,
+    TargetDeviceRelation, SingleBusRelations,
 };
 
 enum bus_query_id_type {
-        BusQueryDeviceID = 0, BusQueryHardwareIDs = 1,
-        BusQueryCompatibleIDs = 2, BusQueryInstanceID = 3,
-        BusQueryDeviceSerialNumber = 4,
+    BusQueryDeviceID = 0, BusQueryHardwareIDs = 1,
+    BusQueryCompatibleIDs = 2, BusQueryInstanceID = 3,
+    BusQueryDeviceSerialNumber = 4,
 };
 
 enum device_text_type {
-        DeviceTextDescription = 0, DeviceTextLocationInformation = 1,
+    DeviceTextDescription = 0, DeviceTextLocationInformation = 1,
 };
 
 enum device_usage_notification_type {
-        DeviceUsageTypeUndefined, DeviceUsageTypePaging,
-        DeviceUsageTypeHibernation, DevbiceUsageTypeDumpFile,
+    DeviceUsageTypeUndefined, DeviceUsageTypePaging,
+    DeviceUsageTypeHibernation, DevbiceUsageTypeDumpFile,
 };
 
 #define METHOD_BUFFERED         0
@@ -819,162 +838,164 @@ enum device_usage_notification_type {
 #define IO_METHOD_FROM_CTL_CODE(code) (code & 0x3)
 
 struct io_stack_location {
-        UCHAR major_fn;
-        UCHAR minor_fn;
-        UCHAR flags;
-        UCHAR control;
-        union {
+    UCHAR major_fn;
+    UCHAR minor_fn;
+    UCHAR flags;
+    UCHAR control;
+    union {
+        struct {
+            void *security_context;
+            ULONG options;
+            USHORT POINTER_ALIGN file_attributes;
+            USHORT share_access;
+            ULONG POINTER_ALIGN ea_length;
+        } create;
+        struct {
+            ULONG length;
+            ULONG POINTER_ALIGN key;
+            LARGE_INTEGER byte_offset;
+        } read;
+        struct {
+            ULONG length;
+            ULONG POINTER_ALIGN key;
+            LARGE_INTEGER byte_offset;
+        } write;
+        struct {
+            ULONG length;
+            enum file_info_class POINTER_ALIGN file_info_class;
+        } query_file;
+        struct {
+            ULONG length;
+            enum file_info_class POINTER_ALIGN file_info_class;
+            struct file_object *file_object;
+            union {
                 struct {
-                        void *security_context;
-                        ULONG options;
-                        USHORT POINTER_ALIGN file_attributes;
-                        USHORT share_access;
-                        ULONG POINTER_ALIGN ea_length;
-                } create;
-                struct {
-                        ULONG length;
-                        ULONG POINTER_ALIGN key;
-                        LARGE_INTEGER byte_offset;
-                } read;
-                struct {
-                        ULONG length;
-                        ULONG POINTER_ALIGN key;
-                        LARGE_INTEGER byte_offset;
-                } write;
-                struct {
-                        ULONG length;
-                        enum file_info_class POINTER_ALIGN file_info_class;
-                } query_file;
-                struct {
-                        ULONG length;
-                        enum file_info_class POINTER_ALIGN file_info_class;
-                        struct file_object *file_object;
-                        union {
-                                struct {
-                                        BOOLEAN replace_if_exists;
-                                        BOOLEAN advance_only;
-                                };
-                                ULONG cluster_count;
-                                void *delete_handle;
-                        };
-                } set_file;
-                struct {
-                        ULONG length;
-                        enum fs_info_class POINTER_ALIGN fs_info_class;
-                } query_volume;
-                struct {
-                        ULONG output_buf_len;
-                        ULONG POINTER_ALIGN input_buf_len;
-                        ULONG POINTER_ALIGN code;
-                        void *type3_input_buf;
-                } dev_ioctl;
-                struct {
-                        SECURITY_INFORMATION security_info;
-                        ULONG POINTER_ALIGN length;
-                } query_security;
-                struct {
-                        SECURITY_INFORMATION security_info;
-                        void *security_descriptor;
-                } set_security;
-                struct {
-                        void *vpb;
-                        struct device_object *device_object;
-                } mount_volume;
-                struct {
-                        void *vpb;
-                        struct device_object *device_object;
-                } verify_volume;
-                struct {
-                        void *srb;
-                } scsi;
-                struct {
-                        enum device_relation_type type;
-                } query_device_relations;
-                struct {
-                        const struct guid *type;
-                        USHORT size;
-                        USHORT version;
-                        struct nt_interface *intf;
-                        void *intf_data;
-                } query_intf;
-                struct {
-                        void *capabilities;
-                } device_capabilities;
-                struct {
-                        void *io_resource_requirement_list;
-                } filter_resource_requirements;
-                struct {
-                        ULONG which_space;
-                        void *buffer;
-                        ULONG offset;
-                        ULONG POINTER_ALIGN length;
-                } read_write_config;
-                struct {
-                        BOOLEAN lock;
-                } set_lock;
-                struct {
-                        enum bus_query_id_type id_type;
-                } query_id;
-                struct {
-                        enum device_text_type device_text_type;
-                        ULONG POINTER_ALIGN locale_id;
-                } query_device_text;
-                struct {
-                        BOOLEAN in_path;
-                        BOOLEAN reserved[3];
-                        enum device_usage_notification_type POINTER_ALIGN type;
-                } usage_notification;
-                struct {
-                        enum system_power_state power_state;
-                } wait_wake;
-                struct {
-                        void *power_sequence;
-                } power_sequence;
-                struct {
-                        ULONG sys_context;
-                        enum power_state_type POINTER_ALIGN type;
-                        union power_state POINTER_ALIGN state;
-                        enum power_action POINTER_ALIGN shutdown_type;
-                } power;
-                struct {
-                        struct cm_resource_list *allocated_resources;
-                        struct cm_resource_list *allocated_resources_translated;
-                } start_device;
-                struct {
-                        ULONG_PTR provider_id;
-                        void *data_path;
-                        ULONG buf_len;
-                        void *buf;
-                } wmi;
-                struct {
-                        void *arg1;
-                        void *arg2;
-                        void *arg3;
-                        void *arg4;
-                } others;
-        } params;
-        struct device_object *dev_obj;
-        struct file_object *file_obj;
-        NTSTATUS (*completion_routine)(struct device_object *,
-                                       struct irp *, void *) wstdcall;
-        void *context;
+                    BOOLEAN replace_if_exists;
+                    BOOLEAN advance_only;
+                };
+                ULONG cluster_count;
+                void *delete_handle;
+            };
+        } set_file;
+        struct {
+            ULONG length;
+            enum fs_info_class POINTER_ALIGN fs_info_class;
+        } query_volume;
+        struct {
+            ULONG output_buf_len;
+            ULONG POINTER_ALIGN input_buf_len;
+            ULONG POINTER_ALIGN code;
+            void *type3_input_buf;
+        } dev_ioctl;
+        struct {
+            SECURITY_INFORMATION security_info;
+            ULONG POINTER_ALIGN length;
+        } query_security;
+        struct {
+            SECURITY_INFORMATION security_info;
+            void *security_descriptor;
+        } set_security;
+        struct {
+            void *vpb;
+            struct device_object *device_object;
+        } mount_volume;
+        struct {
+            void *vpb;
+            struct device_object *device_object;
+        } verify_volume;
+        struct {
+            void *srb;
+        } scsi;
+        struct {
+            enum device_relation_type type;
+        } query_device_relations;
+        struct {
+            const struct guid *type;
+            USHORT size;
+            USHORT version;
+            struct nt_interface *intf;
+            void *intf_data;
+        } query_intf;
+        struct {
+            void *capabilities;
+        } device_capabilities;
+        struct {
+            void *io_resource_requirement_list;
+        } filter_resource_requirements;
+        struct {
+            ULONG which_space;
+            void *buffer;
+            ULONG offset;
+            ULONG POINTER_ALIGN length;
+        } read_write_config;
+        struct {
+            BOOLEAN lock;
+        } set_lock;
+        struct {
+            enum bus_query_id_type id_type;
+        } query_id;
+        struct {
+            enum device_text_type device_text_type;
+            ULONG POINTER_ALIGN locale_id;
+        } query_device_text;
+        struct {
+            BOOLEAN in_path;
+            BOOLEAN reserved[3];
+            enum device_usage_notification_type POINTER_ALIGN type;
+        } usage_notification;
+        struct {
+            enum system_power_state power_state;
+        } wait_wake;
+        struct {
+            void *power_sequence;
+        } power_sequence;
+        struct {
+            ULONG sys_context;
+            enum power_state_type POINTER_ALIGN type;
+            union power_state POINTER_ALIGN state;
+            enum power_action POINTER_ALIGN shutdown_type;
+        } power;
+        struct {
+            struct cm_resource_list *allocated_resources;
+            struct cm_resource_list *allocated_resources_translated;
+        } start_device;
+        struct {
+            ULONG_PTR provider_id;
+            void *data_path;
+            ULONG buf_len;
+            void *buf;
+        } wmi;
+        struct {
+            void *arg1;
+            void *arg2;
+            void *arg3;
+            void *arg4;
+        } others;
+    } params;
+    struct device_object *dev_obj;
+    struct file_object *file_obj;
+
+    NTSTATUS (*completion_routine)(struct device_object *,
+                                   struct irp *, void *) wstdcall;
+
+    void *context;
 };
 
 struct kapc {
-        CSHORT type;
-        CSHORT size;
-        ULONG spare0;
-        struct nt_thread *thread;
-        struct nt_list list;
-        void *kernele_routine;
-        void *rundown_routine;
-        void *normal_routine;
-        void *normal_context;
-        void *sys_arg1;
-        void *sys_arg2;
-        CCHAR apc_state_index;
-        KPROCESSOR_MODE apc_mode;
-        BOOLEAN inserted;
+    CSHORT type;
+    CSHORT size;
+    ULONG spare0;
+    struct nt_thread *thread;
+    struct nt_list list;
+    void *kernele_routine;
+    void *rundown_routine;
+    void *normal_routine;
+    void *normal_context;
+    void *sys_arg1;
+    void *sys_arg2;
+    CCHAR apc_state_index;
+    KPROCESSOR_MODE apc_mode;
+    BOOLEAN inserted;
 };
 
 #define IRP_NOCACHE                     0x00000001
@@ -982,82 +1003,85 @@ struct kapc {
 #define IRP_ASSOCIATED_IRP              0x00000008
 
 enum urb_state {
-        URB_INVALID = 1, URB_ALLOCATED, URB_SUBMITTED,
-        URB_COMPLETED, URB_FREE, URB_SUSPEND, URB_INT_UNLINKED };
+    URB_INVALID = 1, URB_ALLOCATED, URB_SUBMITTED,
+    URB_COMPLETED, URB_FREE, URB_SUSPEND, URB_INT_UNLINKED
+};
 
 struct wrap_urb {
-        struct nt_list list;
-        enum urb_state state;
-        struct nt_list complete_list;
-        unsigned int flags;
-        struct urb *urb;
-        struct irp *irp;
+    struct nt_list list;
+    enum urb_state state;
+    struct nt_list complete_list;
+    unsigned int flags;
+    struct urb *urb;
+    struct irp *irp;
 #ifdef USB_DEBUG
-        unsigned int id;
+    unsigned int id;
 #endif
 };
 
 struct irp {
-        SHORT type;
-        USHORT size;
-        struct mdl *mdl;
-        ULONG flags;
-        union {
-                struct irp *master_irp;
-                LONG irp_count;
-                void *system_buffer;
-        } associated_irp;
-        struct nt_list thread_list;
-        struct io_status_block io_status;
-        KPROCESSOR_MODE requestor_mode;
-        BOOLEAN pending_returned;
-        CHAR stack_count;
-        CHAR current_location;
-        BOOLEAN cancel;
-        KIRQL cancel_irql;
-        CCHAR apc_env;
-        UCHAR alloc_flags;
-        struct io_status_block *user_status;
-        struct nt_event *user_event;
-        union {
+    SHORT type;
+    USHORT size;
+    struct mdl *mdl;
+    ULONG flags;
+    union {
+        struct irp *master_irp;
+        LONG irp_count;
+        void *system_buffer;
+    } associated_irp;
+    struct nt_list thread_list;
+    struct io_status_block io_status;
+    KPROCESSOR_MODE requestor_mode;
+    BOOLEAN pending_returned;
+    CHAR stack_count;
+    CHAR current_location;
+    BOOLEAN cancel;
+    KIRQL cancel_irql;
+    CCHAR apc_env;
+    UCHAR alloc_flags;
+    struct io_status_block *user_status;
+    struct nt_event *user_event;
+    union {
+        struct {
+            void *user_apc_routine;
+            void *user_apc_context;
+        } async_params;
+        LARGE_INTEGER alloc_size;
+    } overlay;
+
+    void (*cancel_routine)(struct device_object *, struct irp *) wstdcall;
+
+    void *user_buf;
+    union {
+        struct {
+            union {
+                struct kdevice_queue_entry dev_q_entry;
                 struct {
-                        void *user_apc_routine;
-                        void *user_apc_context;
-                } async_params;
-                LARGE_INTEGER alloc_size;
-        } overlay;
-        void (*cancel_routine)(struct device_object *, struct irp *) wstdcall;
-        void *user_buf;
-        union {
-                struct {
-                        union {
-                                struct kdevice_queue_entry dev_q_entry;
-                                struct {
-                                        void *driver_context[4];
-                                };
-                        };
-                        void *thread;
-                        char *aux_buf;
-                        struct {
-                                struct nt_list list;
-                                union {
-                                        struct io_stack_location *csl;
-                                        ULONG packet_type;
-                                };
-                        };
-                        struct file_object *file_object;
-                } overlay;
-                union {
-                        struct kapc apc;
-                        /* space for apc is used for ndiswrapper
-                         * specific fields */
-                        struct {
-                                struct wrap_urb *wrap_urb;
-                                struct wrap_device *wrap_device;
-                        };
+                    void *driver_context[4];
                 };
-                void *completion_key;
-        } tail;
+            };
+            void *thread;
+            char *aux_buf;
+            struct {
+                struct nt_list list;
+                union {
+                    struct io_stack_location *csl;
+                    ULONG packet_type;
+                };
+            };
+            struct file_object *file_object;
+        } overlay;
+        union {
+            struct kapc apc;
+            /* space for apc is used for ndiswrapper
+             * specific fields */
+            struct {
+                struct wrap_urb *wrap_urb;
+                struct wrap_device *wrap_device;
+            };
+        };
+        void *completion_key;
+    } tail;
 };
 
 #define IoSizeOfIrp(stack_count)                                        \
@@ -1089,29 +1113,27 @@ do {                                                            \
 } while (0)
 
 static inline void
-IoCopyCurrentIrpStackLocationToNext(struct irp *irp)
-{
-        struct io_stack_location *next;
-        next = IoGetNextIrpStackLocation(irp);
-        memcpy(next, IoGetCurrentIrpStackLocation(irp),
-               offsetof(struct io_stack_location, completion_routine));
-        next->control = 0;
+IoCopyCurrentIrpStackLocationToNext(struct irp *irp) {
+    struct io_stack_location *next;
+    next = IoGetNextIrpStackLocation(irp);
+    memcpy(next, IoGetCurrentIrpStackLocation(irp),
+           offsetof(struct io_stack_location, completion_routine));
+    next->control = 0;
 }
 
 static inline void
 IoSetCompletionRoutine(struct irp *irp, void *routine, void *context,
-                       BOOLEAN success, BOOLEAN error, BOOLEAN cancel)
-{
-        struct io_stack_location *irp_sl = IoGetNextIrpStackLocation(irp);
-        irp_sl->completion_routine = routine;
-        irp_sl->context = context;
-        irp_sl->control = 0;
-        if (success)
-                irp_sl->control |= SL_INVOKE_ON_SUCCESS;
-        if (error)
-                irp_sl->control |= SL_INVOKE_ON_ERROR;
-        if (cancel)
-                irp_sl->control |= SL_INVOKE_ON_CANCEL;
+                       BOOLEAN success, BOOLEAN error, BOOLEAN cancel) {
+    struct io_stack_location *irp_sl = IoGetNextIrpStackLocation(irp);
+    irp_sl->completion_routine = routine;
+    irp_sl->context = context;
+    irp_sl->control = 0;
+    if (success)
+        irp_sl->control |= SL_INVOKE_ON_SUCCESS;
+    if (error)
+        irp_sl->control |= SL_INVOKE_ON_ERROR;
+    if (cancel)
+        irp_sl->control |= SL_INVOKE_ON_CANCEL;
 }
 
 #define IoMarkIrpPending(irp)                                           \
@@ -1130,59 +1152,59 @@ IoSetCompletionRoutine(struct irp *irp, void *routine, void *context,
 #define IRP_WRAP_URB(irp) (irp)->tail.wrap_urb
 
 struct wmi_guid_reg_info {
-        struct guid *guid;
-        ULONG instance_count;
-        ULONG flags;
+    struct guid *guid;
+    ULONG instance_count;
+    ULONG flags;
 };
 
 struct wmilib_context {
-        ULONG guid_count;
-        struct wmi_guid_reg_info *guid_list;
-        void *query_wmi_reg_info;
-        void *query_wmi_data_block;
-        void *set_wmi_data_block;
-        void *set_wmi_data_item;
-        void *execute_wmi_method;
-        void *wmi_function_control;
+    ULONG guid_count;
+    struct wmi_guid_reg_info *guid_list;
+    void *query_wmi_reg_info;
+    void *query_wmi_data_block;
+    void *set_wmi_data_block;
+    void *set_wmi_data_item;
+    void *execute_wmi_method;
+    void *wmi_function_control;
 };
 
 enum key_value_information_class {
-        KeyValueBasicInformation, KeyValueFullInformation,
-        KeyValuePartialInformation, KeyValueFullInformationAlign64,
-        KeyValuePartialInformationAlign64
+    KeyValueBasicInformation, KeyValueFullInformation,
+    KeyValuePartialInformation, KeyValueFullInformationAlign64,
+    KeyValuePartialInformationAlign64
 };
 
 struct file_name_info {
-        ULONG length;
-        wchar_t *name;
+    ULONG length;
+    wchar_t *name;
 };
 
 struct file_std_info {
-        LARGE_INTEGER alloc_size;
-        LARGE_INTEGER eof;
-        ULONG num_links;
-        BOOLEAN delete_pending;
-        BOOLEAN dir;
+    LARGE_INTEGER alloc_size;
+    LARGE_INTEGER eof;
+    ULONG num_links;
+    BOOLEAN delete_pending;
+    BOOLEAN dir;
 };
 
 enum nt_obj_type {
-        NT_OBJ_EVENT = 10, NT_OBJ_MUTEX, NT_OBJ_THREAD, NT_OBJ_TIMER,
-        NT_OBJ_SEMAPHORE,
+    NT_OBJ_EVENT = 10, NT_OBJ_MUTEX, NT_OBJ_THREAD, NT_OBJ_TIMER,
+    NT_OBJ_SEMAPHORE,
 };
 
 enum common_object_type {
-        OBJECT_TYPE_NONE, OBJECT_TYPE_DEVICE, OBJECT_TYPE_DRIVER,
-        OBJECT_TYPE_NT_THREAD, OBJECT_TYPE_FILE, OBJECT_TYPE_CALLBACK,
+    OBJECT_TYPE_NONE, OBJECT_TYPE_DEVICE, OBJECT_TYPE_DRIVER,
+    OBJECT_TYPE_NT_THREAD, OBJECT_TYPE_FILE, OBJECT_TYPE_CALLBACK,
 };
 
 struct common_object_header {
-        struct nt_list list;
-        enum common_object_type type;
-        UINT size;
-        UINT ref_count;
-        BOOLEAN close_in_process;
-        BOOLEAN permanent;
-        struct unicode_string name;
+    struct nt_list list;
+    enum common_object_type type;
+    UINT size;
+    UINT ref_count;
+    BOOLEAN close_in_process;
+    BOOLEAN permanent;
+    struct unicode_string name;
 };
 
 #define OBJECT_TO_HEADER(object)                                        \
@@ -1196,140 +1218,142 @@ struct common_object_header {
 #define HANDLE_TO_HEADER(handle) (handle)
 
 enum work_queue_type {
-        CriticalWorkQueue, DelayedWorkQueue, HyperCriticalWorkQueue,
-        MaximumWorkQueue
+    CriticalWorkQueue, DelayedWorkQueue, HyperCriticalWorkQueue,
+    MaximumWorkQueue
 };
 
 typedef void (*NTOS_WORK_FUNC)(void *arg1, void *arg2) wstdcall;
 
 struct io_workitem {
-        enum work_queue_type type;
-        struct device_object *dev_obj;
-        NTOS_WORK_FUNC worker_routine;
-        void *context;
+    enum work_queue_type type;
+    struct device_object *dev_obj;
+    NTOS_WORK_FUNC worker_routine;
+    void *context;
 };
 
 struct io_workitem_entry {
-        struct nt_list list;
-        struct io_workitem *io_workitem;
+    struct nt_list list;
+    struct io_workitem *io_workitem;
 };
 
 enum mm_page_priority {
-        LowPagePriority, NormalPagePriority = 16, HighPagePriority = 32
+    LowPagePriority, NormalPagePriority = 16, HighPagePriority = 32
 };
 
 enum kinterrupt_mode {
-        LevelSensitive, Latched
+    LevelSensitive, Latched
 };
 
 enum ntos_wait_reason {
-        Executive, FreePage, PageIn, PoolAllocation, DelayExecution,
-        Suspended, UserRequest, WrExecutive, WrFreePage, WrPageIn,
-        WrPoolAllocation, WrDelayExecution, WrSuspended, WrUserRequest,
-        WrEventPair, WrQueue, WrLpcReceive, WrLpcReply, WrVirtualMemory,
-        WrPageOut, WrRendezvous, Spare2, Spare3, Spare4, Spare5, Spare6,
-        WrKernel, MaximumWaitReason
+    Executive, FreePage, PageIn, PoolAllocation, DelayExecution,
+    Suspended, UserRequest, WrExecutive, WrFreePage, WrPageIn,
+    WrPoolAllocation, WrDelayExecution, WrSuspended, WrUserRequest,
+    WrEventPair, WrQueue, WrLpcReceive, WrLpcReply, WrVirtualMemory,
+    WrPageOut, WrRendezvous, Spare2, Spare3, Spare4, Spare5, Spare6,
+    WrKernel, MaximumWaitReason
 };
 
 typedef enum ntos_wait_reason KWAIT_REASON;
 
 typedef void *LOOKASIDE_ALLOC_FUNC(enum pool_type pool_type,
                                    SIZE_T size, ULONG tag) wstdcall;
+
 typedef void LOOKASIDE_FREE_FUNC(void *) wstdcall;
 
 struct npaged_lookaside_list {
-        nt_slist_header head;
-        USHORT depth;
-        USHORT maxdepth;
-        ULONG totalallocs;
-        union {
-                ULONG allocmisses;
-                ULONG allochits;
-        } u1;
-        ULONG totalfrees;
-        union {
-                ULONG freemisses;
-                ULONG freehits;
-        } u2;
-        enum pool_type pool_type;
-        ULONG tag;
-        ULONG size;
-        LOOKASIDE_ALLOC_FUNC *alloc_func;
-        LOOKASIDE_FREE_FUNC *free_func;
-        struct nt_list list;
-        ULONG lasttotallocs;
-        union {
-                ULONG lastallocmisses;
-                ULONG lastallochits;
-        } u3;
-        ULONG pad[2];
-}
-;
+    nt_slist_header head;
+    USHORT depth;
+    USHORT maxdepth;
+    ULONG totalallocs;
+    union {
+        ULONG allocmisses;
+        ULONG allochits;
+    } u1;
+    ULONG totalfrees;
+    union {
+        ULONG freemisses;
+        ULONG freehits;
+    } u2;
+    enum pool_type pool_type;
+    ULONG tag;
+    ULONG size;
+    LOOKASIDE_ALLOC_FUNC *alloc_func;
+    LOOKASIDE_FREE_FUNC *free_func;
+    struct nt_list list;
+    ULONG lasttotallocs;
+    union {
+        ULONG lastallocmisses;
+        ULONG lastallochits;
+    } u3;
+    ULONG pad[2];
+};
 
 enum device_registry_property {
-        DevicePropertyDeviceDescription, DevicePropertyHardwareID,
-        DevicePropertyCompatibleIDs, DevicePropertyBootConfiguration,
-        DevicePropertyBootConfigurationTranslated,
-        DevicePropertyClassName, DevicePropertyClassGuid,
-        DevicePropertyDriverKeyName, DevicePropertyManufacturer,
-        DevicePropertyFriendlyName, DevicePropertyLocationInformation,
-        DevicePropertyPhysicalDeviceObjectName, DevicePropertyBusTypeGuid,
-        DevicePropertyLegacyBusType, DevicePropertyBusNumber,
-        DevicePropertyEnumeratorName, DevicePropertyAddress,
-        DevicePropertyUINumber, DevicePropertyInstallState,
-        DevicePropertyRemovalPolicy
+    DevicePropertyDeviceDescription, DevicePropertyHardwareID,
+    DevicePropertyCompatibleIDs, DevicePropertyBootConfiguration,
+    DevicePropertyBootConfigurationTranslated,
+    DevicePropertyClassName, DevicePropertyClassGuid,
+    DevicePropertyDriverKeyName, DevicePropertyManufacturer,
+    DevicePropertyFriendlyName, DevicePropertyLocationInformation,
+    DevicePropertyPhysicalDeviceObjectName, DevicePropertyBusTypeGuid,
+    DevicePropertyLegacyBusType, DevicePropertyBusNumber,
+    DevicePropertyEnumeratorName, DevicePropertyAddress,
+    DevicePropertyUINumber, DevicePropertyInstallState,
+    DevicePropertyRemovalPolicy
 };
 
 enum trace_information_class {
-        TraceIdClass, TraceHandleClass, TraceEnableFlagsClass,
-        TraceEnableLevelClass, GlobalLoggerHandleClass, EventLoggerHandleClass,
-        AllLoggerHandlesClass, TraceHandleByNameClass
+    TraceIdClass, TraceHandleClass, TraceEnableFlagsClass,
+    TraceEnableLevelClass, GlobalLoggerHandleClass, EventLoggerHandleClass,
+    AllLoggerHandlesClass, TraceHandleByNameClass
 };
 
 struct kinterrupt;
+
 typedef BOOLEAN (*PKSERVICE_ROUTINE)(struct kinterrupt *interrupt,
                                      void *context) wstdcall;
+
 typedef BOOLEAN (*PKSYNCHRONIZE_ROUTINE)(void *context) wstdcall;
 
 struct kinterrupt {
-        ULONG vector;
-        KAFFINITY cpu_mask;
-        NT_SPIN_LOCK lock;
-        NT_SPIN_LOCK *actual_lock;
-        BOOLEAN shared;
-        BOOLEAN save_fp;
-        union {
-                CHAR processor_number;
+    ULONG vector;
+    KAFFINITY cpu_mask;
+    NT_SPIN_LOCK lock;
+    NT_SPIN_LOCK *actual_lock;
+    BOOLEAN shared;
+    BOOLEAN save_fp;
+    union {
+        CHAR processor_number;
 #ifdef CONFIG_DEBUG_SHIRQ
-                CHAR enabled;
+        CHAR enabled;
 #endif
-        } u;
-        PKSERVICE_ROUTINE isr;
-        void *isr_ctx;
-        struct nt_list list;
-        KIRQL irql;
-        KIRQL synch_irql;
-        enum kinterrupt_mode mode;
+    } u;
+    PKSERVICE_ROUTINE isr;
+    void *isr_ctx;
+    struct nt_list list;
+    KIRQL irql;
+    KIRQL synch_irql;
+    enum kinterrupt_mode mode;
 };
 
 struct time_fields {
-        CSHORT year;
-        CSHORT month;
-        CSHORT day;
-        CSHORT hour;
-        CSHORT minute;
-        CSHORT second;
-        CSHORT milliseconds;
-        CSHORT weekday;
+    CSHORT year;
+    CSHORT month;
+    CSHORT day;
+    CSHORT hour;
+    CSHORT minute;
+    CSHORT second;
+    CSHORT milliseconds;
+    CSHORT weekday;
 };
 
 struct object_attributes {
-        ULONG length;
-        void *root_dir;
-        struct unicode_string *name;
-        ULONG attributes;
-        void *security_descr;
-        void *security_qos;
+    ULONG length;
+    void *root_dir;
+    struct unicode_string *name;
+    ULONG attributes;
+    void *security_descr;
+    void *security_qos;
 };
 
 typedef void (*PFLS_CALLBACK_FUNCTION)(PVOID lpFlsData) wstdcall;
@@ -1339,75 +1363,232 @@ typedef void (*PCALLBACK_FUNCTION)(void *context, void *arg1,
 
 struct callback_object;
 struct callback_func {
-        PCALLBACK_FUNCTION func;
-        void *context;
-        struct nt_list list;
-        struct callback_object *object;
+    PCALLBACK_FUNCTION func;
+    void *context;
+    struct nt_list list;
+    struct callback_object *object;
 };
 
 struct callback_object {
-        NT_SPIN_LOCK lock;
-        struct nt_list list;
-        struct nt_list callback_funcs;
-        BOOLEAN allow_multiple_callbacks;
-        struct object_attributes *attributes;
+    NT_SPIN_LOCK lock;
+    struct nt_list list;
+    struct nt_list callback_funcs;
+    BOOLEAN allow_multiple_callbacks;
+    struct object_attributes *attributes;
 };
 
 enum section_inherit {
-        ViewShare = 1, ViewUnmap = 2
+    ViewShare = 1, ViewUnmap = 2
 };
 
 struct ksystem_time {
-        ULONG low_part;
-        LONG high1_time;
-        LONG high2_time;
+    ULONG low_part;
+    LONG high1_time;
+    LONG high2_time;
 };
 
 enum nt_product_type {
-        nt_product_win_nt = 1, nt_product_lan_man_nt, nt_product_server
+    nt_product_win_nt = 1, nt_product_lan_man_nt, nt_product_server
 };
 
 enum alt_arch_type {
-        arch_type_standard, arch_type_nex98x86, end_alternatives
+    arch_type_standard, arch_type_nex98x86, end_alternatives
 };
 
 #define EXCEPTION_MAXIMUM_PARAMETERS 15
 #define MAXIMUM_SUPPORTED_EXTENSION  512
 #define SIZE_OF_80387_REGISTERS      80
 
-typedef enum
-{
-         ExceptionContinueExecution = 0,
-         ExceptionContinueSearch = 1,
-         ExceptionNestedException = 2,
-         ExceptionCollidedUnwind = 3
+typedef enum {
+    ExceptionContinueExecution = 0,
+    ExceptionContinueSearch = 1,
+    ExceptionNestedException = 2,
+    ExceptionCollidedUnwind = 3
 } EXCEPTION_DISPOSITION;
 
 typedef struct _EXCEPTION_RECORD {
-  DWORD                    ExceptionCode;
-  DWORD                    ExceptionFlags;
-  struct _EXCEPTION_RECORD  *ExceptionRecord;
-  PVOID                    ExceptionAddress;
-  DWORD                    NumberParameters;
-  ULONG_PTR                ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+    DWORD ExceptionCode;
+    DWORD ExceptionFlags;
+    struct _EXCEPTION_RECORD *ExceptionRecord;
+    PVOID ExceptionAddress;
+    long NumberParameters;
+    ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
 } EXCEPTION_RECORD, *PEXCEPTION_RECORD;
 
 typedef struct _FLOATING_SAVE_AREA {
-  DWORD   ControlWord;
-  DWORD   StatusWord;
-  DWORD   TagWord;
-  DWORD   ErrorOffset;
-  DWORD   ErrorSelector;
-  DWORD   DataOffset;
-  DWORD   DataSelector;
-  BYTE    RegisterArea[SIZE_OF_80387_REGISTERS];
-  DWORD   Cr0NpxState;
+    DWORD ControlWord;
+    DWORD StatusWord;
+    DWORD TagWord;
+    DWORD ErrorOffset;
+    DWORD ErrorSelector;
+    DWORD DataOffset;
+    DWORD DataSelector;
+    BYTE RegisterArea[SIZE_OF_80387_REGISTERS];
+    DWORD Cr0NpxState;
 } FLOATING_SAVE_AREA;
 
+#ifdef __x86_64__
+typedef struct _M128A {
+    ULONGLONG Low;
+    LONGLONG High;
+} M128A, *PM128A;
+
+typedef struct _XSAVE_FORMAT {
+    WORD   ControlWord;
+    WORD   StatusWord;
+    BYTE  TagWord;
+    BYTE  Reserved1;
+    WORD   ErrorOpcode;
+    DWORD ErrorOffset;
+    WORD   ErrorSelector;
+    WORD   Reserved2;
+    DWORD DataOffset;
+    WORD   DataSelector;
+    WORD   Reserved3;
+    DWORD MxCsr;
+    DWORD MxCsr_Mask;
+    M128A FloatRegisters[8];
+
+#if defined(_WIN64)
+
+    M128A XmmRegisters[16];
+    BYTE  Reserved4[96];
+
+#else
+
+    M128A XmmRegisters[8];
+    BYTE  Reserved4[224];
+
+#endif
+
+} XSAVE_FORMAT, *PXSAVE_FORMAT;
+
+typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
+
+typedef struct _CONTEXT {
+
+    //
+    // Register parameter home addresses.
+    //
+    // N.B. These fields are for convience - they could be used to extend the
+    //      context record in the future.
+    //
+
+    DWORD64 P1Home;
+    DWORD64 P2Home;
+    DWORD64 P3Home;
+    DWORD64 P4Home;
+    DWORD64 P5Home;
+    DWORD64 P6Home;
+
+    //
+    // Control flags.
+    //
+
+    DWORD ContextFlags;
+    DWORD MxCsr;
+
+    //
+    // Segment Registers and processor flags.
+    //
+
+    WORD   SegCs;
+    WORD   SegDs;
+    WORD   SegEs;
+    WORD   SegFs;
+    WORD   SegGs;
+    WORD   SegSs;
+    DWORD EFlags;
+
+    //
+    // Debug registers
+    //
+
+    DWORD64 Dr0;
+    DWORD64 Dr1;
+    DWORD64 Dr2;
+    DWORD64 Dr3;
+    DWORD64 Dr6;
+    DWORD64 Dr7;
+
+    //
+    // Integer registers.
+    //
+
+    DWORD64 Rax;
+    DWORD64 Rcx;
+    DWORD64 Rdx;
+    DWORD64 Rbx;
+    DWORD64 Rsp;
+    DWORD64 Rbp;
+    DWORD64 Rsi;
+    DWORD64 Rdi;
+    DWORD64 R8;
+    DWORD64 R9;
+    DWORD64 R10;
+    DWORD64 R11;
+    DWORD64 R12;
+    DWORD64 R13;
+    DWORD64 R14;
+    DWORD64 R15;
+
+    //
+    // Program counter.
+    //
+
+    DWORD64 Rip;
+
+    //
+    // Floating point state.
+    //
+
+    union {
+        XMM_SAVE_AREA32 FltSave;
+        struct {
+            M128A Header[2];
+            M128A Legacy[8];
+            M128A Xmm0;
+            M128A Xmm1;
+            M128A Xmm2;
+            M128A Xmm3;
+            M128A Xmm4;
+            M128A Xmm5;
+            M128A Xmm6;
+            M128A Xmm7;
+            M128A Xmm8;
+            M128A Xmm9;
+            M128A Xmm10;
+            M128A Xmm11;
+            M128A Xmm12;
+            M128A Xmm13;
+            M128A Xmm14;
+            M128A Xmm15;
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+
+    //
+    // Vector registers.
+    //
+
+    M128A VectorRegister[26];
+    DWORD64 VectorControl;
+
+    //
+    // Special debug control registers.
+    //
+
+    DWORD64 DebugControl;
+    DWORD64 LastBranchToRip;
+    DWORD64 LastBranchFromRip;
+    DWORD64 LastExceptionToRip;
+    DWORD64 LastExceptionFromRip;
+} CONTEXT, *PCONTEXT;
+
+#else
 typedef struct _CONTEXT {
   DWORD ContextFlags;
 
-  DWORD   Dr0;
+  DWORD   Drct0;
   DWORD   Dr1;
   DWORD   Dr2;
   DWORD   Dr3;
@@ -1437,22 +1618,23 @@ typedef struct _CONTEXT {
 
   BYTE    ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
 } CONTEXT;
+#endif
 
 struct _EXCEPTION_FRAME;
 
 typedef EXCEPTION_DISPOSITION (*PEXCEPTION_HANDLER)(
-    struct _EXCEPTION_RECORD *ExceptionRecord,
-    struct _EXCEPTION_FRAME *EstablisherFrame,
-    struct _CONTEXT *ContextRecord,
-    struct _EXCEPTION_FRAME **DispatcherContext);
+        struct _EXCEPTION_RECORD *ExceptionRecord,
+        struct _EXCEPTION_FRAME *EstablisherFrame,
+        PVOID *ContextRecord,
+        struct _EXCEPTION_FRAME **DispatcherContext);
 
 typedef struct _EXCEPTION_FRAME {
-  struct _EXCEPTION_FRAME *prev;
-  PEXCEPTION_HANDLER handler;
+    struct _EXCEPTION_FRAME *prev;
+    PEXCEPTION_HANDLER handler;
 } EXCEPTION_FRAME, *PEXCEPTION_FRAME;
 
 typedef struct _RTL_BITMAP {
-    ULONG  SizeOfBitMap;
+    ULONG SizeOfBitMap;
     LPBYTE Buffer;
 } RTL_BITMAP, *PRTL_BITMAP;
 
@@ -1466,44 +1648,44 @@ typedef struct _RTL_BITMAP_RUN {
 typedef const RTL_BITMAP_RUN *PCRTL_BITMAP_RUN;
 
 typedef struct _KUSER_SHARED_DATA {
-        ULONG tick_count;
-        ULONG tick_count_multiplier;
-        volatile struct ksystem_time interrupt_time;
-        volatile struct ksystem_time system_time;
-        volatile struct ksystem_time time_zone_bias;
-        USHORT image_number_low;
-        USHORT image_number_high;
-        wchar_t nt_system_root[260];
-        ULONG max_stack_trace_depth;
-        ULONG crypto_exponent;
-        ULONG time_zone_id;
-        ULONG large_page_min;
-        ULONG reserved2[7];
-        enum nt_product_type nt_product_type;
-        BOOLEAN product_type_is_valid;
-        ULONG nt_major_version;
-        ULONG nt_minor_version;
-        BOOLEAN processor_features[PROCESSOR_FEATURE_MAX];
-        ULONG reserved1;
-        ULONG reserved3;
-        volatile LONG time_slip;
-        enum alt_arch_type alt_arch_type;
-        LARGE_INTEGER system_expiration_date;
-        ULONG suite_mask;
-        BOOLEAN kdbg_enabled;
-        volatile ULONG active_console;
-        volatile ULONG dismount_count;
-        ULONG com_plus_package;
-        ULONG last_system_rite_event_tick_count;
-        ULONG num_phys_pages;
-        BOOLEAN safe_boot_mode;
-        ULONG trace_log;
-        ULONGLONG fill0;
-        ULONGLONG sys_call[4];
-        union {
-                volatile struct ksystem_time tick_count;
-                volatile ULONG64 tick_count_quad;
-        } tick;
+    ULONG tick_count;
+    ULONG tick_count_multiplier;
+    volatile struct ksystem_time interrupt_time;
+    volatile struct ksystem_time system_time;
+    volatile struct ksystem_time time_zone_bias;
+    USHORT image_number_low;
+    USHORT image_number_high;
+    wchar_t nt_system_root[260];
+    ULONG max_stack_trace_depth;
+    ULONG crypto_exponent;
+    ULONG time_zone_id;
+    ULONG large_page_min;
+    ULONG reserved2[7];
+    enum nt_product_type nt_product_type;
+    BOOLEAN product_type_is_valid;
+    ULONG nt_major_version;
+    ULONG nt_minor_version;
+    BOOLEAN processor_features[PROCESSOR_FEATURE_MAX];
+    ULONG reserved1;
+    ULONG reserved3;
+    volatile LONG time_slip;
+    enum alt_arch_type alt_arch_type;
+    LARGE_INTEGER system_expiration_date;
+    ULONG suite_mask;
+    BOOLEAN kdbg_enabled;
+    volatile ULONG active_console;
+    volatile ULONG dismount_count;
+    ULONG com_plus_package;
+    ULONG last_system_rite_event_tick_count;
+    ULONG num_phys_pages;
+    BOOLEAN safe_boot_mode;
+    ULONG trace_log;
+    ULONGLONG fill0;
+    ULONGLONG sys_call[4];
+    union {
+        volatile struct ksystem_time tick_count;
+        volatile ULONG64 tick_count_quad;
+    } tick;
 } KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
 
 #define REG_NONE                        (0)
@@ -1536,36 +1718,36 @@ typedef NTSTATUS (*PRTL_QUERY_REGISTRY_ROUTINE)(wchar_t *name, ULONG type,
                                                 void *entry) wstdcall;
 
 struct rtl_query_registry_table {
-        PRTL_QUERY_REGISTRY_ROUTINE query_func;
-        ULONG flags;
-        wchar_t *name;
-        void *context;
-        ULONG def_type;
-        void *def_data;
-        ULONG def_length;
+    PRTL_QUERY_REGISTRY_ROUTINE query_func;
+    ULONG flags;
+    wchar_t *name;
+    void *context;
+    ULONG def_type;
+    void *def_data;
+    ULONG def_length;
 };
 
 struct io_remove_lock {
-        BOOLEAN removed;
-        BOOLEAN reserved[3];
-        LONG io_count;
-        struct nt_event remove_event;
+    BOOLEAN removed;
+    BOOLEAN reserved[3];
+    LONG io_count;
+    struct nt_event remove_event;
 };
 
 struct io_error_log_packet {
-        UCHAR major_fn_code;
-        UCHAR retry_count;
-        USHORT dump_data_size;
-        USHORT nr_of_strings;
-        USHORT string_offset;
-        USHORT event_category;
-        NTSTATUS error_code;
-        ULONG unique_error_value;
-        NTSTATUS final_status;
-        ULONG sequence_number;
-        ULONG io_control_code;
-        LARGE_INTEGER device_offset;
-        ULONG dump_data[1];
+    UCHAR major_fn_code;
+    UCHAR retry_count;
+    USHORT dump_data_size;
+    USHORT nr_of_strings;
+    USHORT string_offset;
+    USHORT event_category;
+    NTSTATUS error_code;
+    ULONG unique_error_value;
+    NTSTATUS final_status;
+    ULONG sequence_number;
+    ULONG io_control_code;
+    LARGE_INTEGER device_offset;
+    ULONG dump_data[1];
 };
 
 /* some of the functions below are slightly different from DDK's
@@ -1577,86 +1759,78 @@ struct io_error_log_packet {
  * worry about Linux's list being different from nt_list (right now
  * they are same, but in future they could be different) */
 
-static inline void InitializeListHead(struct nt_list *head)
-{
-        head->next = head->prev = head;
+static inline void InitializeListHead(struct nt_list *head) {
+    head->next = head->prev = head;
 }
 
-static inline BOOLEAN IsListEmpty(struct nt_list *head)
-{
-        if (head == head->next)
-                return TRUE;
-        else
-                return FALSE;
+static inline BOOLEAN IsListEmpty(struct nt_list *head) {
+    if (head == head->next)
+        return TRUE;
+    else
+        return FALSE;
 }
 
-static inline void RemoveEntryList(struct nt_list *entry)
-{
-        entry->prev->next = entry->next;
-        entry->next->prev = entry->prev;
+static inline void RemoveEntryList(struct nt_list *entry) {
+    entry->prev->next = entry->next;
+    entry->next->prev = entry->prev;
 }
 
-static inline struct nt_list *RemoveHeadList(struct nt_list *head)
-{
-        struct nt_list *entry;
+static inline struct nt_list *RemoveHeadList(struct nt_list *head) {
+    struct nt_list *entry;
 
-        entry = head->next;
-        if (entry == head)
-                return NULL;
-        else {
-                RemoveEntryList(entry);
-                return entry;
-        }
+    entry = head->next;
+    if (entry == head)
+        return NULL;
+    else {
+        RemoveEntryList(entry);
+        return entry;
+    }
 }
 
-static inline struct nt_list *RemoveTailList(struct nt_list *head)
-{
-        struct nt_list *entry;
+static inline struct nt_list *RemoveTailList(struct nt_list *head) {
+    struct nt_list *entry;
 
-        entry = head->prev;
-        if (entry == head)
-                return NULL;
-        else {
-                RemoveEntryList(entry);
-                return entry;
-        }
+    entry = head->prev;
+    if (entry == head)
+        return NULL;
+    else {
+        RemoveEntryList(entry);
+        return entry;
+    }
 }
 
 static inline void InsertListEntry(struct nt_list *entry, struct nt_list *prev,
-                                   struct nt_list *next)
-{
-        next->prev = entry;
-        entry->next = next;
-        entry->prev = prev;
-        prev->next = entry;
+                                   struct nt_list *next) {
+    next->prev = entry;
+    entry->next = next;
+    entry->prev = prev;
+    prev->next = entry;
 }
 
 static inline struct nt_list *InsertHeadList(struct nt_list *head,
-                                             struct nt_list *entry)
-{
-        struct nt_list *ret;
+                                             struct nt_list *entry) {
+    struct nt_list *ret;
 
-        if (IsListEmpty(head))
-                ret = NULL;
-        else
-                ret = head->next;
+    if (IsListEmpty(head))
+        ret = NULL;
+    else
+        ret = head->next;
 
-        InsertListEntry(entry, head, head->next);
-        return ret;
+    InsertListEntry(entry, head, head->next);
+    return ret;
 }
 
 static inline struct nt_list *InsertTailList(struct nt_list *head,
-                                             struct nt_list *entry)
-{
-        struct nt_list *ret;
+                                             struct nt_list *entry) {
+    struct nt_list *ret;
 
-        if (IsListEmpty(head))
-                ret = NULL;
-        else
-                ret = head->prev;
+    if (IsListEmpty(head))
+        ret = NULL;
+    else
+        ret = head->prev;
 
-        InsertListEntry(entry, head->prev, head);
-        return ret;
+    InsertListEntry(entry, head->prev, head);
+    return ret;
 }
 
 #define nt_list_for_each(pos, head)                                     \
@@ -1829,5 +2003,265 @@ typedef enum _HEAP_INFORMATION_CLASS {
     HeapCompatibilityInformation,
     HeapEnableTerminationOnCorruption
 } HEAP_INFORMATION_CLASS;
+
+typedef enum _EVENT_INFO_CLASS {
+    EventProviderBinaryTrackInfo,
+    EventProviderSetReserved1,
+    EventProviderSetTraits,
+    EventProviderUseDescriptorType,
+    MaxEventInfo
+} EVENT_INFO_CLASS;
+
+typedef enum _PROCESS_MITIGATION_POLICY {
+    ProcessDEPPolicy,
+    ProcessASLRPolicy,
+    ProcessDynamicCodePolicy,
+    ProcessStrictHandleCheckPolicy,
+    ProcessSystemCallDisablePolicy,
+    ProcessMitigationOptionsMask,
+    ProcessExtensionPointDisablePolicy,
+    ProcessControlFlowGuardPolicy,
+    ProcessSignaturePolicy,
+    ProcessFontDisablePolicy,
+    ProcessImageLoadPolicy,
+    ProcessSystemCallFilterPolicy,
+    ProcessPayloadRestrictionPolicy,
+    ProcessChildProcessPolicy,
+    ProcessSideChannelIsolationPolicy,
+    ProcessUserShadowStackPolicy,
+    MaxProcessMitigationPolicy
+} PROCESS_MITIGATION_POLICY, *PPROCESS_MITIGATION_POLICY;
+
+typedef enum _FILE_INFO_BY_HANDLE_CLASS {
+    FileBasicInfo,
+    FileStandardInfo,
+    FileNameInfo,
+    FileRenameInfo,
+    FileDispositionInfo,
+    FileAllocationInfo,
+    FileEndOfFileInfo,
+    FileStreamInfo,
+    FileCompressionInfo,
+    FileAttributeTagInfo,
+    FileIdBothDirectoryInfo,
+    FileIdBothDirectoryRestartInfo,
+    FileIoPriorityHintInfo,
+    FileRemoteProtocolInfo,
+    FileFullDirectoryInfo,
+    FileFullDirectoryRestartInfo,
+    FileStorageInfo,
+    FileAlignmentInfo,
+    FileIdInfo,
+    FileIdExtdDirectoryInfo,
+    FileIdExtdDirectoryRestartInfo,
+    FileDispositionInfoEx,
+    FileRenameInfoEx,
+    FileCaseSensitiveInfo,
+    FileNormalizedNameInfo,
+    MaximumFileInfoByHandleClass
+} FILE_INFO_BY_HANDLE_CLASS, *PFILE_INFO_BY_HANDLE_CLASS;
+
+#define CSTR_LESS_THAN        0
+#define CSTR_EQUAL            1
+#define CSTR_GREATER_THAN     2
+
+typedef union _RTL_RUN_ONCE {
+    PVOID Ptr;
+} RTL_RUN_ONCE, *PRTL_RUN_ONCE;
+
+typedef union _UNWIND_CODE {
+    struct {
+        UBYTE CodeOffset;
+        UBYTE UnwindOp: 4;
+        UBYTE OpInfo: 4;
+    };
+    USHORT FrameOffset;
+} UNWIND_CODE, *PUNWIND_CODE;
+
+#define STATUS_INVALID_DISPOSITION ((DWORD) 0xC0000026L)
+
+#define UWOP_PUSH_NONVOL 0      // info == register number
+#define UWOP_ALLOC_LARGE 1      // no info, alloc size in next 2 slots
+#define UWOP_ALLOC_SMALL 2      // info == size of allocation / 8 - 1
+#define UWOP_SET_FPREG 3        // no info, FP = RSP + UNWIND_INFO.FPRegOffset*16
+#define UWOP_SAVE_NONVOL 4      // info == register number, offset in next slot
+#define UWOP_SAVE_NONVOL_FAR 5  // info == register number, offset in next 2 slots
+#define UWOP_SAVE_XMM 6         // Version 1; undocumented
+#define UWOP_EPILOG 6           // Version 2; undocumented
+#define UWOP_SAVE_XMM_FAR 7     // Version 1; undocumented
+#define UWOP_SPARE_CODE 7       // Version 2; undocumented
+#define UWOP_SAVE_XMM128 8      // info == XMM reg number, offset in next slot
+#define UWOP_SAVE_XMM128_FAR 9  // info == XMM reg number, offset in next 2 slots
+#define UWOP_PUSH_MACHFRAME 10   // info == 0: no error-code, 1: error-code
+
+#define EH_NONCONTINUABLE   0x01
+#define EH_UNWINDING        0x02
+#define EH_EXIT_UNWIND      0x04
+#define EH_STACK_INVALID    0x08
+#define EH_NESTED_CALL      0x10
+
+enum
+{
+    UNW_FLAG_NHANDLER  = 0x00,
+    UNW_FLAG_EHANDLER  = 0x01,
+    UNW_FLAG_UHANDLER  = 0x02,
+    UNW_FLAG_CHAININFO = 0x04,
+};
+
+typedef struct _UNWIND_INFO {
+    UBYTE Version: 3;
+    UBYTE Flags: 5;
+    UBYTE SizeOfProlog;
+    UBYTE CountOfCodes;  //so the beginning of ExceptionData is known as they're both FAMs
+    UBYTE FrameRegister: 4;
+    UBYTE FrameOffset: 4;
+    UNWIND_CODE UnwindCode[1];
+    union {
+        //
+        // If (Flags & UNW_FLAG_EHANDLER)
+        //
+        ULONG ExceptionHandler;
+        //
+        // Else if (Flags & UNW_FLAG_CHAININFO)
+        //
+        ULONG FunctionEntry;
+    };
+    //
+    // If (Flags & UNW_FLAG_EHANDLER)
+    //
+    ULONG ExceptionData[];
+} UNWIND_INFO, *PUNWIND_INFO;
+
+typedef struct _RUNTIME_FUNCTION {
+    DWORD BeginAddress;
+    DWORD EndAddress;
+    DWORD UnwindData;
+} RUNTIME_FUNCTION, *PRUNTIME_FUNCTION;
+
+#define UNWIND_HISTORY_TABLE_SIZE 12
+
+typedef struct _UNWIND_HISTORY_TABLE_ENTRY {
+    DWORD64 ImageBase;
+    PRUNTIME_FUNCTION FunctionEntry;
+} UNWIND_HISTORY_TABLE_ENTRY, *PUNWIND_HISTORY_TABLE_ENTRY;
+
+typedef struct _UNWIND_HISTORY_TABLE {
+    DWORD Count;
+    BYTE LocalHint;
+    BYTE GlobalHint;
+    BYTE Search;
+    BYTE Once;
+    DWORD64 LowAddress;
+    DWORD64 HighAddress;
+    UNWIND_HISTORY_TABLE_ENTRY Entry[UNWIND_HISTORY_TABLE_SIZE];
+} UNWIND_HISTORY_TABLE, *PUNWIND_HISTORY_TABLE;
+
+typedef struct _FRAME_POINTERS {
+    ULONGLONG MemoryStackFp;
+    ULONGLONG BackingStoreFp;
+} FRAME_POINTERS, *PFRAME_POINTERS;
+
+typedef EXCEPTION_DISPOSITION
+WINAPI EXCEPTION_ROUTINE(
+        struct _EXCEPTION_RECORD *ExceptionRecord,
+        PVOID EstablisherFrame,
+        struct _CONTEXT *ContextRecord,
+        PVOID DispatcherContext);
+
+typedef EXCEPTION_ROUTINE *PEXCEPTION_ROUTINE;
+
+typedef struct _DISPATCHER_CONTEXT
+{
+    ULONG64 ControlPc;
+    ULONG64 ImageBase;
+    struct _RUNTIME_FUNCTION *FunctionEntry;
+    ULONG64 EstablisherFrame;
+    ULONG64 TargetIp;
+    CONTEXT *ContextRecord;
+    PEXCEPTION_ROUTINE LanguageHandler;
+    PVOID HandlerData;
+    struct _UNWIND_HISTORY_TABLE *HistoryTable;
+    ULONG ScopeIndex;
+    ULONG Fill0;
+} DISPATCHER_CONTEXT, *PDISPATCHER_CONTEXT;
+
+#ifdef __x86_64__
+typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
+    union {
+        PM128A FloatingContext[16];
+        struct {
+            PM128A Xmm0;
+            PM128A Xmm1;
+            PM128A Xmm2;
+            PM128A Xmm3;
+            PM128A Xmm4;
+            PM128A Xmm5;
+            PM128A Xmm6;
+            PM128A Xmm7;
+            PM128A Xmm8;
+            PM128A Xmm9;
+            PM128A Xmm10;
+            PM128A Xmm11;
+            PM128A Xmm12;
+            PM128A Xmm13;
+            PM128A Xmm14;
+            PM128A Xmm15;
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
+
+    union {
+        PDWORD64 IntegerContext[16];
+        struct {
+            PDWORD64 Rax;
+            PDWORD64 Rcx;
+            PDWORD64 Rdx;
+            PDWORD64 Rbx;
+            PDWORD64 Rsp;
+            PDWORD64 Rbp;
+            PDWORD64 Rsi;
+            PDWORD64 Rdi;
+            PDWORD64 R8;
+            PDWORD64 R9;
+            PDWORD64 R10;
+            PDWORD64 R11;
+            PDWORD64 R12;
+            PDWORD64 R13;
+            PDWORD64 R14;
+            PDWORD64 R15;
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME2;
+
+} KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
+#endif
+
+typedef struct _MEMORYSTATUSEX {
+    DWORD     dwLength;
+    DWORD     dwMemoryLoad;
+    DWORDLONG ullTotalPhys;
+    DWORDLONG ullAvailPhys;
+    DWORDLONG ullTotalPageFile;
+    DWORDLONG ullAvailPageFile;
+    DWORDLONG ullTotalVirtual;
+    DWORDLONG ullAvailVirtual;
+    DWORDLONG ullAvailExtendedVirtual;
+} MEMORYSTATUSEX, *LPMEMORYSTATUSEX;
+
+
+#define EXCEPTION_NONCONTINUABLE 0x1    // Noncontinuable exception
+#define EXCEPTION_UNWINDING 0x2         // Unwind is in progress
+#define EXCEPTION_EXIT_UNWIND 0x4       // Exit unwind is in progress
+#define EXCEPTION_STACK_INVALID 0x8     // Stack out of limits or unaligned
+#define EXCEPTION_NESTED_CALL 0x10      // Nested exception handler call
+#define EXCEPTION_TARGET_UNWIND 0x20    // Target unwind in progress
+#define EXCEPTION_COLLIDED_UNWIND 0x40  // Collided exception handler call
+
+#define EXCEPTION_UNWIND (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND | \
+                          EXCEPTION_TARGET_UNWIND | EXCEPTION_COLLIDED_UNWIND)
+
+#define IS_UNWINDING(Flag) ((Flag & EXCEPTION_UNWIND) != 0)
+#define IS_DISPATCHING(Flag) ((Flag & EXCEPTION_UNWIND) == 0)
+#define IS_TARGET_UNWIND(Flag) (Flag & EXCEPTION_TARGET_UNWIND)
+
+#define EXCEPTION_MAXIMUM_PARAMETERS 15 // maximum number of exception parameters
 
 #endif /* WINNT_TYPES_H */

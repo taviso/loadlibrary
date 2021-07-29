@@ -1,0 +1,7 @@
+#ifndef LOADLIBRARY_HEAP_H
+#define LOADLIBRARY_HEAP_H
+
+PVOID WINAPI HeapAlloc(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes);
+BOOL WINAPI HeapFree(HANDLE hHeap, DWORD dwFlags, PVOID lpMem);
+
+#endif //LOADLIBRARY_HEAP_H

@@ -2,6 +2,8 @@
 #define __UTIL_H
 #pragma once
 
+#include <ucontext.h>
+
 bool IsGdbPresent();
 
 #ifdef __linux__
@@ -22,10 +24,21 @@ bool IsGdbPresent();
 
 #define MIN(x, y)       ((x) > (y) ? (y) : (x))
 
+
 static inline void *ZeroMemory(void *s, size_t n)
 {
     return memset(s, 0, n);
 }
+
+union long_int64 {
+    int64_t value;
+    struct {
+        int32_t low;
+        int32_t high;
+    };
+};
+
+void nix_2_ms_context_swap(ucontext_t *pNixContext, CONTEXT *pMSContext);
 
 #else
 # warning util.h included twice
