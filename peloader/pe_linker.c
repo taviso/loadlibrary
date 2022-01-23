@@ -322,6 +322,7 @@ static int read_exports(struct pe_image *pe)
                                       export_dir_table->AddressOfNameOrdinals);
 
         pe_exports = calloc(export_dir_table->NumberOfNames, sizeof(struct pe_exports));
+        num_pe_exports = 0;
 
         for (i = 0; i < export_dir_table->NumberOfNames; i++) {
                 uint32_t address = ((uint32_t *) (pe->image + export_dir_table->AddressOfFunctions))[*ordinal_table];
