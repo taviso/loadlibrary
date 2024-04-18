@@ -93,13 +93,13 @@ enum {
 
 typedef struct _STREAMBUFFER_DESCRIPTOR {
     PVOID  UserPtr;
-    DWORD  (* Read)(PVOID this, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead);
-    DWORD  (* Write)(PVOID this, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD TotalWritten);
-    DWORD  (* GetSize)(PVOID this, uint64_t *FileSize);
-    DWORD  (* SetSize)(PVOID this, uint64_t *FileSize);
-    PWCHAR (* GetName)(PVOID this);
-    DWORD  (* SetAttributes)(PVOID this, DWORD Attribute, PVOID Data, DWORD DataSize);
-    DWORD  (* GetAttributes)(PVOID this, DWORD Attribute, PVOID Data, DWORD DataSize, PDWORD DataSizeWritten);
+    DWORD  (* Read)(PVOID _this, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead);
+    DWORD  (* Write)(PVOID _this, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD TotalWritten);
+    DWORD  (* GetSize)(PVOID _this, uint64_t *FileSize);
+    DWORD  (* SetSize)(PVOID _this, uint64_t *FileSize);
+    PWCHAR (* GetName)(PVOID _this);
+    DWORD  (* SetAttributes)(PVOID _this, DWORD Attribute, PVOID Data, DWORD DataSize);
+    DWORD  (* GetAttributes)(PVOID _this, DWORD Attribute, PVOID Data, DWORD DataSize, PDWORD DataSizeWritten);
 } STREAMBUFFER_DESCRIPTOR, *PSTREAMBUFFER_DESCRIPTOR;
 
 typedef struct _SCANSTREAM_PARAMS {

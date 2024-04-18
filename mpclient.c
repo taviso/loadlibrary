@@ -91,23 +91,23 @@ static DWORD EngineScanCallback(PSCANSTRUCT Scan)
     return 0;
 }
 
-static DWORD ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
+static DWORD ReadStream(PVOID _this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
 {
-    fseek(this, Offset, SEEK_SET);
-    *SizeRead = fread(Buffer, 1, Size, this);
+    fseek((FILE *)_this, Offset, SEEK_SET);
+    *SizeRead = fread((FILE *)Buffer, 1, Size, (FILE *)_this);
     return TRUE;
 }
 
-static DWORD GetStreamSize(PVOID this, PULONGLONG FileSize)
+static DWORD GetStreamSize(PVOID _this, PULONGLONG FileSize)
 {
-    fseek(this, 0, SEEK_END);
-    *FileSize = ftell(this);
+    fseek((FILE *)_this, 0, SEEK_END);
+    *FileSize = ftell((FILE *)_this);
     return TRUE;
 }
 
-static PWCHAR GetStreamName(PVOID this)
+static PWCHAR GetStreamName(PVOID _this)
 {
-    return L"input";
+    return (PWCHAR)"input";
 }
 
 // These are available for pintool.
@@ -145,7 +145,12 @@ int main(int argc, char **argv, char **envp)
 
     // Fetch the headers to get base offsets.
     DosHeader   = (PIMAGE_DOS_HEADER) image.image;
+#ifdef __cplusplus
+    // fix: error: arithmetic on a pointer to void
+    PeHeader    = (PIMAGE_NT_HEADERS)(static_cast<char*>(image.image) + DosHeader->e_lfanew);
+#else
     PeHeader    = (PIMAGE_NT_HEADERS)(image.image + DosHeader->e_lfanew);
+#endif
 
     // Load any additional exports.
     if (!process_extra_exports(image.image, PeHeader->OptionalHeader.BaseOfCode, "engine/mpengine.map")) {
@@ -173,7 +178,13 @@ int main(int argc, char **argv, char **envp)
         errx(EXIT_FAILURE, "Failed to resolve mpengine entrypoint");
     }
 
-    EXCEPTION_DISPOSITION ExceptionHandler(struct _EXCEPTION_RECORD *ExceptionRecord,
+#ifdef __cplusplus
+    // fix C++ error: function definition is not allowed here
+    PEXCEPTION_HANDLER ExceptionHandler = reinterpret_cast<PEXCEPTION_HANDLER>(+[](
+#else
+    EXCEPTION_DISPOSITION ExceptionHandler(
+#endif
+            struct _EXCEPTION_RECORD *ExceptionRecord,
             struct _EXCEPTION_FRAME *EstablisherFrame,
             struct _CONTEXT *ContextRecord,
             struct _EXCEPTION_FRAME **DispatcherContext)
@@ -181,11 +192,22 @@ int main(int argc, char **argv, char **envp)
         LogMessage("Toplevel Exception Handler Caught Exception");
         abort();
     }
+#ifdef __cplusplus
+    );
+#endif
 
+#ifdef __cplusplus
+    // fix C++ error: function definition is not allowed here
+    auto ResourceExhaustedHandler = [](int Signal)
+#else
     VOID ResourceExhaustedHandler(int Signal)
+#endif
     {
         errx(EXIT_FAILURE, "Resource Limits Exhausted, Signal %s", strsignal(Signal));
     }
+#ifdef __cplusplus
+    ;
+#endif
 
     setup_nt_threadinfo(ExceptionHandler);
 
@@ -212,10 +234,12 @@ int main(int argc, char **argv, char **envp)
 
     BootParams.ClientVersion = BOOTENGINE_PARAMS_VERSION;
     BootParams.Attributes    = BOOT_ATTR_NORMAL;
-    BootParams.SignatureLocation = L"engine";
-    BootParams.ProductName = L"Legitimate Antivirus";
-    EngineConfig.QuarantineLocation = L"quarantine";
-    EngineConfig.Inclusions = L"*.*";
+    // fix C++ error: assigning to 'PWCHAR' from incompatible type
+    //BootParams.SignatureLocation = L"engine";
+    BootParams.SignatureLocation = (PWCHAR)"engine";
+    BootParams.ProductName = (PWCHAR)"Legitimate Antivirus";
+    EngineConfig.QuarantineLocation = (PWCHAR)"quarantine";
+    EngineConfig.Inclusions = (PWCHAR)"*.*";
     EngineConfig.EngineFlags = 1 << 1;
     BootParams.EngineInfo = &EngineInfo;
     BootParams.EngineConfig = &EngineConfig;
