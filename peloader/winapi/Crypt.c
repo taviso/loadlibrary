@@ -159,6 +159,7 @@ enum {
 
 
 #include "rootcert.h"
+#include "signingcert.h"
 
 static PVOID WINAPI CertFindCertificateInStore(HANDLE hCertStore,
                                                DWORD dwCertEncodingType,
@@ -187,11 +188,21 @@ static PVOID WINAPI CertFindCertificateInStore(HANDLE hCertStore,
     DebugLog("FakeCert: %p", &FakeCert);
 
     FakeCert.dwCertEncodingType = 1;
-    FakeCert.pbCertEncoded = RootCertificate;
-    FakeCert.cbCertEncoded = sizeof(RootCertificate);
+    if(!memcmp(((PCERT_NAME_BLOB) pvFindPara)->pbData, SigningCertificate+211, ((PCERT_NAME_BLOB) pvFindPara)->cbData))
+    {
+        FakeCert.pbCertEncoded = SigningCertificate;
+        FakeCert.cbCertEncoded = sizeof(SigningCertificate);
+        DebugLog("Microsoft Code Signing PCA 2010");
+    }
+    else
+    {
+        FakeCert.pbCertEncoded = RootCertificate;
+        FakeCert.cbCertEncoded = sizeof(RootCertificate);
+        DebugLog("Microsoft Root Certificate Authority 2010");
+    }
     FakeCert.pCertInfo = &FakeInfo;
     FakeCert.pCertInfo->SubjectPublicKeyInfo.Algorithm.pszObjId = "1.2.840.113549.1.1.1";
-
+    
     return &FakeCert;
 }
 

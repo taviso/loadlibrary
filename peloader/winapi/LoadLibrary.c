@@ -14,6 +14,12 @@
 #include "util.h"
 #include "winstrings.h"
 
+static LONG WINAPI GetCurrentPackageId(uint32_t bufferLength, BYTE buffer)
+{
+    DebugLog("");
+    //return APPMODEL_ERROR_NO_PACKAGE value
+    return 15700L;
+}
 
 static HANDLE WINAPI LoadLibraryExW(PVOID lpFileName, HANDLE hFile, DWORD dwFlags)
 {
@@ -105,6 +111,7 @@ static VOID WINAPI FreeLibrary(PVOID hLibModule)
     DebugLog("FreeLibrary(%p)", hLibModule);
 }
 
+DECLARE_CRT_EXPORT("GetCurrentPackageId", GetCurrentPackageId);
 DECLARE_CRT_EXPORT("FreeLibrary", FreeLibrary);
 DECLARE_CRT_EXPORT("LoadLibraryExW", LoadLibraryExW);
 DECLARE_CRT_EXPORT("LoadLibraryW", LoadLibraryW);

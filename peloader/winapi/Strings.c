@@ -115,6 +115,15 @@ STATIC BOOL WINAPI GetStringTypeA(DWORD locale, DWORD dwInfoType, PUSHORT lpSrcS
     return FALSE;
 }
 
+STATIC BOOL WINAPI GetStringTypeExA(DWORD locale, DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc, PUSHORT lpCharType)
+{
+    DebugLog("%u, %u, %p, %d, %p", locale, dwInfoType, lpSrcStr, cchSrc, lpCharType);
+
+    memset(lpCharType, 1, cchSrc * sizeof(USHORT));
+
+    return TRUE;
+}
+
 
 STATIC BOOL WINAPI GetStringTypeW(DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc, PUSHORT lpCharType)
 {
@@ -123,6 +132,15 @@ STATIC BOOL WINAPI GetStringTypeW(DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc
     memset(lpCharType, 1, cchSrc * sizeof(USHORT));
 
     return FALSE;
+}
+
+STATIC BOOL WINAPI GetStringTypeExW(DWORD locale, DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc, PUSHORT lpCharType)
+{
+    DebugLog("%u, %p, %d, %p", dwInfoType, lpSrcStr, cchSrc, lpCharType);
+
+    memset(lpCharType, 1, cchSrc * sizeof(USHORT));
+
+    return TRUE;
 }
 
 STATIC VOID WINAPI RtlInitUnicodeString(PUNICODE_STRING DestinationString, PWCHAR SourceString)
@@ -216,12 +234,33 @@ STATIC INT WINAPI CompareStringOrdinal(PVOID lpString1,
     return CSTR_GREATER_THAN;
 }
 
+static BOOL WINAPI ConvertStringSecurityDescriptorToSecurityDescriptorW(PUSHORT StringSecurityDescriptor, DWORD StringSDRevision, PVOID *SecurityDescriptor, PULONG SecurityDescriptorSize)
+{
+    //The SECURITY_DESCRIPTOR struct is not well documented and is a mess to construct. 
+    //Could implement the actual conversion but reading React OS source suggests this would be a massive pain.
+    //This is just the raw struct data returned from feeding the requested SD string through the same API on a Windows system.
+    //S:P(TL;;FRFX;;;S-1-19-512-1536)
+    BYTE psd[52] = {0x01, 0x00, 0x10, 0xa0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                    0x00, 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 
+                    0x20, 0x00, 0x01, 0x00, 0x00, 0x00, 0x14, 0x00, 0x18, 0x00, 0xa9,
+                    0x00, 0x12, 0x00, 0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x13,
+                    0x00, 0x02, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00};
+
+    SecurityDescriptor = (PVOID)psd;
+
+    DebugLog("%p", SecurityDescriptor);
+    return TRUE;
+}
+
 DECLARE_CRT_EXPORT("MultiByteToWideChar", MultiByteToWideChar);
 DECLARE_CRT_EXPORT("WideCharToMultiByte", WideCharToMultiByte);
 DECLARE_CRT_EXPORT("GetStringTypeA", GetStringTypeA);
+DECLARE_CRT_EXPORT("GetStringTypeExA", GetStringTypeExA);
 DECLARE_CRT_EXPORT("GetStringTypeW", GetStringTypeW);
+DECLARE_CRT_EXPORT("GetStringTypeExW", GetStringTypeExW);
 DECLARE_CRT_EXPORT("RtlInitUnicodeString", RtlInitUnicodeString);
 DECLARE_CRT_EXPORT("UuidFromStringW", UuidFromStringW);
 DECLARE_CRT_EXPORT("UuidCreate", UuidCreate);
 DECLARE_CRT_EXPORT("CompareStringOrdinal", CompareStringOrdinal);
+DECLARE_CRT_EXPORT("ConvertStringSecurityDescriptorToSecurityDescriptorW", ConvertStringSecurityDescriptorToSecurityDescriptorW);
 
