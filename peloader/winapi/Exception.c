@@ -41,10 +41,27 @@ VOID DumpExceptionChain(VOID)
 }
 #endif
 
+// Windows calls exception handlers via RtlpExecuteHandlerForException, which
+// registers its own frame on top of the SEH chain for the duration of the
+// call. The MSVC runtime depends on this: _UnwindNestedFrames() saves the
+// top of the chain before calling RtlUnwind() and relinks it afterwards,
+// which creates a loop in the chain if the top frame is the target frame.
+static EXCEPTION_DISPOSITION DispatcherHandler(struct _EXCEPTION_RECORD *ExceptionRecord,
+                                               struct _EXCEPTION_FRAME *EstablisherFrame,
+                                               struct _CONTEXT *ContextRecord,
+                                               struct _EXCEPTION_FRAME **DispatcherContext)
+{
+    return ExceptionContinueSearch;
+}
+
 static WINAPI PVOID RaiseException(DWORD dwExceptionCode, DWORD dwExceptionFlags, DWORD nNumberOfArguments, PVOID Arguments)
 {
     PEXCEPTION_FRAME ExceptionList;
+    PEXCEPTION_FRAME TopFrame;
     PEXCEPTION_FRAME Dispatch = NULL;
+    EXCEPTION_FRAME DispatcherFrame = {
+        .handler = DispatcherHandler,
+    };
     DWORD Disposition;
     DWORD Depth;
     CONTEXT Context = {0};
@@ -77,7 +94,14 @@ static WINAPI PVOID RaiseException(DWORD dwExceptionCode, DWORD dwExceptionFlags
                  ExceptionList->prev,
                  ExceptionList->handler);
 
+        // Register a dispatcher frame while the handler runs.
+        asm("mov %%fs:0, %[list]" : [list] "=r"(TopFrame));
+        DispatcherFrame.prev = TopFrame;
+        asm("mov %[list], %%fs:0" :: [list] "r"(&DispatcherFrame));
+
         Result = ExceptionList->handler(&Record, ExceptionList, &Context, &Dispatch);
+
+        asm("mov %[list], %%fs:0" :: [list] "r"(TopFrame));
 
         DebugLog("%*s Handler Result: %u, Dispatch: %p", Depth, "", Result, Dispatch);
 
