@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <wchar.h>
 
 #include "winnt_types.h"
 #include "pe_linker.h"
@@ -28,6 +29,7 @@ typedef struct _WIN32_FILE_ATTRIBUTE_DATA {
 extern void WINAPI SetLastError(DWORD dwErrCode);
 
 #define ERROR_FILE_NOT_FOUND 2
+#define ERROR_INSUFFICIENT_BUFFER 122
 
 #define FILE_ATTRIBUTE_NORMAL 128
 #define FILE_ATTRIBUTE_DIRECTORY 16
@@ -203,7 +205,12 @@ static BOOL WINAPI CloseHandle(HANDLE hObject)
     DebugLog("%p", hObject);
     if (hObject != (HANDLE) 'EVNT'
      && hObject != INVALID_HANDLE_VALUE
-     && hObject != (HANDLE) 'SEMA')
+     && hObject != (HANDLE) 'SEMA'
+     && hObject != (HANDLE) 'HEAP'
+     && hObject != (HANDLE) 'PROC'
+     && hObject != (HANDLE) 'THRD'
+     && hObject != (HANDLE) 'MUTX'
+     && hObject != (HANDLE) 'TIMR')
         fclose(hObject);
     return TRUE;
 }
@@ -257,6 +264,13 @@ static HANDLE WINAPI FindFirstFileW(PWCHAR lpFileName, PVOID lpFindFileData)
     SetLastError(ERROR_FILE_NOT_FOUND);
 
     return INVALID_HANDLE_VALUE;
+}
+
+static DWORD WINAPI GetCurrentDirectoryW(DWORD BufferLength, LPWSTR Buffer) 
+{
+    DebugLog("");
+    Buffer = L"C:\\Windows\\System32";
+    return wcslen(Buffer);
 }
 
 static DWORD WINAPI NtOpenSymbolicLinkObject(PHANDLE LinkHandle, DWORD DesiredAccess, PVOID ObjectAttributes)
@@ -336,8 +350,31 @@ static BOOL WINAPI VerQueryValueW(PVOID pBlock, PWCHAR lpSubBlock, PVOID  *lplpB
 
 static DWORD WINAPI QueryDosDevice(PVOID lpDeviceName, PVOID lpTargetPath, DWORD ucchMax)
 {
-    DebugLog("");
-    return 0;
+    // Pretend every drive letter maps to the same volume device, and when
+    // asked for the full list (lpDeviceName == NULL) report just "C:".
+    const char *Target = "\\Device\\HarddiskVolume1";
+    char *DeviceName = lpDeviceName ? CreateAnsiFromWide(lpDeviceName) : NULL;
+    const char *Result = lpDeviceName ? Target : "C:";
+    uint16_t *Out = lpTargetPath;
+    size_t Length = strlen(Result);
+
+    DebugLog("%p [%s], %p, %u", lpDeviceName, DeviceName, lpTargetPath, ucchMax);
+
+    free(DeviceName);
+
+    // Result string plus the terminating double null.
+    if (ucchMax < Length + 2) {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return 0;
+    }
+
+    for (size_t i = 0; i < Length; i++)
+        Out[i] = Result[i];
+
+    Out[Length + 0] = L'\0';
+    Out[Length + 1] = L'\0';
+
+    return Length + 2;
 }
 
 static BOOL WINAPI GetDiskFreeSpaceExW(PWCHAR lpDirectoryName, PVOID lpFreeBytesAvailableToCaller, PVOID lpTotalNumberOfBytes, QWORD *lpTotalNumberOfFreeBytes)
@@ -362,6 +399,7 @@ DECLARE_CRT_EXPORT("WriteFile", WriteFile);
 DECLARE_CRT_EXPORT("DeleteFileW", DeleteFileW);
 DECLARE_CRT_EXPORT("GetFileSizeEx", GetFileSizeEx);
 DECLARE_CRT_EXPORT("FindFirstFileW", FindFirstFileW);
+DECLARE_CRT_EXPORT("GetCurrentDirectoryW", GetCurrentDirectoryW);
 DECLARE_CRT_EXPORT("NtOpenSymbolicLinkObject", NtOpenSymbolicLinkObject);
 DECLARE_CRT_EXPORT("NtQuerySymbolicLinkObject", NtQuerySymbolicLinkObject);
 DECLARE_CRT_EXPORT("NtClose", NtClose);

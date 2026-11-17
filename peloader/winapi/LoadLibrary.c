@@ -14,6 +14,12 @@
 #include "util.h"
 #include "winstrings.h"
 
+static LONG WINAPI GetCurrentPackageId(uint32_t bufferLength, BYTE buffer)
+{
+    DebugLog("");
+    //return APPMODEL_ERROR_NO_PACKAGE value
+    return 15700L;
+}
 
 static HANDLE WINAPI LoadLibraryExW(PVOID lpFileName, HANDLE hFile, DWORD dwFlags)
 {
@@ -73,6 +79,29 @@ static HANDLE WINAPI GetModuleHandleW(PVOID lpModuleName)
     return (HANDLE) NULL;
 }
 
+#define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS 0x00000004
+#define ERROR_MOD_NOT_FOUND 126
+
+extern void WINAPI SetLastError(DWORD dwErrCode);
+
+static BOOL WINAPI GetModuleHandleExW(DWORD dwFlags, PVOID lpModuleName, HANDLE *phModule)
+{
+    DebugLog("%#x, %p, %p", dwFlags, lpModuleName, phModule);
+
+    // The only module that code can live in is the one we loaded.
+    if (dwFlags & GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS) {
+        *phModule = (HANDLE) 'MPEN';
+        return TRUE;
+    }
+
+    if ((*phModule = GetModuleHandleW(lpModuleName)) == NULL) {
+        SetLastError(ERROR_MOD_NOT_FOUND);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 static DWORD WINAPI GetModuleFileNameA(HANDLE hModule, PCHAR lpFilename, DWORD nSize)
 {
     DebugLog("%p, %p, %u", hModule, lpFilename, nSize);
@@ -105,11 +134,13 @@ static VOID WINAPI FreeLibrary(PVOID hLibModule)
     DebugLog("FreeLibrary(%p)", hLibModule);
 }
 
+DECLARE_CRT_EXPORT("GetCurrentPackageId", GetCurrentPackageId);
 DECLARE_CRT_EXPORT("FreeLibrary", FreeLibrary);
 DECLARE_CRT_EXPORT("LoadLibraryExW", LoadLibraryExW);
 DECLARE_CRT_EXPORT("LoadLibraryW", LoadLibraryW);
 DECLARE_CRT_EXPORT("GetProcAddress", GetProcAddress);
 DECLARE_CRT_EXPORT("GetModuleHandleW", GetModuleHandleW);
+DECLARE_CRT_EXPORT("GetModuleHandleExW", GetModuleHandleExW);
 DECLARE_CRT_EXPORT("GetModuleHandleA", GetModuleHandleA);
 DECLARE_CRT_EXPORT("GetModuleFileNameA", GetModuleFileNameA);
 DECLARE_CRT_EXPORT("GetModuleFileNameW", GetModuleFileNameW);
