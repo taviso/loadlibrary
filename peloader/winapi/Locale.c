@@ -59,7 +59,7 @@ STATIC DWORD LocaleNameToLCID(PVOID lpName, DWORD dwFlags)
     return 0;
 }
 
-STATIC DWORD GetUserDefaultLCID()
+STATIC WINAPI DWORD GetUserDefaultLCID()
 {
     //value of LOCALE_USER_DEFAULT
     DebugLog("");
