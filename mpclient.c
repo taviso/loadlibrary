@@ -253,7 +253,7 @@ int main(int argc, char **argv, char **envp)
 
         if (ScanDescriptor.UserPtr == NULL) {
             LogMessage("failed to open file %s", *argv);
-            return 1;
+            continue;
         }
 
         LogMessage("Scanning %s...", *argv);
