@@ -156,10 +156,104 @@ enum {
     CERT_FIND_SUBJECT_NAME = 131079,
 };
 
+#define CRYPT_E_NOT_FOUND 0x80092004
 
+extern void WINAPI SetLastError(DWORD dwErrCode);
 
 #include "rootcert.h"
 #include "signingcert.h"
+
+// The certificates our fake certificate store contains.
+static struct {
+    uint8_t *Encoded;
+    size_t Size;
+    const char *Description;
+} KnownCertificates[] = {
+    { RootCertificate, sizeof(RootCertificate), "Microsoft Root Certificate Authority 2010" },
+    { SigningCertificate, sizeof(SigningCertificate), "Microsoft Code Signing PCA 2010" },
+};
+
+// Parse the DER tag and length at *Data, returning a pointer to the
+// contents and the content length, or NULL on malformed input. *Data is
+// advanced past the whole element.
+static uint8_t *DerNextElement(uint8_t **Data, uint8_t *End, uint8_t *Tag, size_t *Length, uint8_t **Element)
+{
+    uint8_t *p = *Data;
+    size_t len;
+
+    if (End - p < 2)
+        return NULL;
+
+    *Element = p;
+    *Tag = *p++;
+    len = *p++;
+
+    if (len & 0x80) {
+        int count = len & 0x7f;
+
+        if (count == 0 || count > 4 || End - p < count)
+            return NULL;
+
+        for (len = 0; count; count--)
+            len = (len << 8) | *p++;
+    }
+
+    if ((size_t)(End - p) < len)
+        return NULL;
+
+    *Length = len;
+    *Data   = p + len;
+    return p;
+}
+
+// Locate the DER encoded issuer and subject Names of an X.509 certificate.
+static bool GetCertificateNames(uint8_t *Cert, size_t CertSize, PCERT_NAME_BLOB Issuer, PCERT_NAME_BLOB Subject)
+{
+    uint8_t *p = Cert, *end = Cert + CertSize, *element;
+    uint8_t tag;
+    size_t len;
+
+    // Certificate ::= SEQUENCE { tbsCertificate, ... }
+    if (!(p = DerNextElement(&p, end, &tag, &len, &element)) || tag != 0x30)
+        return false;
+
+    end = p + len;
+
+    // TBSCertificate ::= SEQUENCE { ... }
+    if (!(p = DerNextElement(&p, end, &tag, &len, &element)) || tag != 0x30)
+        return false;
+
+    end = p + len;
+
+    // Skip optional [0] version.
+    if (*p == 0xa0 && !DerNextElement(&p, end, &tag, &len, &element))
+        return false;
+
+    // Skip serialNumber and signature.
+    for (int i = 0; i < 2; i++) {
+        if (!DerNextElement(&p, end, &tag, &len, &element))
+            return false;
+    }
+
+    // issuer Name
+    if (!DerNextElement(&p, end, &tag, &len, &element) || tag != 0x30)
+        return false;
+
+    Issuer->pbData = element;
+    Issuer->cbData = p - element;
+
+    // Skip validity.
+    if (!DerNextElement(&p, end, &tag, &len, &element))
+        return false;
+
+    // subject Name
+    if (!DerNextElement(&p, end, &tag, &len, &element) || tag != 0x30)
+        return false;
+
+    Subject->pbData = element;
+    Subject->cbData = p - element;
+    return true;
+}
 
 static PVOID WINAPI CertFindCertificateInStore(HANDLE hCertStore,
                                                DWORD dwCertEncodingType,
@@ -170,6 +264,7 @@ static PVOID WINAPI CertFindCertificateInStore(HANDLE hCertStore,
 {
     static CERT_INFO FakeInfo = {0};
     static CERT_CONTEXT FakeCert = {0};
+    PCERT_NAME_BLOB Name = pvFindPara;
 
     DebugLog("%p, %u, %#x, %#x, %p, %p", hCertStore,
                                          dwCertEncodingType,
@@ -178,32 +273,54 @@ static PVOID WINAPI CertFindCertificateInStore(HANDLE hCertStore,
                                          pvFindPara,
                                          pPrevCertContext);
 
-    switch  (dwFindType) {
-        case CERT_FIND_SUBJECT_NAME: {
-            DebugLog("\tCERT_FIND_SUBJECT_NAME");
-            break;
+    // We only have one matching certificate per name, so there is never a
+    // next match.
+    if (pPrevCertContext != NULL) {
+        SetLastError(CRYPT_E_NOT_FOUND);
+        return NULL;
+    }
+
+    if (dwFindType != CERT_FIND_SUBJECT_NAME) {
+        DebugLog("unsupported dwFindType %#x", dwFindType);
+        SetLastError(CRYPT_E_NOT_FOUND);
+        return NULL;
+    }
+
+    DebugLog("\tCERT_FIND_SUBJECT_NAME");
+
+    for (int i = 0; i < sizeof(KnownCertificates) / sizeof(KnownCertificates[0]); i++) {
+        CERT_NAME_BLOB Issuer;
+        CERT_NAME_BLOB Subject;
+
+        if (!GetCertificateNames(KnownCertificates[i].Encoded,
+                                 KnownCertificates[i].Size,
+                                 &Issuer,
+                                 &Subject)) {
+            DebugLog("failed to parse certificate %s", KnownCertificates[i].Description);
+            continue;
         }
+
+        if (Subject.cbData != Name->cbData || memcmp(Subject.pbData, Name->pbData, Subject.cbData) != 0)
+            continue;
+
+        DebugLog("FakeCert: %p", &FakeCert);
+        DebugLog("%s", KnownCertificates[i].Description);
+
+        FakeCert.dwCertEncodingType = 1;
+        FakeCert.pbCertEncoded = KnownCertificates[i].Encoded;
+        FakeCert.cbCertEncoded = KnownCertificates[i].Size;
+        FakeCert.pCertInfo = &FakeInfo;
+        FakeCert.pCertInfo->Issuer = Issuer;
+        FakeCert.pCertInfo->Subject = Subject;
+        FakeCert.pCertInfo->SubjectPublicKeyInfo.Algorithm.pszObjId = "1.2.840.113549.1.1.1";
+
+        return &FakeCert;
     }
 
-    DebugLog("FakeCert: %p", &FakeCert);
+    DebugLog("no certificate matches the requested subject name");
 
-    FakeCert.dwCertEncodingType = 1;
-    if(!memcmp(((PCERT_NAME_BLOB) pvFindPara)->pbData, SigningCertificate+211, ((PCERT_NAME_BLOB) pvFindPara)->cbData))
-    {
-        FakeCert.pbCertEncoded = SigningCertificate;
-        FakeCert.cbCertEncoded = sizeof(SigningCertificate);
-        DebugLog("Microsoft Code Signing PCA 2010");
-    }
-    else
-    {
-        FakeCert.pbCertEncoded = RootCertificate;
-        FakeCert.cbCertEncoded = sizeof(RootCertificate);
-        DebugLog("Microsoft Root Certificate Authority 2010");
-    }
-    FakeCert.pCertInfo = &FakeInfo;
-    FakeCert.pCertInfo->SubjectPublicKeyInfo.Algorithm.pszObjId = "1.2.840.113549.1.1.1";
-    
-    return &FakeCert;
+    SetLastError(CRYPT_E_NOT_FOUND);
+    return NULL;
 }
 
 static BOOL WINAPI CertCloseStore(HANDLE hCertStore, DWORD dwFlags)
