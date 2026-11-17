@@ -45,7 +45,7 @@ typedef struct _SCANSTRUCT {
 } SCANSTRUCT, *PSCANSTRUCT;
 
 typedef struct _SCAN_REPLY {
-    DWORD   (*EngineScanCallback)(PSCANSTRUCT this);
+    DWORD   (*EngineScanCallback)(PSCANSTRUCT _this);
     DWORD   field_4;
     DWORD   UserPtr;
     DWORD   field_C;

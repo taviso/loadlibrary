@@ -43,7 +43,7 @@ struct pe_image {
         char name[128];
         BOOL WINAPI (*entry)(PVOID hinstDLL, DWORD fdwReason, PVOID lpvReserved);
         void *image;
-        int size;
+        size_t size;
         int type;
 
         IMAGE_NT_HEADERS *nt_hdr;

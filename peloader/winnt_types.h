@@ -144,7 +144,7 @@ typedef uint8_t         *PBYTE;
 typedef uint8_t         *LPBYTE;
 typedef int8_t          CHAR;
 typedef char            *PCHAR;
-typedef wchar_t         WCHAR;
+typedef uint16_t        WCHAR;
 typedef CHAR            *LPSTR;
 typedef const char      *LPCSTR;
 typedef WCHAR           *LPWSTR;
@@ -1103,7 +1103,15 @@ IoSetCompletionRoutine(struct irp *irp, void *routine, void *context,
                        BOOLEAN success, BOOLEAN error, BOOLEAN cancel)
 {
         struct io_stack_location *irp_sl = IoGetNextIrpStackLocation(irp);
+
+#ifdef __cplusplus
+        // https://stackoverflow.com/questions/1096341/function-pointers-casting-in-c
+        // fix: error: assigning to x from y converts between void pointer and function pointer
+        irp_sl->completion_routine = (typeof(irp_sl->completion_routine))(routine);
+#else
         irp_sl->completion_routine = routine;
+#endif
+
         irp_sl->context = context;
         irp_sl->control = 0;
         if (success)

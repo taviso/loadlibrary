@@ -1,5 +1,5 @@
 #ifndef __RSIGNAL_H
-#define __RESIGNAL_H
+#define __RSIGNAL_H
 
 #define RSIG_BASE                             0x4000
 #define RSIG_RESERVED1                        0x4003
