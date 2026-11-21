@@ -16,6 +16,8 @@
 #ifndef _WINNT_TYPES_H_
 #define _WINNT_TYPES_H_
 
+#include <string.h>
+
 #include "winapi_abi.h"
 
 #define DLL_PROCESS_ATTACH              1
@@ -1620,7 +1622,7 @@ struct _EXCEPTION_FRAME;
 typedef EXCEPTION_DISPOSITION (*PEXCEPTION_HANDLER)(
         struct _EXCEPTION_RECORD *ExceptionRecord,
         struct _EXCEPTION_FRAME *EstablisherFrame,
-        PVOID *ContextRecord,
+        struct _CONTEXT *ContextRecord,
         struct _EXCEPTION_FRAME **DispatcherContext);
 
 typedef struct _EXCEPTION_FRAME {

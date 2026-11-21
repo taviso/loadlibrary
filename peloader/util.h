@@ -2,6 +2,7 @@
 #define __UTIL_H
 #pragma once
 
+#include <string.h>
 #include <ucontext.h>
 
 bool IsGdbPresent();

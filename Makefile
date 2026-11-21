@@ -99,7 +99,7 @@ $(BUILD_DIR)/x86/libdisasm.a: $(DISASM_OBJECTS)
 # CMake tracks its own sources and headers. Run its incremental build before
 # checking the library timestamps used by the client link rule.
 x64-intercept:
-	$(CMAKE) -S intercept -B $(X64_INTERCEPT) -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+	$(CMAKE) -S intercept -B $(X64_INTERCEPT) -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DCMAKE_POLICY_VERSION_MINIMUM=3.10
 	+$(CMAKE) --build $(X64_INTERCEPT)
 
 $(filter-out $(BUILD_DIR)/x64/libpeloader.a,$(X64_LIBS)): | x64-intercept
