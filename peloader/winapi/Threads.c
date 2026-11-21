@@ -54,6 +54,33 @@ static WINAPI void WakeAllConditionVariable(PVOID ConditionVariable) {
     DebugLog("%p", ConditionVariable);
 }
 
+static __stdcall void WakeConditionVariable(PVOID ConditionVariable)
+{
+    DebugLog("%p", ConditionVariable);
+}
+
+#define INFINITE        0xFFFFFFFF
+#define ERROR_TIMEOUT   1460
+
+extern void WINAPI SetLastError(DWORD dwErrCode);
+
+static __stdcall BOOL SleepConditionVariableSRW(PVOID ConditionVariable,
+                                                PVOID SRWLock,
+                                                DWORD dwMilliseconds,
+                                                ULONG Flags)
+{
+    DebugLog("%p %p %u %#x", ConditionVariable, SRWLock, dwMilliseconds, Flags);
+
+    // There are no other threads that could wake us, so a timed wait times
+    // out immediately and an infinite wait is a spurious wakeup.
+    if (dwMilliseconds != INFINITE) {
+        SetLastError(ERROR_TIMEOUT);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 
 static WINAPI PVOID CreateThreadpoolWait() {
     DebugLog("");
@@ -172,6 +199,8 @@ DECLARE_CRT_EXPORT("InitializeConditionVariable", InitializeConditionVariable);
 DECLARE_CRT_EXPORT("SleepConditionVariableCS", SleepConditionVariableCS);
 
 DECLARE_CRT_EXPORT("WakeAllConditionVariable", WakeAllConditionVariable);
+DECLARE_CRT_EXPORT("WakeConditionVariable", WakeConditionVariable);
+DECLARE_CRT_EXPORT("SleepConditionVariableSRW", SleepConditionVariableSRW);
 
 DECLARE_CRT_EXPORT("CreateThreadpoolTimer", CreateThreadpoolTimer);
 

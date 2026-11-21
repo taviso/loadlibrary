@@ -127,6 +127,7 @@ static BOOL WINAPI GetModuleHandleExA(DWORD dwFlags,
     return true;
 }
 
+#ifdef __x86_64__
 static BOOL WINAPI GetModuleHandleExW(DWORD dwFlags,
                                       LPCWSTR lpModuleName,
                                       HMODULE *phModule) {
@@ -156,6 +157,31 @@ static BOOL WINAPI GetModuleHandleExW(DWORD dwFlags,
     return true;
 }
 
+#else
+#define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS 0x00000004
+#define ERROR_MOD_NOT_FOUND 126
+
+extern void WINAPI SetLastError(DWORD dwErrCode);
+
+static BOOL WINAPI GetModuleHandleExW(DWORD dwFlags, PVOID lpModuleName, HANDLE *phModule)
+{
+    DebugLog("%#x, %p, %p", dwFlags, lpModuleName, phModule);
+
+    // The only module that code can live in is the one we loaded.
+    if (dwFlags & GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS) {
+        *phModule = (HANDLE) 'MPEN';
+        return TRUE;
+    }
+
+    if ((*phModule = GetModuleHandleW(lpModuleName)) == NULL) {
+        SetLastError(ERROR_MOD_NOT_FOUND);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+#endif
 
 static VOID WINAPI FreeLibrary(PVOID hLibModule) {
     DebugLog("FreeLibrary(%p)", hLibModule);

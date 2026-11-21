@@ -681,8 +681,12 @@ bool pe_unload_library(struct pe_image pe)
 bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
 {
     static EXCEPTION_FRAME ExceptionFrame;
+    // RTL_USER_PROCESS_PARAMETERS, the CRT reads flags from it. An empty one
+    // is fine, but it must exist.
+    static uint8_t ProcessParameters[0x400];
     static PEB ProcessEnvironmentBlock = {
         .TlsBitmap          = &TlsBitmap,
+        .ProcessParameters  = ProcessParameters,
     };
     static TEB ThreadEnvironment = {
         .Tib.Self                   = &ThreadEnvironment.Tib,

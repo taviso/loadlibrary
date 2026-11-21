@@ -17,8 +17,10 @@ DEBUG_CFLAGS 	 = -O0 -g
 
 .PHONY: clean
 
-# This glob matches all the winapi exports we provide.
-WINAPI  = $(patsubst %.c,%.o,$(wildcard winapi/*.c))
+# Compile the exception implementation for the selected architecture only.
+WINAPI_SOURCES = $(filter-out winapi/Exception_x86.c winapi/Exception_x64.c,$(wildcard winapi/*.c))
+WINAPI_SOURCES += winapi/Exception_$(ARCH).c
+WINAPI = $(patsubst %.c,%.o,$(WINAPI_SOURCES))
 
 TARGETS=libpeloader.a
 
@@ -30,6 +32,7 @@ debug: CFLAGS += $(DEBUG_CFLAGS)
 debug: $(TARGETS)
 
 libpeloader.a: $(WINAPI) $(OBJECT_FILES)
+	rm -f $@
 	$(AR) $(ARFLAGS) $@ $^
 
 clean:

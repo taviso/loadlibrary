@@ -30,6 +30,7 @@ typedef struct _WIN32_FILE_ATTRIBUTE_DATA {
 extern void WINAPI SetLastError(DWORD dwErrCode);
 
 #define ERROR_FILE_NOT_FOUND 2
+#define ERROR_INSUFFICIENT_BUFFER 122
 
 #define FILE_ATTRIBUTE_NORMAL 128
 #define FILE_ATTRIBUTE_DIRECTORY 16
@@ -207,10 +208,15 @@ SetFilePointerEx(HANDLE hFile, uint64_t liDistanceToMove, uint64_t *lpNewFilePoi
 static BOOL WINAPI CloseHandle(HANDLE hObject) {
     DebugLog("%p", hObject);
     if (hObject != (HANDLE) 'EVNT'
-        && hObject != INVALID_HANDLE_VALUE
-        && hObject != (HANDLE) 'SEMA'
-        && hObject != 0x41414141)
-            fclose(hObject);
+     && hObject != (HANDLE) 0x41414141
+     && hObject != INVALID_HANDLE_VALUE
+     && hObject != (HANDLE) 'SEMA'
+     && hObject != (HANDLE) 'HEAP'
+     && hObject != (HANDLE) 'PROC'
+     && hObject != (HANDLE) 'THRD'
+     && hObject != (HANDLE) 'MUTX'
+     && hObject != (HANDLE) 'TIMR')
+        fclose(hObject);
     return TRUE;
 }
 
@@ -337,16 +343,33 @@ static BOOL WINAPI VerQueryValueW(PVOID pBlock, PWCHAR lpSubBlock, PVOID *lplpBu
     return FALSE;
 }
 
-static DWORD WINAPI QueryDosDevice(LPCWSTR lpDeviceName, LPWSTR lpTargetPath, DWORD ucchMax) {
+static DWORD WINAPI QueryDosDevice(PVOID lpDeviceName, PVOID lpTargetPath, DWORD ucchMax)
+{
+    // Pretend every drive letter maps to the same volume device, and when
+    // asked for the full list (lpDeviceName == NULL) report just "C:".
+    const char *Target = "\\Device\\HarddiskVolume1";
+    char *DeviceName = lpDeviceName ? CreateAnsiFromWide(lpDeviceName) : NULL;
+    const char *Result = lpDeviceName ? Target : "C:";
+    uint16_t *Out = lpTargetPath;
+    size_t Length = strlen(Result);
 
-    char *device_name = CreateAnsiFromWide(lpDeviceName);
-    DebugLog("%p [%s] %p", lpDeviceName, device_name, lpTargetPath);
-    free(device_name);
+    DebugLog("%p [%s], %p, %u", lpDeviceName, DeviceName, lpTargetPath, ucchMax);
 
-    *lpTargetPath = L"\\Device\\HarddiskVolume3";
+    free(DeviceName);
 
-    // Return the length, in TCHARs, of *lpTargetPath
-    return 25;
+    // Result string plus the terminating double null.
+    if (ucchMax < Length + 2) {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return 0;
+    }
+
+    for (size_t i = 0; i < Length; i++)
+        Out[i] = Result[i];
+
+    Out[Length + 0] = L'\0';
+    Out[Length + 1] = L'\0';
+
+    return Length + 2;
 }
 
 static BOOL WINAPI

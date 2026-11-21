@@ -134,6 +134,7 @@ int main(int argc, char **argv, char **envp)
     SCANSTREAM_PARAMS ScanParams;
     STREAMBUFFER_DESCRIPTOR ScanDescriptor;
     ENGINE_INFO EngineInfo;
+    DWORD Result;
     ENGINE_CONFIG EngineConfig;
 
     // Load the mpengine module.
@@ -223,8 +224,8 @@ int main(int argc, char **argv, char **envp)
     BootParams.EngineConfig = &EngineConfig;
     KernelHandle = NULL;
 
-    if (__rsignal(&KernelHandle, RSIG_BOOTENGINE, &BootParams, sizeof BootParams) != 0) {
-        LogMessage("__rsignal(RSIG_BOOTENGINE) returned failure, missing definitions?");
+    if ((Result = __rsignal(&KernelHandle, RSIG_BOOTENGINE, &BootParams, sizeof BootParams)) != 0) {
+        LogMessage("__rsignal(RSIG_BOOTENGINE) returned failure %#x, missing definitions?", Result);
         LogMessage("Make sure the VDM files and mpengine.dll are in the engine directory");
         return 1;
     }
