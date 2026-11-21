@@ -275,7 +275,7 @@ int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
         for (i = 0; lookup_tbl[i]; i++) {
                 if (IMAGE_SNAP_BY_ORDINAL(lookup_tbl[i])) {
                         ERROR("ordinal import not supported: %llu", (uint64_t)lookup_tbl[i]);
-                        address_tbl[i] = (ULONG) ordinal_import_stub;
+                        address_tbl[i] = (ULONG_PTR) ordinal_import_stub;
                         continue;
                 }
                 else {
@@ -283,7 +283,7 @@ int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
                 }
                 if (get_export(symname, &adr) < 0) {
                         ERROR("unknown symbol: %s:%s", dll, symname);
-                        address_tbl[i] = (ULONG) unknown_symbol_stub;
+                        address_tbl[i] = (ULONG_PTR) unknown_symbol_stub;
                         continue;
                 } else {
                         //DBGLINKER("found symbol: %s:%s: addr: %p, rva = %llu",
@@ -539,7 +539,7 @@ int link_pe_images(struct pe_image *pe_image, unsigned short n)
                 dos_hdr = pe->image;
 
                 if (pe->size < sizeof(IMAGE_DOS_HEADER)) {
-                        TRACE1("image too small: %d", pe->size);
+                        TRACE1("image too small: %zu", pe->size);
                         return -EINVAL;
                 }
 

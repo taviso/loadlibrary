@@ -242,7 +242,7 @@ bool free_executable_near(void *address, size_t size) {
     return munmap(address, allocation_size) == 0;
 }
 
-static void __attribute__((constructor(100))) init(void) {
+static void __attribute__((constructor(101))) init(void) {
     // Initialize Zydis disassemble
     ZydisDecoderInit(&decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
     ZydisFormatterInit(&formatter, ZYDIS_FORMATTER_STYLE_INTEL);

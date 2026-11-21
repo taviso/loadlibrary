@@ -54,7 +54,7 @@ static WINAPI void WakeAllConditionVariable(PVOID ConditionVariable) {
     DebugLog("%p", ConditionVariable);
 }
 
-static __stdcall void WakeConditionVariable(PVOID ConditionVariable)
+static WINAPI void WakeConditionVariable(PVOID ConditionVariable)
 {
     DebugLog("%p", ConditionVariable);
 }
@@ -64,7 +64,7 @@ static __stdcall void WakeConditionVariable(PVOID ConditionVariable)
 
 extern void WINAPI SetLastError(DWORD dwErrCode);
 
-static __stdcall BOOL SleepConditionVariableSRW(PVOID ConditionVariable,
+static WINAPI BOOL SleepConditionVariableSRW(PVOID ConditionVariable,
                                                 PVOID SRWLock,
                                                 DWORD dwMilliseconds,
                                                 ULONG Flags)
@@ -175,7 +175,7 @@ static WINAPI HANDLE CreateThread(
 ){
 
 DebugLog("");
-return 0x41414141;
+return (HANDLE) (uintptr_t) 0x41414141;
 
 }
 

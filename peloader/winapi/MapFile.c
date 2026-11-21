@@ -35,6 +35,7 @@ STATIC HANDLE WINAPI CreateFileMappingW(HANDLE hFile,
     char *file_name = CreateAnsiFromWide(lpName);
 
     DebugLog("%p, %#x, %#x, %#x, %p [%s]", hFile, flProtect, dwMaximumSizeHigh, dwMaximumSizeLow, lpName, file_name);
+    free(file_name);
 
     if (dwMaximumSizeHigh != 0 || dwMaximumSizeLow != 0) {
         file_size.high = dwMaximumSizeHigh;

@@ -181,10 +181,6 @@ STATIC INT WINAPI UuidCreate(PBYTE Uuid) {
     return 0;
 }
 
-#define CSTR_LESS_THAN    1
-#define CSTR_EQUAL        2
-#define CSTR_GREATER_THAN 3
-
 STATIC INT WINAPI CompareStringOrdinal(PVOID lpString1,
                                        INT cchCount1,
                                        PVOID lpString2,

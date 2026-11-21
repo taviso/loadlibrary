@@ -85,7 +85,7 @@ STATIC LONG WINAPI RegQueryInfoKeyW(
     }
 #endif
 
-    switch ((DWORD) hKey) {
+    switch ((uintptr_t) hKey) {
         case 'REG0':
 #ifdef __x86_64__
             *lpcValues = 0xc;
@@ -130,7 +130,7 @@ STATIC NTSTATUS WINAPI NtEnumerateValueKey(
         return -1;
     }
 
-    switch ((DWORD) KeyHandle) {
+    switch ((uintptr_t) KeyHandle) {
         case 'REG1':
             KeyValueInformation->Type = REG_SZ;
             KeyValueInformation->NameLength = sizeof(L"Common AppDatz") - 2;
@@ -172,7 +172,7 @@ STATIC NTSTATUS WINAPI NtQueryValueKey(
         return -1;
     }
 
-    switch ((DWORD) KeyHandle) {
+    switch ((uintptr_t) KeyHandle) {
         case 'REG1':
             KeyValueInformation->Type = REG_SZ;
             KeyValueInformation->DataLength = sizeof(L"Common AppData") - 2;

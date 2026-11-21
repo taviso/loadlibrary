@@ -208,7 +208,7 @@ int main(int argc, char **argv, char **envp)
 
     // Call DllMain()
 #ifdef __x86_64__
-    image.entry((PVOID) 'MPENENGN', DLL_PROCESS_ATTACH, NULL);
+    image.entry((PVOID) (uintptr_t) 0x454e474e, DLL_PROCESS_ATTACH, NULL);
 #else
     image.entry((PVOID) 'MPEN', DLL_PROCESS_ATTACH, NULL);
 #endif

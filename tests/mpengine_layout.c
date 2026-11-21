@@ -1,11 +1,17 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "winnt_types.h"
+#include "pe_linker.h"
+#include "ntoskernel.h"
 #include "scanreply.h"
 #include "streambuffer.h"
+
+_Static_assert(sizeof(((struct pe_image *) 0)->size) == sizeof(size_t),
+               "PE image size must match pe_load_library's output type");
 
 /* mpengine consumes these packed structures across the DLL boundary. */
 #if defined(__i386__)

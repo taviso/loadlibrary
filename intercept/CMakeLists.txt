@@ -15,5 +15,5 @@ add_subdirectory(zydis)
 add_subdirectory(subhook)
 
 add_library(hook STATIC src/hook_x86_64.c)
-target_include_directories(hook PRIVATE include ../log)
+target_include_directories(hook PRIVATE include ../include ../log)
 target_link_libraries(hook PRIVATE Zydis subhook)

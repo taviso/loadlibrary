@@ -36,10 +36,12 @@ X64_LIBS := $(BUILD_DIR)/x64/libpeloader.a $(X64_INTERCEPT)/libhook.a $(X64_INTE
 all: mpclient mpclient_x64
 debug:
 	$(MAKE) BUILD_DIR=$(BUILD_DIR)/debug BUILD_MODE=debug all
-check: $(BUILD_DIR)/x86/tests/mpengine_layout $(BUILD_DIR)/x64/tests/mpengine_layout $(BUILD_DIR)/x64/tests/hook_x64
+check: $(BUILD_DIR)/x86/tests/mpengine_layout $(BUILD_DIR)/x64/tests/mpengine_layout $(BUILD_DIR)/x64/tests/hook_x64 $(BUILD_DIR)/x86/tests/map_exports $(BUILD_DIR)/x64/tests/map_exports
 	$(BUILD_DIR)/x86/tests/mpengine_layout
 	$(BUILD_DIR)/x64/tests/mpengine_layout
 	$(BUILD_DIR)/x64/tests/hook_x64
+	$(BUILD_DIR)/x86/tests/map_exports
+	$(BUILD_DIR)/x64/tests/map_exports
 mpclient: $(BUILD_DIR)/x86/mpclient
 mpclient_x64: $(BUILD_DIR)/x64/mpclient_x64
 peloader: $(BUILD_DIR)/x86/libpeloader.a
@@ -59,12 +61,19 @@ $(BUILD_DIR)/x86/intercept/src/hook_x86.o \
 $(BUILD_DIR)/x86/mpclient.o $(BUILD_DIR)/x86/log/log.o \
 $(BUILD_DIR)/x64/mpclient.o $(BUILD_DIR)/x64/log/log.o \
 $(BUILD_DIR)/x86/tests/mpengine_layout.o $(BUILD_DIR)/x64/tests/mpengine_layout.o \
-$(BUILD_DIR)/x64/tests/hook_x64.o: Makefile
+$(BUILD_DIR)/x64/tests/hook_x64.o $(BUILD_DIR)/x86/tests/map_exports.o \
+$(BUILD_DIR)/x64/tests/map_exports.o: Makefile
 
 $(BUILD_DIR)/x86/tests/mpengine_layout: $(BUILD_DIR)/x86/tests/mpengine_layout.o
 	$(CC) -m32 -o $@ $^
 
 $(BUILD_DIR)/x64/tests/mpengine_layout: $(BUILD_DIR)/x64/tests/mpengine_layout.o
+	$(CC) -m64 -o $@ $^
+
+$(BUILD_DIR)/x86/tests/map_exports: $(BUILD_DIR)/x86/tests/map_exports.o $(BUILD_DIR)/x86/peloader/extra.o
+	$(CC) -m32 -o $@ $^
+
+$(BUILD_DIR)/x64/tests/map_exports: $(BUILD_DIR)/x64/tests/map_exports.o $(BUILD_DIR)/x64/peloader/extra.o
 	$(CC) -m64 -o $@ $^
 
 $(DISASM_OBJECTS): CPPFLAGS += -DHAVE_CONFIG_H -Iintercept/libdisasm
@@ -123,4 +132,5 @@ clean:
          $(BUILD_DIR)/x86/mpclient.d $(BUILD_DIR)/x86/log/log.d \
          $(BUILD_DIR)/x64/mpclient.d $(BUILD_DIR)/x64/log/log.d \
          $(BUILD_DIR)/x86/tests/mpengine_layout.d $(BUILD_DIR)/x64/tests/mpengine_layout.d \
-         $(BUILD_DIR)/x64/tests/hook_x64.d
+         $(BUILD_DIR)/x64/tests/hook_x64.d $(BUILD_DIR)/x86/tests/map_exports.d \
+         $(BUILD_DIR)/x64/tests/map_exports.d

@@ -16,6 +16,8 @@
 #ifndef _WINNT_TYPES_H_
 #define _WINNT_TYPES_H_
 
+#include "winapi_abi.h"
+
 #define DLL_PROCESS_ATTACH              1
 #define DLL_PROCESS_DETACH              0
 #define DLL_THREAD_ATTACH               2
@@ -131,17 +133,10 @@
 
 #define noregparm __attribute__((regparm(0)))
 #define regparm3 __attribute__((regparm(3)))
-#define wstdcall __attribute__((__stdcall__, regparm(0)))
 #define __packed __attribute__((packed))
 #define wfastcall __attribute__((fastcall))
 #define STATIC static
 #define VOID void
-#ifdef __x86_64__
-#define WINAPI __attribute__((ms_abi))
-#else
-#define WINAPI __attribute__((__stdcall__))
-#endif
-
 #define KI_USER_SHARED_DATA 0xffdf0000
 #define MM_SHARED_USER_DATA_VA 0x7ffe0000
 
@@ -2061,9 +2056,9 @@ typedef enum _FILE_INFO_BY_HANDLE_CLASS {
     MaximumFileInfoByHandleClass
 } FILE_INFO_BY_HANDLE_CLASS, *PFILE_INFO_BY_HANDLE_CLASS;
 
-#define CSTR_LESS_THAN        0
-#define CSTR_EQUAL            1
-#define CSTR_GREATER_THAN     2
+#define CSTR_LESS_THAN        1
+#define CSTR_EQUAL            2
+#define CSTR_GREATER_THAN     3
 
 typedef union _RTL_RUN_ONCE {
     PVOID Ptr;

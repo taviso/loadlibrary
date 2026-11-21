@@ -1,6 +1,8 @@
 #ifndef __HOOK_H
 #define __HOOK_H
 
+#include "winapi_abi.h"
+
 #ifdef __x86_64__
 #include "../subhook/subhook.h"
 #endif
@@ -91,10 +93,10 @@ static int __stub_true() { return  true; }
 static int __stub_neg()  { return -1; }
 
 // Callee clears stubs, common on Windows.
-static int __attribute__((stdcall)) __stub_zero_std_4(int a) { return 0; }
-static int __attribute__((stdcall)) __stub_zero_std_8(int a, int b) { return 0; }
-static int __attribute__((stdcall)) __stub_zero_std_12(int a, int b, int c) { return 0; }
-static int __attribute__((stdcall)) __stub_zero_std_16(int a, int b, int c, int d) { return 0; }
+static int WINAPI __stub_zero_std_4(int a) { return 0; }
+static int WINAPI __stub_zero_std_8(int a, int b) { return 0; }
+static int WINAPI __stub_zero_std_12(int a, int b, int c) { return 0; }
+static int WINAPI __stub_zero_std_16(int a, int b, int c, int d) { return 0; }
 
 // This allows you to call stubs like __stub_zero_std(4) to specify how many bytes to clear.
 #define __stub_zero_std(n) __stub_zero_std_ ## n

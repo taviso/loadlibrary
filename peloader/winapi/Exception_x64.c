@@ -672,7 +672,8 @@ VOID RtlRestoreContext(PCONTEXT pContext, PEXCEPTION_RECORD pExceptionRecord) {
     if (pExceptionRecord != NULL) {
         if (pExceptionRecord->ExceptionCode == STATUS_UNWIND_CONSOLIDATE) {
             if (pExceptionRecord->NumberParameters > 1) {
-                CxxCallCatchBlock = pExceptionRecord->ExceptionInformation[0];
+                CxxCallCatchBlock = (PVOID (WINAPI *)(PEXCEPTION_RECORD))
+                    (uintptr_t) pExceptionRecord->ExceptionInformation[0];
                 RestoreExecutionPoint = CxxCallCatchBlock(pExceptionRecord);
                 pContext->Rip = (DWORD64) RestoreExecutionPoint;
             }
@@ -887,8 +888,8 @@ BOOL RtlUnwindEx(
      * After we unwound to the previous frame, we call DispatchContext and we should be
      * able to loop back starting from it.
      */
-    uintptr_t *rbp = ((uintptr_t *) (__builtin_frame_address(0)))[0];
-    uintptr_t *rsp = ((uintptr_t) (__builtin_frame_address(0))) + 0x8 + 0x8; // Find rsp + 0x8 + 0x8 (rsi + rdi maybe?)
+    uintptr_t rbp = ((uintptr_t *) (__builtin_frame_address(0)))[0];
+    uintptr_t rsp = (uintptr_t) (__builtin_frame_address(0)) + 0x8 + 0x8; // Find rsp + 0x8 + 0x8 (rsi + rdi maybe?)
 
     MSContext.Rsp = (DWORD64) rsp;
     MSContext.Rbp = (DWORD64) rbp;
@@ -1065,8 +1066,8 @@ RaiseException(DWORD dwExceptionCode, DWORD dwExceptionFlags, DWORD nNumberOfArg
      * After we unwound to the previous frame, we call DispatchContext and we should be
      * able to loop back starting from it.
      */
-    uintptr_t *rbp = ((uintptr_t *) (__builtin_frame_address(0)))[0];
-    uintptr_t *rsp = ((uintptr_t) (__builtin_frame_address(0))) + 0x8 + 0x8; // Find rsp + 0x8 + 0x8 (rsi + rdi maybe?)
+    uintptr_t rbp = ((uintptr_t *) (__builtin_frame_address(0)))[0];
+    uintptr_t rsp = (uintptr_t) (__builtin_frame_address(0)) + 0x8 + 0x8; // Find rsp + 0x8 + 0x8 (rsi + rdi maybe?)
 
 
     MSContext.Rsp = (DWORD64) rsp;

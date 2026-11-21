@@ -147,11 +147,10 @@ static BOOL WINAPI GetModuleHandleExW(DWORD dwFlags,
 	    exit(1);
 	}
     }else{
-	char a_name[300];
-	for (int i=0; lpModuleName[i*2]!=0 && i < 150; i++){
-	  a_name[i]=(char*)lpModuleName[i*2];
-	}
-	return GetModuleHandleExA(dwFlags, a_name, phModule);
+        char *a_name = CreateAnsiFromWide(lpModuleName);
+        BOOL result = GetModuleHandleExA(dwFlags, a_name, phModule);
+        free(a_name);
+        return result;
     }
     *phModule = (HANDLE) NULL;
     return true;
