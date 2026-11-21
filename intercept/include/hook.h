@@ -14,8 +14,11 @@ enum ENUM_REDIRECT_FLAGS{
 
 #ifdef __x86_64__
 subhook_t insert_function_redirect(void *function, void *target, uint32_t flags);
+subhook_t insert_function_wrapper(void *function, void *wrapper, void **original);
 bool remove_function_redirect(subhook_t hook);
 bool redirect_call_within_function(void *function, void *target, void *redirect);
+void *alloc_executable_near(void *target, size_t size);
+bool free_executable_near(void *address, size_t size);
 #else
 bool insert_function_redirect(void *function, void *target, uint32_t flags);
 bool remove_function_redirect(void *function);
