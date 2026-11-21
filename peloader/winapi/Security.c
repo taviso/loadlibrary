@@ -19,3 +19,25 @@ BOOL WINAPI LookupPrivilegeValueW(PVOID lpSystemName, PVOID lpName, PVOID lpLuid
 }
 
 DECLARE_CRT_EXPORT("LookupPrivilegeValueW", LookupPrivilegeValueW);
+
+STATIC BOOL WINAPI InitializeSecurityDescriptor(
+  PVOID pSecurityDescriptor,
+  DWORD                dwRevision
+){
+    DebugLog("Returning success from InitializeSecurityDescriptor");
+    return 1;
+};
+
+STATIC BOOL WINAPI SetSecurityDescriptorDacl(
+  PVOID pSecurityDescriptor,
+  BOOL  bDaclPresent,
+  PVOID pDacl,
+  BOOL                 bDaclDefaulted
+){
+
+    DebugLog("Returning success from SetSecurityDescriptorDacl");
+    return 1;
+};
+
+DECLARE_CRT_EXPORT("InitializeSecurityDescriptor", InitializeSecurityDescriptor);
+DECLARE_CRT_EXPORT("SetSecurityDescriptorDacl", SetSecurityDescriptorDacl);

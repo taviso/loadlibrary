@@ -227,6 +227,32 @@ STATIC NTSTATUS WINAPI RegQueryValueExW(HANDLE hKey,
 }
 
 
+STATIC DWORD WINAPI RegGetValueA(
+  PVOID   hkey,
+  LPCSTR  lpSubKey,
+  LPCSTR  lpValue,
+  DWORD   dwFlags,
+  LPDWORD pdwType,
+  PVOID   pvData,
+  LPDWORD pcbData
+){
+    DebugLog(lpValue);
+    if (pvData != NULL && !strcmp(lpValue, "CurrentVersion") && *pcbData >= 4){
+        strcpy(pvData, "6.3");
+        *pcbData=4;
+        return 0;
+    }
+    char* prod_name="Windows Server 2022 Standard";
+    size_t prod_name_len=strlen(prod_name);
+    if (pvData != NULL && !strcmp(lpValue, "ProductName") && *pcbData >= prod_name_len){
+        strcpy(pvData, prod_name);
+        *pcbData=prod_name_len;
+        return 0;
+    }
+
+    return 1;
+}
+
 DECLARE_CRT_EXPORT("RegOpenKeyExW", RegOpenKeyExW);
 
 DECLARE_CRT_EXPORT("RegCloseKey", RegCloseKey);
@@ -240,3 +266,4 @@ DECLARE_CRT_EXPORT("NtQueryValueKey", NtQueryValueKey);
 DECLARE_CRT_EXPORT("RegCreateKeyExW", RegCreateKeyExW);
 DECLARE_CRT_EXPORT("RegQueryValueExW", RegQueryValueExW);
 
+DECLARE_CRT_EXPORT("RegGetValueA", RegGetValueA);

@@ -16,11 +16,6 @@
  * needs to be implemented
  */
 
-STATIC PVOID WINAPI AreFileApisANSI() {
-    DebugLog("");
-    return 0;
-}
-
 STATIC PVOID WINAPI CompareStringEx() {
     DebugLog("Not implemented.");
     exit(1);
@@ -97,11 +92,6 @@ STATIC PVOID WINAPI GetFirmwareEnvironmentVariableExW() {
 }
 
 STATIC PVOID WINAPI GetFirmwareType() {
-    DebugLog("Not implemented.");
-    exit(1);
-}
-
-STATIC PVOID WINAPI GetProcessInformation() {
     DebugLog("Not implemented.");
     exit(1);
 }
@@ -191,14 +181,6 @@ STATIC PVOID WINAPI UpdateProcThreadAttribute() {
     exit(1);
 }
 
-STATIC long WINAPI EventRegister(PVOID ProviderId,
-                                 PVOID EnableCallback,
-                                 PVOID CallbackContext,
-                                 HANDLE RegHandle) {
-    DebugLog("");
-    return 0;
-}
-
 STATIC PVOID WINAPI EventWriteTransfer() {
     DebugLog("Not implemented.");
     exit(1);
@@ -229,105 +211,6 @@ STATIC PVOID WINAPI GetTempPath2W() {
     exit(1);
 }
 
-STATIC BOOL WINAPI InitializeSecurityDescriptor(
-  PVOID pSecurityDescriptor,
-  DWORD                dwRevision
-){
-    DebugLog("Returning success from InitializeSecurityDescriptor");
-    return 1;
-};
-
-STATIC BOOL WINAPI SetSecurityDescriptorDacl(
-  PVOID pSecurityDescriptor,
-  BOOL  bDaclPresent,
-  PVOID pDacl,
-  BOOL                 bDaclDefaulted
-){
-
-    DebugLog("Returning success from SetSecurityDescriptorDacl");
-    return 1;
-};
-
-
-STATIC DWORD WINAPI RegGetValueA(
-  PVOID   hkey,
-  LPCSTR  lpSubKey,
-  LPCSTR  lpValue,
-  DWORD   dwFlags,
-  LPDWORD pdwType,
-  PVOID   pvData,
-  LPDWORD pcbData
-){
-    DebugLog(lpValue);
-    if (pvData != NULL && !strcmp(lpValue, "CurrentVersion") && *pcbData >= 4){
-        strcpy(pvData, "6.3");
-        *pcbData=4;
-        return 0;
-    }
-    char* prod_name="Windows Server 2022 Standard";
-    size_t prod_name_len=strlen(prod_name);
-    if (pvData != NULL && !strcmp(lpValue, "ProductName") && *pcbData >= prod_name_len){
-        strcpy(pvData, prod_name);
-        *pcbData=prod_name_len;
-        return 0;
-    }
-
-    return 1;
-}
-
-typedef struct _JOBOBJECT_BASIC_LIMIT_INFORMATION {
-  LARGE_INTEGER PerProcessUserTimeLimit;
-  LARGE_INTEGER PerJobUserTimeLimit;
-  DWORD         LimitFlags;
-  SIZE_T        MinimumWorkingSetSize;
-  SIZE_T        MaximumWorkingSetSize;
-  DWORD         ActiveProcessLimit;
-  ULONG_PTR     Affinity;
-  DWORD         PriorityClass;
-  DWORD         SchedulingClass;
-} JOBOBJECT_BASIC_LIMIT_INFORMATION, *PJOBOBJECT_BASIC_LIMIT_INFORMATION;
-
-typedef struct _IO_COUNTERS {
-  ULONGLONG ReadOperationCount;
-  ULONGLONG WriteOperationCount;
-  ULONGLONG OtherOperationCount;
-  ULONGLONG ReadTransferCount;
-  ULONGLONG WriteTransferCount;
-  ULONGLONG OtherTransferCount;
-} IO_COUNTERS;
-
-typedef struct _JOBOBJECT_EXTENDED_LIMIT_INFORMATION {
-  JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
-  IO_COUNTERS                       IoInfo;
-  SIZE_T                            ProcessMemoryLimit;
-  SIZE_T                            JobMemoryLimit;
-  SIZE_T                            PeakProcessMemoryUsed;
-  SIZE_T                            PeakJobMemoryUsed;
-} JOBOBJECT_EXTENDED_LIMIT_INFORMATION, *PJOBOBJECT_EXTENDED_LIMIT_INFORMATION;
-
-STATIC WINAPI BOOL QueryInformationJobObject(
-  HANDLE             hJob,
-  DWORD JobObjectInformationClass,
-  LPVOID             lpJobObjectInformation,
-  DWORD              cbJobObjectInformationLength,
-  LPDWORD            lpReturnLength
-){
-  DebugLog("%d %d", hJob, JobObjectInformationClass);
-  if ( JobObjectInformationClass == 9) {
-    PJOBOBJECT_EXTENDED_LIMIT_INFORMATION info = (PJOBOBJECT_EXTENDED_LIMIT_INFORMATION)lpJobObjectInformation;
-
-    info->BasicLimitInformation.LimitFlags = 0;
-    info->PeakProcessMemoryUsed=0x41;
-    info->PeakJobMemoryUsed=0x41;
-  }
-  return true;
-}
-
-DECLARE_CRT_EXPORT("QueryInformationJobObject", QueryInformationJobObject);
-DECLARE_CRT_EXPORT("RegGetValueA", RegGetValueA);
-DECLARE_CRT_EXPORT("SetSecurityDescriptorDacl", SetSecurityDescriptorDacl);
-DECLARE_CRT_EXPORT("InitializeSecurityDescriptor", InitializeSecurityDescriptor);
-DECLARE_CRT_EXPORT("AreFileApisANSI", AreFileApisANSI);
 DECLARE_CRT_EXPORT("CompareStringEx", CompareStringEx);
 DECLARE_CRT_EXPORT("GetTempPath2W", GetTempPath2W);
 DECLARE_CRT_EXPORT("EnumSystemLocalesEx", EnumSystemLocalesEx);
@@ -362,12 +245,6 @@ DECLARE_CRT_EXPORT("GetFirmwareEnvironmentVariableExW", GetFirmwareEnvironmentVa
 
 DECLARE_CRT_EXPORT("GetFirmwareType", GetFirmwareType);
 
-/* On x86, report this optional API as unavailable rather than advertising
- * the diagnostic stub that terminates the process when called. */
-#ifdef __x86_64__
-DECLARE_CRT_EXPORT("GetProcessInformation", GetProcessInformation);
-#endif
-
 DECLARE_CRT_EXPORT("GetThreadInformation", GetThreadInformation);
 
 DECLARE_CRT_EXPORT("InitializeProcThreadAttributeList", InitializeProcThreadAttributeList);
@@ -400,7 +277,6 @@ DECLARE_CRT_EXPORT("TryAcquireSRWLockExclusive", TryAcquireSRWLockExclusive);
 
 DECLARE_CRT_EXPORT("UpdateProcThreadAttribute", UpdateProcThreadAttribute);
 
-DECLARE_CRT_EXPORT("EventRegister", EventRegister);
 
 DECLARE_CRT_EXPORT("EventWriteTransfer", EventWriteTransfer);
 
