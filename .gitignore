@@ -12,3 +12,4 @@ eicar.com
 .idea/
 mpcache-*
 .vscode/
+/build/

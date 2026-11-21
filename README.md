@@ -67,28 +67,30 @@ of this code is accessible to remote attackers.
 
 ### Building
 
-This fork depends on submodules:
+The x64 build depends on submodules (including Zydis's nested dependency):
 
 ```
-git submodule init
-git submodule update
+git submodule update --init --recursive
 ```
 
-To build the test original 32-bit client:
+To build both clients:
 
 ```
-$ make clean
-$ make peloader
+$ make all
+```
+
+To build one client:
+
+```
 $ make mpclient
-```
-
-To build the x64 version:
-
-```
-$ make clean
-$ make peloader_x64
 $ make mpclient_x64
 ```
+
+The resulting programs are `build/x86/mpclient` and
+`build/x64/mpclient_x64`. Run them from the repository root so their relative
+engine paths resolve correctly. The x86 build uses the original hook library
+and libdisasm; x64 uses Zydis and subhook. `make debug` builds separate
+unoptimized binaries under `build/debug/`. `make clean` removes `build/`.
 
 
 ### Dependencies
@@ -101,6 +103,10 @@ $ make mpclient_x64
 | `libgcc.i686`         | `gcc-multilib`                      |                              |
 | `readline-devel.i686` | `libreadline-dev:i386`              | Optional, used in mpscript.  |
 | `cabextract`          | `cabextract`                        | Used to extract definitions. |
+
+The x64 build also requires CMake and a C++ compiler for Zydis. The x64
+client loads `engine/x64/mpengine.dll`; put the corresponding 64-bit engine
+and definitions in `engine/x64/`.
 
 You will need to download the 32-bit antimalware update file from this page:
 
@@ -136,11 +142,11 @@ Product Version Number          : 1.1.13701.0
 
 ### Running
 
-The main mpengine loader is called `mpclient`, it accepts filenames to scan as
+The 32-bit mpengine loader is `build/x86/mpclient`; it accepts filenames to scan as
 a parameter.
 
 ```
-$ ./mpclient netsky.exe
+$ ./build/x86/mpclient netsky.exe
 main(): Scanning netsky.exe...
 EngineScanCallback(): Scanning input
 EngineScanCallback(): Threat Worm:Win32/Netsky.P@mm identified.
@@ -174,7 +180,7 @@ When you run mpclient under gdb, it will detect a debugger and print the
 commands you need to enter to teach gdb about the symbols:
 
 ```
-$ gdb -q ./mpclient
+$ gdb -q ./build/x86/mpclient
 (gdb) r testfile.txt
 Starting program: mpclient
 main(): GDB: add-symbol-file engine/mpengine.dll 0xf6af4008+0x1000

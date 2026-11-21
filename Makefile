@@ -1,57 +1,100 @@
-CFLAGS  = -march=native -ggdb3 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -Iintercept/include -Ilog -Ipeloader -mstackrealign -maccumulate-outgoing-args
-CPPFLAGS= -D_GNU_SOURCE -I.
-LDFLAGS = $(CFLAGS) -lm -Wl,--dynamic-list=exports.lst -ldl
-LDLIBS  = -Wl,--whole-archive peloader/libpeloader.a -Wl,intercept/libhook.a -Wl,intercept/libZydis.a -Wl,intercept/libsubhook.a -Wl,--no-whole-archive
+.DEFAULT_GOAL := all
 
-.PHONY: clean peloader intercept
+CC ?= cc
+AR ?= ar
+CMAKE ?= cmake
+BUILD_DIR ?= build
+BUILD_MODE ?= release
 
-RELEASE_CFLAGS 	 = -O3
-RELEASE_CPPFLAGS = -DNDEBUG
-DEBUG_CFLAGS 	 = -O0 -g
+ifeq ($(BUILD_MODE),debug)
+X86_OPT := -O0
+else ifeq ($(BUILD_MODE),release)
+X86_OPT := -O2
+else
+$(error Supported BUILD_MODE values: release or debug)
+endif
 
-TARGETS=mpclient mpclient_x64 | peloader
+CPPFLAGS += -D_GNU_SOURCE -I. -Iinclude -Iintercept/include -Ilog -Ipeloader
+CFLAGS += -march=native -ggdb3 -std=gnu99 -fshort-wchar -fno-omit-frame-pointer \
+          -Wno-multichar -mstackrealign -maccumulate-outgoing-args
+LDFLAGS += -Wl,--dynamic-list=exports.lst
+LDLIBS += -lm -ldl
 
-all: CFLAGS += $(RELEASE_CFLAGS)
-all: CPPFLAGS += $(RELEASE_CPPFLAGS)
-all: BUILD_TARGET = "all"
-all: $(TARGETS)
-	-mkdir -p faketemp
+LOADER_SOURCES := $(wildcard peloader/*.c) $(filter-out peloader/winapi/Exception_x86.c peloader/winapi/Exception_x64.c,$(wildcard peloader/winapi/*.c))
+LOADER_x86 := $(patsubst %.c,$(BUILD_DIR)/x86/%.o,$(LOADER_SOURCES) peloader/winapi/Exception_x86.c)
+LOADER_x64 := $(patsubst %.c,$(BUILD_DIR)/x64/%.o,$(LOADER_SOURCES) peloader/winapi/Exception_x64.c)
+DISASM_SOURCES := $(wildcard intercept/libdisasm/*.c)
+DISASM_OBJECTS := $(patsubst %.c,$(BUILD_DIR)/x86/%.o,$(DISASM_SOURCES))
+X86_LIBS := $(BUILD_DIR)/x86/libpeloader.a $(BUILD_DIR)/x86/libhook.a $(BUILD_DIR)/x86/libdisasm.a
+X64_INTERCEPT := $(BUILD_DIR)/x64/intercept
+X64_LIBS := $(BUILD_DIR)/x64/libpeloader.a $(X64_INTERCEPT)/libhook.a $(X64_INTERCEPT)/zydis/libZydis.a $(X64_INTERCEPT)/subhook/libsubhook.a
 
-debug: CFLAGS += $(DEBUG_CFLAGS)
-debug: BUILD_TARGET = "debug"
-debug: CMAKE_FLAGS = -DCMAKE_BUILD_TYPE=Debug
-debug: $(TARGETS)
-	-mkdir -p faketemp
+.PHONY: all debug clean mpclient mpclient_x64 peloader peloader_x64 x64-intercept x64-relink-check
+all: mpclient mpclient_x64
+debug:
+	$(MAKE) BUILD_DIR=$(BUILD_DIR)/debug BUILD_MODE=debug all
+mpclient: $(BUILD_DIR)/x86/mpclient
+mpclient_x64: $(BUILD_DIR)/x64/mpclient_x64
+peloader: $(BUILD_DIR)/x86/libpeloader.a
+peloader_x64: $(BUILD_DIR)/x64/libpeloader.a
 
-intercept:
-	cd intercept; mkdir build; cd build; cmake $(CMAKE_FLAGS) ..; make
-	cp intercept/build/libhook.a intercept/libhook.a
-	cp intercept/build/zydis/libZydis.a intercept/libZydis.a
-	cp intercept/build/subhook/libsubhook.a intercept/libsubhook.a
+$(BUILD_DIR)/x86/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -m32 $(X86_OPT) -MMD -MP -c $< -o $@
 
-peloader:
-	make -C peloader ARCH=x86
+$(BUILD_DIR)/x64/%.o: %.c
+	@mkdir -p $(@D)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -m64 -O0 -fPIC -MMD -MP -c $< -o $@
 
-peloader_x64:
-	make -C peloader debug ARCH=x64
+$(DISASM_OBJECTS): CPPFLAGS += -DHAVE_CONFIG_H -Iintercept/libdisasm
+$(DISASM_OBJECTS): CFLAGS += -w
+$(BUILD_DIR)/x86/intercept/src/hook_x86.o: CPPFLAGS += -Iintercept/libdisasm
 
-mpclient: CFLAGS += -m32
-mpclient: LDFLAGS += -m32
-mpclient: CMAKE_FLAGS += -DARCH:STRING=x86
-mpclient: mpclient.o log/log.o | peloader intercept
-	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
+$(BUILD_DIR)/x86/libpeloader.a: $(LOADER_x86)
+	@mkdir -p $(@D)
+	rm -f $@
+	$(AR) rcs $@ $^
 
-mpclient_x64: CFLAGS += -g -O0  -fPIC
-mpclient_x64: CMAKE_FLAGS = -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=Debug
-mpclient_x64: mpclient_x64.o log/log.o | peloader_x64 intercept
-	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
+$(BUILD_DIR)/x64/libpeloader.a: $(LOADER_x64)
+	@mkdir -p $(@D)
+	rm -f $@
+	$(AR) rcs $@ $^
 
-test_seh: CFLAGS += -g -O0  -fPIC
-test_seh: CMAKE_FLAGS = -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=Debug
-test_seh: test_seh.o log/log.o | peloader_x64 intercept
-	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS) $(LDFLAGS)
+$(BUILD_DIR)/x86/libhook.a: $(BUILD_DIR)/x86/intercept/src/hook_x86.o
+	$(AR) rcs $@ $^
+
+$(BUILD_DIR)/x86/libdisasm.a: $(DISASM_OBJECTS)
+	$(AR) rcs $@ $^
+
+# CMake tracks its own sources and headers. Run its incremental build before
+# checking the library timestamps used by the client link rule.
+x64-intercept:
+	$(CMAKE) -S intercept -B $(X64_INTERCEPT) -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+	+$(CMAKE) --build $(X64_INTERCEPT)
+
+$(filter-out $(BUILD_DIR)/x64/libpeloader.a,$(X64_LIBS)): | x64-intercept
+	@test -f $@
+
+$(BUILD_DIR)/x86/mpclient: $(BUILD_DIR)/x86/mpclient.o $(BUILD_DIR)/x86/log/log.o $(X86_LIBS) exports.lst
+	$(CC) -m32 $(LDFLAGS) -o $@ $(filter %.o,$^) -Wl,--whole-archive $(X86_LIBS) -Wl,--no-whole-archive $(LDLIBS)
+
+# CMake may update its archives while make is considering order-only
+# prerequisites. Check their actual timestamps after the CMake build finishes.
+x64-relink-check:
+
+$(BUILD_DIR)/x64/mpclient_x64: $(BUILD_DIR)/x64/mpclient_x64.o $(BUILD_DIR)/x64/log/log.o $(X64_LIBS) exports.lst x64-relink-check
+	@relink=; if [ ! -f $@ ]; then relink=1; fi; \
+	for input in $(filter %.o,$^) $(X64_LIBS) exports.lst; do \
+		if [ "$$input" -nt "$@" ]; then relink=1; fi; \
+	done; \
+	if [ -n "$$relink" ]; then \
+		set -x; $(CC) -m64 $(LDFLAGS) -o $@ $(filter %.o,$^) -Wl,--whole-archive $(X64_LIBS) -Wl,--no-whole-archive $(LDLIBS); \
+	fi
 
 clean:
-	rm -rf a.out core *.o core.* vgcore.* gmon.out mpclient intercept/build intercept/*.a tests/build log/log.o
-	make -C peloader clean
-	rm -rf faketemp
+	rm -rf $(BUILD_DIR)
+
+-include $(LOADER_x86:.o=.d) $(LOADER_x64:.o=.d) $(DISASM_OBJECTS:.o=.d) \
+         $(BUILD_DIR)/x86/intercept/src/hook_x86.d \
+         $(BUILD_DIR)/x86/mpclient.d $(BUILD_DIR)/x86/log/log.d \
+         $(BUILD_DIR)/x64/mpclient_x64.d $(BUILD_DIR)/x64/log/log.d

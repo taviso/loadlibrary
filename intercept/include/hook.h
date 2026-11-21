@@ -1,7 +1,9 @@
 #ifndef __HOOK_H
 #define __HOOK_H
 
+#ifdef __x86_64__
 #include "../subhook/subhook.h"
+#endif
 
 // Flags recognised by insert_function_redirect.
 enum ENUM_REDIRECT_FLAGS{
