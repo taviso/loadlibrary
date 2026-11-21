@@ -1115,6 +1115,8 @@ bool pe_load_library(const char *filename, void **image, size_t *size);
 
 void *get_export_address(const char *name);
 int link_pe_images(struct pe_image *pe_image, unsigned short n);
+/* Returns loader-owned metadata for the linked image containing address. */
+const struct pe_image *pe_find_image_by_address(const void *address);
 bool pe_unload_library(struct pe_image pe);
 int get_export(const char *name, void *func);
 int get_data_export(char *name, uint32_t base, void *result);

@@ -18,7 +18,6 @@
 #include "log.h"
 #include "winexports.h"
 #include "util.h"
-#include "mpclient.h"
 
 
 extern struct thing *__start_RtlExecuteHandlerForExceptionSection;
@@ -137,17 +136,10 @@ __inline ULONG UnwindOpSlots(UNWIND_CODE UnwindCode) {
 STATIC WINAPI
 
 PVOID RtlPcToFileHeader(PVOID PcValue, PVOID *BaseOfImage) {
-    PVOID ImageBase;
+    const struct pe_image *Image = pe_find_image_by_address(PcValue);
+    PVOID ImageBase = Image ? Image->image : NULL;
 
     DebugLog("%p %p", PcValue, BaseOfImage);
-
-    if ((ULONG_PTR) PcValue >= (ULONG_PTR) image.image &&
-        (ULONG_PTR) PcValue < (ULONG_PTR) image.image + image.size) {
-        ImageBase = image.image;
-    } else {
-        // If we end up here, PcValue is probably somewhere in libpeloader.a
-        ImageBase = NULL;
-    }
 
     *BaseOfImage = ImageBase;
 
@@ -166,19 +158,23 @@ PRUNTIME_FUNCTION RtlLookupFunctionTable(DWORD64 ControlPc,
     ULONG Size;
 
     PVOID Table = NULL;
-    size_t NumberOfSections = image.nt_hdr->FileHeader.NumberOfSections;
-    PIMAGE_SECTION_HEADER Section = IMAGE_FIRST_SECTION(image.nt_hdr);
+    const struct pe_image *Image = pe_find_image_by_address((PVOID) ControlPc);
+    size_t NumberOfSections;
+    PIMAGE_SECTION_HEADER Section;
 
     /* Find corresponding file header from code address */
-    if (!RtlPcToFileHeader((PVOID) ControlPc, (PVOID *) ImageBase)) {
+    if (!Image) {
         /* Nothing found */
         return NULL;
     }
+    *ImageBase = (DWORD64) (uintptr_t) Image->image;
+    NumberOfSections = Image->nt_hdr->FileHeader.NumberOfSections;
+    Section = IMAGE_FIRST_SECTION(Image->nt_hdr);
 
     /* Locate the exception directory */
-    for (int i = 0; i < NumberOfSections; Section++) {
+    for (size_t i = 0; i < NumberOfSections; i++, Section++) {
         if (strncmp(Section->Name, ".pdata", IMAGE_SIZEOF_SHORT_NAME) == 0) {
-            Table = (PRUNTIME_FUNCTION) ((uintptr_t) image.image + Section->VirtualAddress);
+            Table = (PRUNTIME_FUNCTION) ((uintptr_t) Image->image + Section->VirtualAddress);
             Size = (ULONG) Section->Misc.VirtualSize;
             break;
         }

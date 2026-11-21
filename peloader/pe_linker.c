@@ -51,6 +51,8 @@ struct pe_exports {
 
 static struct pe_exports *pe_exports;
 static int num_pe_exports;
+static struct pe_image linked_image;
+static bool image_is_linked;
 PKUSER_SHARED_DATA SharedUserData;
 
 #define DRIVER_NAME "pelinker"
@@ -528,10 +530,27 @@ static int fix_pe_image(struct pe_image *pe)
         return 0;
 }
 
+const struct pe_image *pe_find_image_by_address(const void *address)
+{
+        uintptr_t pc = (uintptr_t) address;
+        uintptr_t base = (uintptr_t) linked_image.image;
+
+        if (!image_is_linked || pc < base || pc - base >= linked_image.size)
+                return NULL;
+
+        return &linked_image;
+}
+
 int link_pe_images(struct pe_image *pe_image, unsigned short n)
 {
         int i;
         struct pe_image *pe;
+
+        /* The loader's exports, TLS and exception state describe one image. */
+        if (!pe_image || n != 1)
+                return -EINVAL;
+        if (image_is_linked)
+                return -EBUSY;
 
         for (i = 0; i < n; i++) {
                 IMAGE_DOS_HEADER *dos_hdr;
@@ -602,6 +621,8 @@ int link_pe_images(struct pe_image *pe_image, unsigned short n)
                 }
         }
 
+        linked_image = pe_image[0];
+        image_is_linked = true;
         return 0;
 }
 
@@ -619,6 +640,12 @@ bool pe_load_library(const char *filename, void **image, size_t *size)
     *image  = MAP_FAILED;
     *size   = 0;
     fd      = -1;
+
+    if (image_is_linked) {
+        errno = EBUSY;
+        l_error("an image is already linked");
+        return false;
+    }
 
     if ((fd = open(filename, O_RDONLY)) < 0) {
         l_error("failed to open pe library %s, %m", filename);
@@ -669,11 +696,23 @@ error:
 // Unmap and unlink a dll
 bool pe_unload_library(struct pe_image pe)
 {
+    const struct pe_image *mapped = image_is_linked ? &linked_image : &pe;
+
+    if (image_is_linked && pe.image != linked_image.image)
+        return false;
+
+    if (munmap(mapped->image, mapped->size) != 0)
+        return false;
+
+    if (image_is_linked) {
+        image_is_linked = false;
+        memset(&linked_image, 0, sizeof linked_image);
+    }
+
     // Search PE exports
     free(pe_exports);
+    pe_exports = NULL;
     num_pe_exports = 0;
-
-    munmap(pe.image, pe.size);
 
     return true;
 }

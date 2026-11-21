@@ -18,7 +18,6 @@
 #include "log.h"
 #include "winexports.h"
 #include "util.h"
-#include "mpclient.h"
 
 #ifndef NDEBUG
 

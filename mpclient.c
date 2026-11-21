@@ -50,7 +50,6 @@
 #include "scanreply.h"
 #include "streambuffer.h"
 #include "openscan.h"
-#include "mpclient.h"
 
 #ifdef __x86_64__
 #define ENGINE_DLL "engine/x64/mpengine.dll"
@@ -61,11 +60,6 @@
 #define ENGINE_MAP "engine/mpengine.map"
 #define SIGNATURE_DIR L"engine"
 #endif
-
-struct pe_image image = {
-        .entry  = NULL,
-        .name   = ENGINE_DLL,
-};
 
 // Any usage limits to prevent bugs disrupting system.
 const struct rlimit kUsageLimits[] = {
@@ -136,6 +130,7 @@ BOOL __noinline InstrumentationCallback(PVOID ImageStart, SIZE_T ImageSize)
 
 int main(int argc, char **argv, char **envp)
 {
+    struct pe_image image = { .name = ENGINE_DLL };
     PIMAGE_DOS_HEADER DosHeader;
     PIMAGE_NT_HEADERS PeHeader;
     HANDLE KernelHandle;
@@ -154,7 +149,12 @@ int main(int argc, char **argv, char **envp)
     }
 
     // Handle relocations, imports, etc.
-    link_pe_images(&image, 1);
+    int LinkResult = link_pe_images(&image, 1);
+    if (LinkResult != 0) {
+        LogMessage("Failed to link %s: %d", image.name, LinkResult);
+        pe_unload_library(image);
+        return 1;
+    }
 
     // Fetch the headers to get base offsets.
     DosHeader   = (PIMAGE_DOS_HEADER) image.image;
