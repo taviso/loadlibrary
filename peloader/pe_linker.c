@@ -251,6 +251,20 @@ int check_nt_hdr(IMAGE_NT_HEADERS *nt_hdr)
         return -EINVAL;
 }
 
+static void WINAPI ordinal_import_stub(void)
+{
+        warnx("function at %p attempted to call a symbol imported by ordinal", __builtin_return_address(0));
+        __debugbreak();
+        abort();
+}
+
+static void WINAPI unknown_symbol_stub(void)
+{
+        warnx("function at %p attempted to call an unknown symbol", __builtin_return_address(0));
+        __debugbreak();
+        abort();
+}
+
 int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
 {
         ULONG_PTR *lookup_tbl, *address_tbl;
@@ -258,18 +272,6 @@ int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
         int i;
         int ret = 0;
         generic_func adr;
-
-        void ordinal_import_stub(void)
-        {
-            warnx("function at %p attempted to call a symbol imported by ordinal", __builtin_return_address(0));
-            __debugbreak();
-        }
-
-        void unknown_symbol_stub(void)
-        {
-            warnx("function at %p attempted to call an unknown symbol", __builtin_return_address(0));
-            __debugbreak();
-        }
 
         lookup_tbl = RVA2VA(image, dirent->u.OriginalFirstThunk, ULONG_PTR *);
         address_tbl = RVA2VA(image, dirent->FirstThunk, ULONG_PTR *);
