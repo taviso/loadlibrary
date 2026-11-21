@@ -27,31 +27,38 @@ bool tree_create(tree_t **tree, int (*compare)(const void *a, const void *b), vo
     return false;
 }
 
-// Execute function for every node of the tree
-bool tree_walk(tree_t *tree, void (*function)(const void *))
+typedef struct {
+    void (*function)(const void *, void *);
+    void *context;
+} tree_walk_context_t;
+
+static tree_walk_context_t current_walk;
+
+static void tree_walk_action(const void *nodep, VISIT which, int depth)
+{
+    const void * const *data = nodep;
+
+    switch (which) {
+        case postorder:
+        case leaf:
+            current_walk.function(*data, current_walk.context);
+            break;
+        case preorder:
+        case endorder:
+            break;
+        default:
+            assert(false);
+            break;
+    }
+}
+
+// Execute function for every node of the tree.
+bool tree_walk(tree_t *tree, void (*function)(const void *, void *), void *context)
 {
     assert(function);
     assert(tree);
-
-    void action(const void *nodep, const VISIT which, const int depth)
-    {
-        const void * const * data = nodep;
-        switch (which) {
-            case postorder:
-            case leaf:
-                function(*data);
-                break;
-            case preorder:
-            case endorder:
-                break;
-            default:
-                assert(false);
-                break;
-        }
-        return;
-    }
-
-    twalk(tree->root, action);
+    current_walk = (tree_walk_context_t) { function, context };
+    twalk(tree->root, tree_walk_action);
     return true;
 }
 

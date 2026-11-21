@@ -32,8 +32,10 @@ X86_LIBS := $(BUILD_DIR)/x86/libpeloader.a $(BUILD_DIR)/x86/libhook.a $(BUILD_DI
 X64_INTERCEPT := $(BUILD_DIR)/x64/intercept
 X64_LIBS := $(BUILD_DIR)/x64/libpeloader.a $(X64_INTERCEPT)/libhook.a $(X64_INTERCEPT)/zydis/libZydis.a $(X64_INTERCEPT)/subhook/libsubhook.a
 
-.PHONY: all debug check clean mpclient mpclient_x64 peloader peloader_x64 x64-intercept x64-relink-check
+.PHONY: all debug check clean coverage mpclient mpclient_x64 peloader peloader_x64 x64-intercept x64-relink-check
 all: mpclient mpclient_x64
+coverage:
+	+$(MAKE) -C coverage BUILD_DIR=$(abspath $(BUILD_DIR)) all
 debug:
 	$(MAKE) BUILD_DIR=$(BUILD_DIR)/debug BUILD_MODE=debug all
 check: $(BUILD_DIR)/x86/tests/mpengine_layout $(BUILD_DIR)/x64/tests/mpengine_layout $(BUILD_DIR)/x64/tests/hook_x64 $(BUILD_DIR)/x86/tests/map_exports $(BUILD_DIR)/x64/tests/map_exports
