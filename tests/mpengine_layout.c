@@ -13,7 +13,7 @@
 _Static_assert(sizeof(((struct pe_image *) 0)->size) == sizeof(size_t),
                "PE image size must match pe_load_library's output type");
 
-/* mpengine consumes these packed structures across the DLL boundary. */
+/* mpengine consumes these structures across the DLL boundary. */
 #if defined(__i386__)
 _Static_assert(sizeof(SCANSTRUCT) == 116, "x86 SCANSTRUCT size");
 _Static_assert(offsetof(SCANSTRUCT, FileSize) == 80, "x86 FileSize offset");
@@ -28,8 +28,9 @@ _Static_assert(sizeof(SCANSTRUCT) == 136, "x64 SCANSTRUCT size");
 _Static_assert(offsetof(SCANSTRUCT, FileSize) == 80, "x64 FileSize offset");
 _Static_assert(offsetof(SCANSTRUCT, StreamName1) == 112, "x64 StreamName1 offset");
 _Static_assert(offsetof(SCANSTRUCT, ThreatId) == 132, "x64 ThreatId offset");
-_Static_assert(sizeof(SCAN_REPLY) == 24, "x64 SCAN_REPLY size");
-_Static_assert(offsetof(SCAN_REPLY, field_C) == 20, "x64 SCAN_REPLY field_C offset");
+_Static_assert(sizeof(SCAN_REPLY) == 32, "x64 SCAN_REPLY size");
+_Static_assert(offsetof(SCAN_REPLY, UserPtr) == 16, "x64 SCAN_REPLY UserPtr offset");
+_Static_assert(offsetof(SCAN_REPLY, field_C) == 24, "x64 SCAN_REPLY field_C offset");
 _Static_assert(sizeof(SCANSTREAM_PARAMS) == 32, "x64 SCANSTREAM_PARAMS size");
 _Static_assert(offsetof(SCANSTREAM_PARAMS, UnknownC) == 24, "x64 UnknownC offset");
 #endif

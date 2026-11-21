@@ -54,6 +54,9 @@ typedef struct _SCANSTRUCT {
     DWORD ThreatId; // Can be passed back to GetThreatInfo
 } SCANSTRUCT, *PSCANSTRUCT;
 
+// SCAN_REPLY uses native alignment; x64 mpengine reads field_C at offset 0x18.
+#pragma pack(pop)
+
 typedef struct _SCAN_REPLY {
     DWORD     (MPENGINE_CALL *EngineScanCallback)(PSCANSTRUCT this);
     DWORD     field_4;
@@ -65,6 +68,5 @@ typedef struct _SCAN_REPLY {
     DWORD     field_C;
 } SCAN_REPLY, *PSCAN_REPLY;
 
-#pragma pack(pop)
 #endif // __SCANREPLY_H
 
