@@ -362,7 +362,11 @@ DECLARE_CRT_EXPORT("GetFirmwareEnvironmentVariableExW", GetFirmwareEnvironmentVa
 
 DECLARE_CRT_EXPORT("GetFirmwareType", GetFirmwareType);
 
+/* On x86, report this optional API as unavailable rather than advertising
+ * the diagnostic stub that terminates the process when called. */
+#ifdef __x86_64__
 DECLARE_CRT_EXPORT("GetProcessInformation", GetProcessInformation);
+#endif
 
 DECLARE_CRT_EXPORT("GetThreadInformation", GetThreadInformation);
 

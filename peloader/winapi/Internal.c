@@ -39,7 +39,7 @@ NTSTATUS WINAPI EtwRegister(PVOID ProviderId,
     return 0;
 }
 
-NTSTATUS WINAPI EtwUnregister(HANDLE RegHandle) {
+NTSTATUS WINAPI EtwUnregister(QWORD RegHandle) {
     DebugLog("");
     return 0;
 }

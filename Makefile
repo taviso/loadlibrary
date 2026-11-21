@@ -29,10 +29,13 @@ X86_LIBS := $(BUILD_DIR)/x86/libpeloader.a $(BUILD_DIR)/x86/libhook.a $(BUILD_DI
 X64_INTERCEPT := $(BUILD_DIR)/x64/intercept
 X64_LIBS := $(BUILD_DIR)/x64/libpeloader.a $(X64_INTERCEPT)/libhook.a $(X64_INTERCEPT)/zydis/libZydis.a $(X64_INTERCEPT)/subhook/libsubhook.a
 
-.PHONY: all debug clean mpclient mpclient_x64 peloader peloader_x64 x64-intercept x64-relink-check
+.PHONY: all debug check clean mpclient mpclient_x64 peloader peloader_x64 x64-intercept x64-relink-check
 all: mpclient mpclient_x64
 debug:
 	$(MAKE) BUILD_DIR=$(BUILD_DIR)/debug BUILD_MODE=debug all
+check: $(BUILD_DIR)/x86/tests/mpengine_layout $(BUILD_DIR)/x64/tests/mpengine_layout
+	$(BUILD_DIR)/x86/tests/mpengine_layout
+	$(BUILD_DIR)/x64/tests/mpengine_layout
 mpclient: $(BUILD_DIR)/x86/mpclient
 mpclient_x64: $(BUILD_DIR)/x64/mpclient_x64
 peloader: $(BUILD_DIR)/x86/libpeloader.a
@@ -45,6 +48,12 @@ $(BUILD_DIR)/x86/%.o: %.c
 $(BUILD_DIR)/x64/%.o: %.c
 	@mkdir -p $(@D)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -m64 -O0 -fPIC -MMD -MP -c $< -o $@
+
+$(BUILD_DIR)/x86/tests/mpengine_layout: $(BUILD_DIR)/x86/tests/mpengine_layout.o
+	$(CC) -m32 -o $@ $^
+
+$(BUILD_DIR)/x64/tests/mpengine_layout: $(BUILD_DIR)/x64/tests/mpengine_layout.o
+	$(CC) -m64 -o $@ $^
 
 $(DISASM_OBJECTS): CPPFLAGS += -DHAVE_CONFIG_H -Iintercept/libdisasm
 $(DISASM_OBJECTS): CFLAGS += -w
@@ -97,4 +106,5 @@ clean:
 -include $(LOADER_x86:.o=.d) $(LOADER_x64:.o=.d) $(DISASM_OBJECTS:.o=.d) \
          $(BUILD_DIR)/x86/intercept/src/hook_x86.d \
          $(BUILD_DIR)/x86/mpclient.d $(BUILD_DIR)/x86/log/log.d \
-         $(BUILD_DIR)/x64/mpclient_x64.d $(BUILD_DIR)/x64/log/log.d
+         $(BUILD_DIR)/x64/mpclient_x64.d $(BUILD_DIR)/x64/log/log.d \
+         $(BUILD_DIR)/x86/tests/mpengine_layout.d $(BUILD_DIR)/x64/tests/mpengine_layout.d

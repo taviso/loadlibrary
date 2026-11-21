@@ -67,7 +67,7 @@ const struct rlimit kUsageLimits[] = {
 
 DWORD (* __rsignal)(PHANDLE KernelHandle, DWORD Code, PVOID Params, DWORD Size);
 
-static DWORD EngineScanCallback(PSCANSTRUCT Scan)
+static DWORD MPENGINE_CALLBACK EngineScanCallback(PSCANSTRUCT Scan)
 {
     if (Scan->Flags & SCAN_MEMBERNAME) {
         LogMessage("Scanning archive member %s", Scan->VirusName);
@@ -97,21 +97,21 @@ static DWORD EngineScanCallback(PSCANSTRUCT Scan)
     return 0;
 }
 
-static DWORD ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
+static DWORD MPENGINE_CALLBACK ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
 {
     fseek(this, Offset, SEEK_SET);
     *SizeRead = fread(Buffer, 1, Size, this);
     return TRUE;
 }
 
-static DWORD GetStreamSize(PVOID this, PULONGLONG FileSize)
+static DWORD MPENGINE_CALLBACK GetStreamSize(PVOID this, PULONGLONG FileSize)
 {
     fseek(this, 0, SEEK_END);
     *FileSize = ftell(this);
     return TRUE;
 }
 
-static PWCHAR GetStreamName(PVOID this)
+static PWCHAR MPENGINE_CALLBACK GetStreamName(PVOID this)
 {
     return L"input";
 }

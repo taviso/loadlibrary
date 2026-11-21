@@ -44,15 +44,11 @@ static BOOL WINAPI ResetEvent(HANDLE hEvent) {
     return TRUE;
 }
 
-STATIC DWORD WINAPI EventSetInformation(HANDLE RegHandle,
+/* ETW registration handles are 64-bit even in a 32-bit process. */
+STATIC DWORD WINAPI EventSetInformation(QWORD RegHandle,
                                         EVENT_INFO_CLASS InformationClass,
                                         PVOID EventInformation,
                                         ULONG InformationLength) {
-    DebugLog("");
-    return STATUS_SUCCESS;
-}
-
-STATIC ULONG WINAPI EventUnregister(HANDLE RegHandle) {
     DebugLog("");
     return STATUS_SUCCESS;
 }
@@ -64,5 +60,3 @@ DECLARE_CRT_EXPORT("SetEvent", SetEvent);
 DECLARE_CRT_EXPORT("ResetEvent", ResetEvent);
 
 DECLARE_CRT_EXPORT("EventSetInformation", EventSetInformation);
-
-DECLARE_CRT_EXPORT("EventUnregister", EventUnregister);

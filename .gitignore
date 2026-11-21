@@ -13,3 +13,10 @@ eicar.com
 mpcache-*
 .vscode/
 /build/
+
+# Local IDA databases and their temporary components.
+/engine/**/*.idb
+/engine/**/*.i64
+/engine/**/*.id[012]
+/engine/**/*.nam
+/engine/**/*.til
