@@ -26,6 +26,8 @@ extern struct thing *__start_RtlDispatchExceptionSection;
 extern struct thing *__stop_RtlDispatchExceptionSection;
 extern struct thing *__start_RaiseExceptionSection;
 extern struct thing *__stop_RaiseExceptionSection;
+extern struct thing *__start_RtlRestoreContextSection;
+extern struct thing *__stop_RtlRestoreContextSection;
 
 EXCEPTION_DISPOSITION WINAPI ExceptionHandler(struct _EXCEPTION_RECORD *ExceptionRecord,
                                               struct _EXCEPTION_FRAME *EstablisherFrame,
@@ -36,6 +38,7 @@ EXCEPTION_DISPOSITION WINAPI ExceptionHandler(struct _EXCEPTION_RECORD *Exceptio
 }
 
 #define RVA(m, b) ((PVOID)((ULONG_PTR)(b) + (ULONG_PTR)(m)))
+#define MSVC_CPP_EXCEPTION 0xE06D7363
 
 /* ALIGNMENT MACROS */
 #define ALIGN_DOWN_BY(size, align) ((ULONG_PTR)(size) & ~((ULONG_PTR)(align) - 1))
@@ -56,10 +59,11 @@ enum {
     RTL_EXECUTE_HANDLER_FOR_EXCEPTION = 0,
     RTL_DISPATCH_EXCEPTION,
     RAISE_EXCEPTION,
+    RTL_RESTORE_CONTEXT,
     MAIN_FUNCTION
 };
 
-PCONTEXT MSContextPtrs[3] = {0};
+PCONTEXT MSContextPtrs[MAIN_FUNCTION] = {0};
 
 
 STATIC WINAPI
@@ -226,6 +230,14 @@ BOOL LookupPeloaderFunction(DWORD64 ControlPc, PRUNTIME_FUNCTION FunctionEntry) 
         FunctionEntry->BeginAddress = (uintptr_t) &__start_RaiseExceptionSection;
         FunctionEntry->EndAddress = (uintptr_t) &__stop_RaiseExceptionSection;
         FunctionEntry->UnwindData = RAISE_EXCEPTION;
+        return TRUE;
+    }
+
+    if (ControlPc >= (DWORD64) &__start_RtlRestoreContextSection &&
+        ControlPc < (DWORD64) &__stop_RtlRestoreContextSection) {
+        FunctionEntry->BeginAddress = (uintptr_t) &__start_RtlRestoreContextSection;
+        FunctionEntry->EndAddress = (uintptr_t) &__stop_RtlRestoreContextSection;
+        FunctionEntry->UnwindData = RTL_RESTORE_CONTEXT;
         return TRUE;
     }
 
@@ -503,7 +515,8 @@ PEXCEPTION_ROUTINE RtlVirtualUnwind(
     // peloader functions do not have an handler
     if (FunctionEntry->UnwindData == RTL_EXECUTE_HANDLER_FOR_EXCEPTION ||
         FunctionEntry->UnwindData == RTL_DISPATCH_EXCEPTION ||
-        FunctionEntry->UnwindData == RAISE_EXCEPTION) {
+        FunctionEntry->UnwindData == RAISE_EXCEPTION ||
+        FunctionEntry->UnwindData == RTL_RESTORE_CONTEXT) {
         UnwindLibPeloaderFunction(FunctionEntry, Context);
         return NULL;
     }
@@ -682,7 +695,8 @@ RtlExecuteHandlerForException(PEXCEPTION_RECORD pFunction,
 
 STATIC WINAPI
 
-VOID RtlRestoreContext(PCONTEXT pContext, PEXCEPTION_RECORD pExceptionRecord) {
+VOID __attribute__((noinline, section("RtlRestoreContextSection")))
+RtlRestoreContext(PCONTEXT pContext, PEXCEPTION_RECORD pExceptionRecord) {
     PVOID WINAPI (*CxxCallCatchBlock)(PEXCEPTION_RECORD ExceptionRecord);
     PVOID RestoreExecutionPoint;
     if (pExceptionRecord != NULL) {
@@ -690,10 +704,15 @@ VOID RtlRestoreContext(PCONTEXT pContext, PEXCEPTION_RECORD pExceptionRecord) {
             if (pExceptionRecord->NumberParameters > 1) {
                 CxxCallCatchBlock = (PVOID (WINAPI *)(PEXCEPTION_RECORD))
                     (uintptr_t) pExceptionRecord->ExceptionInformation[0];
+                /* A rethrow from the catch must resume unwinding at the
+                 * engine frame represented by this context. */
+                PCONTEXT previous = MSContextPtrs[RTL_RESTORE_CONTEXT];
+                MSContextPtrs[RTL_RESTORE_CONTEXT] = pContext;
                 RestoreExecutionPoint = CxxCallCatchBlock(pExceptionRecord);
+                MSContextPtrs[RTL_RESTORE_CONTEXT] = previous;
                 pContext->Rip = (DWORD64) RestoreExecutionPoint;
             }
-        } else {
+        } else if (pExceptionRecord->ExceptionCode != MSVC_CPP_EXCEPTION) {
             // TODO: implement this
             __debugbreak();
         }
@@ -974,7 +993,8 @@ RtlDispatchException(PEXCEPTION_RECORD ExceptionRecord, CONTEXT *pContext) {
         PRUNTIME_FUNCTION RuntimeFunction = RtlLookupFunctionEntry(ControlPc, &ImageBase, NULL);
         // Check if a RUNTIME_FUNCTION is associated with it
         if (!RuntimeFunction) {
-            pContext->Rip = pContext->Rsp;
+            /* A leaf frame's return address is at the top of its stack. */
+            pContext->Rip = *(DWORD64 *)pContext->Rsp;
             pContext->Rsp = pContext->Rsp + 0x8;
             continue;
         }
