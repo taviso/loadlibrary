@@ -1444,7 +1444,7 @@ typedef struct _XSAVE_FORMAT {
     DWORD MxCsr_Mask;
     M128A FloatRegisters[8];
 
-#if defined(_WIN64)
+#if defined(__x86_64__) || defined(_WIN64)
 
     M128A XmmRegisters[16];
     BYTE  Reserved4[96];
@@ -1460,7 +1460,7 @@ typedef struct _XSAVE_FORMAT {
 
 typedef XSAVE_FORMAT XMM_SAVE_AREA32, *PXMM_SAVE_AREA32;
 
-typedef struct _CONTEXT {
+typedef struct __attribute__((aligned(16))) _CONTEXT {
 
     //
     // Register parameter home addresses.

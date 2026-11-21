@@ -42,6 +42,16 @@ EXCEPTION_DISPOSITION WINAPI ExceptionHandler(struct _EXCEPTION_RECORD *Exceptio
 #define ALIGN_UP_BY(size, align) (ALIGN_DOWN_BY(((ULONG_PTR)(size) + (align) - 1), align))
 #define ALIGN_UP_POINTER_BY(ptr, align) ((PVOID)ALIGN_UP_BY(ptr, align))
 
+/* getcontext() does not capture the XMM registers. Save the complete legacy
+ * floating-point state before calling it, including x87 state and MXCSR. */
+_Static_assert(offsetof(CONTEXT, DUMMYUNIONNAME.FltSave) == 256, "invalid FXSAVE offset");
+_Static_assert(sizeof(XMM_SAVE_AREA32) == 512, "invalid FXSAVE size");
+_Static_assert(_Alignof(CONTEXT) >= 16, "FXSAVE requires 16-byte alignment");
+#define CAPTURE_FLOATING_CONTEXT(context) do { \
+    __asm__ volatile("fxsave %0" : "=m" ((context)->DUMMYUNIONNAME.FltSave) : : "memory"); \
+    (context)->MxCsr = (context)->DUMMYUNIONNAME.FltSave.MxCsr; \
+} while (0)
+
 enum {
     RTL_EXECUTE_HANDLER_FOR_EXCEPTION = 0,
     RTL_DISPATCH_EXCEPTION,
@@ -866,6 +876,7 @@ BOOL RtlUnwindEx(
     uintptr_t ControlPc;
 
     // Save current registers
+    CAPTURE_FLOATING_CONTEXT(&MSContext);
     if (getcontext(&Context) != 0) {
         abort();
     }
@@ -990,6 +1001,7 @@ RtlDispatchException(PEXCEPTION_RECORD ExceptionRecord, CONTEXT *pContext) {
                 return FALSE;
             }
             memset(pMSContext, 0, sizeof(CONTEXT));
+            CAPTURE_FLOATING_CONTEXT(pMSContext);
             if (getcontext(&Context) != 0) {
                 abort();
             }
@@ -1045,6 +1057,7 @@ RaiseException(DWORD dwExceptionCode, DWORD dwExceptionFlags, DWORD nNumberOfArg
     memcpy(&ExceptionRecord.ExceptionInformation, Arguments, nNumberOfArguments * sizeof(long));
 
     // Save current registers
+    CAPTURE_FLOATING_CONTEXT(&MSContext);
     if (getcontext(&Context) != 0) {
         abort();
     }
@@ -1110,6 +1123,7 @@ RaiseException(DWORD dwExceptionCode, DWORD dwExceptionFlags, DWORD nNumberOfArg
             return FALSE;
         }
         memset(pRtlDispatchExceptionMSContext, 0, sizeof(CONTEXT));
+        CAPTURE_FLOATING_CONTEXT(pRtlDispatchExceptionMSContext);
         if (getcontext(&RtlDispatchExceptionContext) != 0) {
             abort();
         }
