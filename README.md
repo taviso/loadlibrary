@@ -108,17 +108,21 @@ The x64 build also requires CMake and a C++ compiler for Zydis. The x64
 client loads `engine/x64/mpengine.dll`; put the corresponding 64-bit engine
 and definitions in `engine/x64/`.
 
-You will need to download the 32-bit antimalware update file from this page:
+You will need to download the 32 (and 64) bit antimalware update file from this page:
 
 * https://www.microsoft.com/security/portal/definitions/adl.aspx#manual
 
-This should be a direct link to the right file:
+This should be a direct link to the right x86/32 file:
 
 * https://go.microsoft.com/fwlink/?LinkID=121721&arch=x86
 
+And this one to the x86/64 file:
+
+* https://go.microsoft.com/fwlink/?LinkID=121721&arch=x64
+
 This will download a file called `mpam-fe.exe`, which is a cabinet file that
 can be extracted with `cabextract`. Extract the files into the `engine`
-directory:
+directory for x86/32, or into the `engine/x64` directory for x86/64:
 
 ```
 $ cabextract mpam-fe.exe
