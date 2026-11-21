@@ -778,6 +778,12 @@ BOOL RtlUnwindInternal(
     /* Copy the context */
     UnwindContext = *ContextRecord;
 
+    /* Termination handlers, including the CRT catch-frame cleanup, only run
+     * when the exception record identifies this as an unwind pass. */
+    if (HandlerType == UNW_FLAG_UHANDLER) {
+        ExceptionRecord->ExceptionFlags |= EXCEPTION_UNWINDING;
+    }
+
     /* Set up the constant fields of the dispatcher context */
     DispatcherContext.ContextRecord = ContextRecord;
     DispatcherContext.HistoryTable = HistoryTable;
