@@ -52,9 +52,19 @@
 #include "openscan.h"
 #include "mpclient.h"
 
+#ifdef __x86_64__
+#define ENGINE_DLL "engine/x64/mpengine.dll"
+#define ENGINE_MAP "engine/x64/mpengine.map"
+#define SIGNATURE_DIR L"engine\\x64"
+#else
+#define ENGINE_DLL "engine/mpengine.dll"
+#define ENGINE_MAP "engine/mpengine.map"
+#define SIGNATURE_DIR L"engine"
+#endif
+
 struct pe_image image = {
         .entry  = NULL,
-        .name   = "engine/mpengine.dll",
+        .name   = ENGINE_DLL,
 };
 
 // Any usage limits to prevent bugs disrupting system.
@@ -65,9 +75,9 @@ const struct rlimit kUsageLimits[] = {
     [RLIMIT_NOFILE] = { .rlim_cur = 32,         .rlim_max = 32 },
 };
 
-DWORD (* __rsignal)(PHANDLE KernelHandle, DWORD Code, PVOID Params, DWORD Size);
+DWORD (MPENGINE_CALL * __rsignal)(PHANDLE KernelHandle, DWORD Code, PVOID Params, DWORD Size);
 
-static DWORD MPENGINE_CALLBACK EngineScanCallback(PSCANSTRUCT Scan)
+static DWORD MPENGINE_CALL EngineScanCallback(PSCANSTRUCT Scan)
 {
     if (Scan->Flags & SCAN_MEMBERNAME) {
         LogMessage("Scanning archive member %s", Scan->VirusName);
@@ -97,21 +107,21 @@ static DWORD MPENGINE_CALLBACK EngineScanCallback(PSCANSTRUCT Scan)
     return 0;
 }
 
-static DWORD MPENGINE_CALLBACK ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
+static DWORD MPENGINE_CALL ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
 {
     fseek(this, Offset, SEEK_SET);
     *SizeRead = fread(Buffer, 1, Size, this);
     return TRUE;
 }
 
-static DWORD MPENGINE_CALLBACK GetStreamSize(PVOID this, PULONGLONG FileSize)
+static DWORD MPENGINE_CALL GetStreamSize(PVOID this, PULONGLONG FileSize)
 {
     fseek(this, 0, SEEK_END);
     *FileSize = ftell(this);
     return TRUE;
 }
 
-static PWCHAR MPENGINE_CALLBACK GetStreamName(PVOID this)
+static PWCHAR MPENGINE_CALL GetStreamName(PVOID this)
 {
     return L"input";
 }
@@ -151,7 +161,7 @@ int main(int argc, char **argv, char **envp)
     PeHeader    = (PIMAGE_NT_HEADERS)(image.image + DosHeader->e_lfanew);
 
     // Load any additional exports.
-    if (!process_extra_exports(image.image, PeHeader->OptionalHeader.BaseOfCode, "engine/mpengine.map")) {
+    if (!process_extra_exports(image.image, PeHeader->OptionalHeader.BaseOfCode, ENGINE_MAP)) {
 #ifndef NDEBUG
         LogMessage("The map file wasn't found, symbols wont be available");
 #endif
@@ -166,7 +176,7 @@ int main(int argc, char **argv, char **envp)
                        image.image,
                        PeHeader->OptionalHeader.BaseOfCode,
                        getpid(),
-                       "engine/mpengine.map");
+                       ENGINE_MAP);
             LogMessage("GDB: add-symbol-file symbols_%d.o 0", getpid());
             __debugbreak();
         }
@@ -176,6 +186,7 @@ int main(int argc, char **argv, char **envp)
         errx(EXIT_FAILURE, "Failed to resolve mpengine entrypoint");
     }
 
+#ifndef __x86_64__
     EXCEPTION_DISPOSITION ExceptionHandler(struct _EXCEPTION_RECORD *ExceptionRecord,
             struct _EXCEPTION_FRAME *EstablisherFrame,
             struct _CONTEXT *ContextRecord,
@@ -184,16 +195,23 @@ int main(int argc, char **argv, char **envp)
         LogMessage("Toplevel Exception Handler Caught Exception");
         abort();
     }
+#endif
 
     VOID ResourceExhaustedHandler(int Signal)
     {
         errx(EXIT_FAILURE, "Resource Limits Exhausted, Signal %s", strsignal(Signal));
     }
 
+#ifndef __x86_64__
     setup_nt_threadinfo(ExceptionHandler);
+#endif
 
     // Call DllMain()
+#ifdef __x86_64__
+    image.entry((PVOID) 'MPENENGN', DLL_PROCESS_ATTACH, NULL);
+#else
     image.entry((PVOID) 'MPEN', DLL_PROCESS_ATTACH, NULL);
+#endif
 
     // Install usage limits to prevent system crash.
     setrlimit(RLIMIT_CORE, &kUsageLimits[RLIMIT_CORE]);
@@ -215,7 +233,7 @@ int main(int argc, char **argv, char **envp)
 
     BootParams.ClientVersion = BOOTENGINE_PARAMS_VERSION;
     BootParams.Attributes    = BOOT_ATTR_NORMAL;
-    BootParams.SignatureLocation = L"engine";
+    BootParams.SignatureLocation = SIGNATURE_DIR;
     BootParams.ProductName = L"Legitimate Antivirus";
     EngineConfig.QuarantineLocation = L"quarantine";
     EngineConfig.Inclusions = L"*.*";

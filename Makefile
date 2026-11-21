@@ -7,14 +7,17 @@ BUILD_DIR ?= build
 BUILD_MODE ?= release
 
 ifeq ($(BUILD_MODE),debug)
-X86_OPT := -O0
+MODE_OPT := -O0
+CMAKE_BUILD_TYPE := Debug
 else ifeq ($(BUILD_MODE),release)
-X86_OPT := -O2
+MODE_OPT := -O2
+MODE_CPPFLAGS := -DNDEBUG
+CMAKE_BUILD_TYPE := RelWithDebInfo
 else
 $(error Supported BUILD_MODE values: release or debug)
 endif
 
-CPPFLAGS += -D_GNU_SOURCE -I. -Iinclude -Iintercept/include -Ilog -Ipeloader
+CPPFLAGS += -D_GNU_SOURCE $(MODE_CPPFLAGS) -I. -Iinclude -Iintercept/include -Ilog -Ipeloader
 CFLAGS += -march=native -ggdb3 -std=gnu99 -fshort-wchar -fno-omit-frame-pointer \
           -Wno-multichar -mstackrealign -maccumulate-outgoing-args
 LDFLAGS += -Wl,--dynamic-list=exports.lst
@@ -43,11 +46,18 @@ peloader_x64: $(BUILD_DIR)/x64/libpeloader.a
 
 $(BUILD_DIR)/x86/%.o: %.c
 	@mkdir -p $(@D)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -m32 $(X86_OPT) -MMD -MP -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -m32 $(MODE_OPT) -MMD -MP -c $< -o $@
 
 $(BUILD_DIR)/x64/%.o: %.c
 	@mkdir -p $(@D)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -m64 -O0 -fPIC -MMD -MP -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -m64 $(MODE_OPT) -fPIC -MMD -MP -c $< -o $@
+
+# Rebuild existing objects when build flags in this Makefile change.
+$(LOADER_x86) $(LOADER_x64) $(DISASM_OBJECTS) \
+$(BUILD_DIR)/x86/intercept/src/hook_x86.o \
+$(BUILD_DIR)/x86/mpclient.o $(BUILD_DIR)/x86/log/log.o \
+$(BUILD_DIR)/x64/mpclient.o $(BUILD_DIR)/x64/log/log.o \
+$(BUILD_DIR)/x86/tests/mpengine_layout.o $(BUILD_DIR)/x64/tests/mpengine_layout.o: Makefile
 
 $(BUILD_DIR)/x86/tests/mpengine_layout: $(BUILD_DIR)/x86/tests/mpengine_layout.o
 	$(CC) -m32 -o $@ $^
@@ -78,7 +88,7 @@ $(BUILD_DIR)/x86/libdisasm.a: $(DISASM_OBJECTS)
 # CMake tracks its own sources and headers. Run its incremental build before
 # checking the library timestamps used by the client link rule.
 x64-intercept:
-	$(CMAKE) -S intercept -B $(X64_INTERCEPT) -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+	$(CMAKE) -S intercept -B $(X64_INTERCEPT) -DARCH:STRING=x64 -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE) -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 	+$(CMAKE) --build $(X64_INTERCEPT)
 
 $(filter-out $(BUILD_DIR)/x64/libpeloader.a,$(X64_LIBS)): | x64-intercept
@@ -91,7 +101,7 @@ $(BUILD_DIR)/x86/mpclient: $(BUILD_DIR)/x86/mpclient.o $(BUILD_DIR)/x86/log/log.
 # prerequisites. Check their actual timestamps after the CMake build finishes.
 x64-relink-check:
 
-$(BUILD_DIR)/x64/mpclient_x64: $(BUILD_DIR)/x64/mpclient_x64.o $(BUILD_DIR)/x64/log/log.o $(X64_LIBS) exports.lst x64-relink-check
+$(BUILD_DIR)/x64/mpclient_x64: $(BUILD_DIR)/x64/mpclient.o $(BUILD_DIR)/x64/log/log.o $(X64_LIBS) exports.lst x64-relink-check
 	@relink=; if [ ! -f $@ ]; then relink=1; fi; \
 	for input in $(filter %.o,$^) $(X64_LIBS) exports.lst; do \
 		if [ "$$input" -nt "$@" ]; then relink=1; fi; \
@@ -106,5 +116,5 @@ clean:
 -include $(LOADER_x86:.o=.d) $(LOADER_x64:.o=.d) $(DISASM_OBJECTS:.o=.d) \
          $(BUILD_DIR)/x86/intercept/src/hook_x86.d \
          $(BUILD_DIR)/x86/mpclient.d $(BUILD_DIR)/x86/log/log.d \
-         $(BUILD_DIR)/x64/mpclient_x64.d $(BUILD_DIR)/x64/log/log.d \
+         $(BUILD_DIR)/x64/mpclient.d $(BUILD_DIR)/x64/log/log.d \
          $(BUILD_DIR)/x86/tests/mpengine_layout.d $(BUILD_DIR)/x64/tests/mpengine_layout.d

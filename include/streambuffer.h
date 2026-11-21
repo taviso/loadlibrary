@@ -94,11 +94,11 @@ enum {
 
 typedef struct _STREAMBUFFER_DESCRIPTOR {
     FILE   *UserPtr;
-    DWORD  (MPENGINE_CALLBACK *Read)(PVOID context, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead);
+    DWORD  (MPENGINE_CALL *Read)(PVOID context, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead);
     DWORD  (* Write)(FILE *fp, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD TotalWritten);
-    DWORD  (MPENGINE_CALLBACK *GetSize)(PVOID context, uint64_t *FileSize);
+    DWORD  (MPENGINE_CALL *GetSize)(PVOID context, uint64_t *FileSize);
     DWORD  (* SetSize)(FILE *fp, uint64_t *FileSize);
-    PWCHAR (MPENGINE_CALLBACK *GetName)(PVOID context);
+    PWCHAR (MPENGINE_CALL *GetName)(PVOID context);
     DWORD  (* SetAttributes)(FILE *fp, DWORD Attribute, PVOID Data, DWORD DataSize);
     DWORD  (* GetAttributes)(FILE *fp, DWORD Attribute, PVOID Data, DWORD DataSize, PDWORD DataSizeWritten);
 } STREAMBUFFER_DESCRIPTOR, *PSTREAMBUFFER_DESCRIPTOR;

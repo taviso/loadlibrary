@@ -55,7 +55,7 @@ typedef struct _SCANSTRUCT {
 } SCANSTRUCT, *PSCANSTRUCT;
 
 typedef struct _SCAN_REPLY {
-    DWORD     (MPENGINE_CALLBACK *EngineScanCallback)(PSCANSTRUCT this);
+    DWORD     (MPENGINE_CALL *EngineScanCallback)(PSCANSTRUCT this);
     DWORD     field_4;
 #ifdef __x86_64__
     ULONG64   UserPtr;
