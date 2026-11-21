@@ -24,7 +24,7 @@ typedef struct {
     uint32_t  count;        // Number of times I've been here
 } execution_record_t;
 
-VOID PIN_FAST_ANALYSIS_CALL instrument_basic_block(ADDRINT address, UINT32 size)
+void PIN_FAST_ANALYSIS_CALL instrument_basic_block(uintptr_t address, uint32_t size)
 {
     static execution_record_t zero, *hblock = &zero;
     void **data;
@@ -73,7 +73,7 @@ VOID PIN_FAST_ANALYSIS_CALL instrument_basic_block(ADDRINT address, UINT32 size)
 static const char kCoverageReport[] = "coverage.txt";
 static const char kCoverageVariable[] = "COVERAGE_REPORT_FILE";
 
-VOID instrument_fini_callback(INT32 code, VOID *v)
+void instrument_fini_callback(int32_t code, void *v)
 {
     unsigned instructions = 0;
     unsigned blockcount = 0;

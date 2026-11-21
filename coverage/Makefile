@@ -26,13 +26,13 @@ tools: deepcover.so
 OBJS = tree.o deepcover.o instrument.o
 
 %.o : %.cpp
-	$(CXX) $(COMP_OBJ) $@ $(CXXFLAGS) $(TOOL_CXXFLAGS) $<
+	$(TOOL_CXX) $(COMP_OBJ) $@ $(CXXFLAGS) $(TOOL_CXXFLAGS) $<
 
 %.o : %.c
-	$(CC) $(COMP_OBJ) $@ $(CFLAGS) $(TOOL_CFLAGS) $<
+	$(TOOL_CC) $(COMP_OBJ) $@ $(CFLAGS) $(TOOL_CFLAGS) $<
 
 deepcover.so : $(OBJS)
-	$(CXX) $(LINK_EXE) $@ $(LDFLAGS) $(TOOL_LDFLAGS) $(OBJS) $(TOOL_LPATHS) $(TOOL_LIBS) -static-libgcc -static-libstdc++
+	$(TOOL_LINKER) $(LINK_EXE) $@ $(LDFLAGS) $(TOOL_LDFLAGS) $(OBJS) $(TOOL_LPATHS) $(TOOL_LIBS) -static-libgcc -static-libstdc++
 
 coverage_parse_min: coverage_parse_min.c
 	gcc -std=gnu99 $(CFLAGS) $(LDFLAGS) $(shell pkg-config glib-2.0 --cflags) -o $@ $<  $(shell pkg-config glib-2.0 --libs)
