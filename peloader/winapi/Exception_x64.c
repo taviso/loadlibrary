@@ -465,6 +465,16 @@ VOID UnwindLibPeloaderFunction(PRUNTIME_FUNCTION pFunction, PCONTEXT pContext) {
     pContext->Rsp = LibPeloaderFunctionContext->Rsp;
     pContext->Rbp = LibPeloaderFunctionContext->Rbp;
     pContext->Rip = LibPeloaderFunctionContext->Rip;
+    pContext->Rbx = LibPeloaderFunctionContext->Rbx;
+    pContext->Rsi = LibPeloaderFunctionContext->Rsi;
+    pContext->Rdi = LibPeloaderFunctionContext->Rdi;
+    pContext->R12 = LibPeloaderFunctionContext->R12;
+    pContext->R13 = LibPeloaderFunctionContext->R13;
+    pContext->R14 = LibPeloaderFunctionContext->R14;
+    pContext->R15 = LibPeloaderFunctionContext->R15;
+    memcpy(&pContext->DUMMYUNIONNAME.DUMMYSTRUCTNAME.Xmm6,
+           &LibPeloaderFunctionContext->DUMMYUNIONNAME.DUMMYSTRUCTNAME.Xmm6,
+           10 * sizeof(M128A));
 }
 
 // Shamelessly copy-pasted from ReactOS and re-adapted
@@ -1022,10 +1032,40 @@ RtlDispatchException(PEXCEPTION_RECORD ExceptionRecord, CONTEXT *pContext) {
     }
 }
 
-STATIC WINAPI
+typedef struct {
+    DWORD64 Rbx, Rbp, Rsi, Rdi, R12, R13, R14, R15;
+    DWORD64 Rsp, Rip;
+    M128A Xmm[10];
+} RAISE_SAVED_REGISTERS;
+_Static_assert(offsetof(RAISE_SAVED_REGISTERS, Rsp) == 0x40, "invalid saved stack offset");
+_Static_assert(offsetof(RAISE_SAVED_REGISTERS, Xmm) == 0x50, "invalid saved XMM offset");
+_Static_assert(sizeof(RAISE_SAVED_REGISTERS) == 0xf0, "invalid saved register size");
 
-PVOID __attribute__ ((noinline, section ("RaiseExceptionSection")))
-RaiseException(DWORD dwExceptionCode, DWORD dwExceptionFlags, DWORD nNumberOfArguments, PVOID Arguments) {
+/* Capture the Windows nonvolatile registers before the compiler's prologue
+ * can reuse them. The fifth argument points to the aligned stack snapshot. */
+STATIC WINAPI PVOID __attribute__((naked, noinline, section("RaiseExceptionSection")))
+RaiseException(DWORD code, DWORD flags, DWORD count, PVOID arguments) {
+    __asm__ volatile(
+        "sub $0x128, %rsp\n"
+        "mov %rbx, 0x30(%rsp)\n" "mov %rbp, 0x38(%rsp)\n"
+        "mov %rsi, 0x40(%rsp)\n" "mov %rdi, 0x48(%rsp)\n"
+        "mov %r12, 0x50(%rsp)\n" "mov %r13, 0x58(%rsp)\n"
+        "mov %r14, 0x60(%rsp)\n" "mov %r15, 0x68(%rsp)\n"
+        "lea 0x130(%rsp), %rax\n" "mov %rax, 0x70(%rsp)\n"
+        "mov 0x128(%rsp), %rax\n" "mov %rax, 0x78(%rsp)\n"
+        "movaps %xmm6, 0x80(%rsp)\n" "movaps %xmm7, 0x90(%rsp)\n"
+        "movaps %xmm8, 0xa0(%rsp)\n" "movaps %xmm9, 0xb0(%rsp)\n"
+        "movaps %xmm10, 0xc0(%rsp)\n" "movaps %xmm11, 0xd0(%rsp)\n"
+        "movaps %xmm12, 0xe0(%rsp)\n" "movaps %xmm13, 0xf0(%rsp)\n"
+        "movaps %xmm14, 0x100(%rsp)\n" "movaps %xmm15, 0x110(%rsp)\n"
+        "lea 0x30(%rsp), %rax\n" "mov %rax, 0x20(%rsp)\n"
+        "call RaiseExceptionImpl\n"
+        "add $0x128, %rsp\n" "ret\n");
+}
+
+STATIC WINAPI PVOID __attribute__((used, noinline, section("RaiseExceptionSection")))
+RaiseExceptionImpl(DWORD dwExceptionCode, DWORD dwExceptionFlags, DWORD nNumberOfArguments,
+                   PVOID Arguments, const RAISE_SAVED_REGISTERS *saved) {
     uintptr_t ControlPc;
     uintptr_t CallerFrame;
     PUNWIND_INFO UnwindInfo;
@@ -1062,12 +1102,21 @@ RaiseException(DWORD dwExceptionCode, DWORD dwExceptionFlags, DWORD nNumberOfArg
         abort();
     }
     nix_2_ms_context_swap(&Context, &MSContext);
+    MSContext.Rbx = saved->Rbx;
+    MSContext.Rbp = saved->Rbp;
+    MSContext.Rsi = saved->Rsi;
+    MSContext.Rdi = saved->Rdi;
+    MSContext.R12 = saved->R12;
+    MSContext.R13 = saved->R13;
+    MSContext.R14 = saved->R14;
+    MSContext.R15 = saved->R15;
+    memcpy(&MSContext.DUMMYUNIONNAME.DUMMYSTRUCTNAME.Xmm6, saved->Xmm, sizeof(saved->Xmm));
     /*
      * Get the return address of the current (RaiseException) function.
      * ControlPc will point to the body of some DLL's function,
      * which called RaiseException.
      */
-    ControlPc = (uintptr_t) __builtin_return_address(0);
+    ControlPc = saved->Rip;
     /*
      * Now, we have to manually unwind the context to the previous call (VCRUTIMEVXX!_CxxThrowException),
      * since we do not have a RUNTIME_FUNCTION available for the current (RaiseException)
@@ -1075,8 +1124,8 @@ RaiseException(DWORD dwExceptionCode, DWORD dwExceptionFlags, DWORD nNumberOfArg
      * After we unwound to the previous frame, we call DispatchContext and we should be
      * able to loop back starting from it.
      */
-    uintptr_t rbp = ((uintptr_t *) (__builtin_frame_address(0)))[0];
-    uintptr_t rsp = (uintptr_t) (__builtin_frame_address(0)) + 0x8 + 0x8; // Find rsp + 0x8 + 0x8 (rsi + rdi maybe?)
+    uintptr_t rbp = saved->Rbp;
+    uintptr_t rsp = saved->Rsp;
 
 
     MSContext.Rsp = (DWORD64) rsp;
@@ -1086,10 +1135,7 @@ RaiseException(DWORD dwExceptionCode, DWORD dwExceptionFlags, DWORD nNumberOfArg
     if (pRaiseExceptionMSContext == NULL) {
         return FALSE;
     }
-    memset(pRaiseExceptionMSContext, 0, sizeof(CONTEXT));
-    pRaiseExceptionMSContext->Rsp = MSContext.Rsp;
-    pRaiseExceptionMSContext->Rbp = MSContext.Rbp;
-    pRaiseExceptionMSContext->Rip = MSContext.Rip;
+    *pRaiseExceptionMSContext = MSContext;
     MSContextPtrs[RAISE_EXCEPTION] = pRaiseExceptionMSContext;
 
     /* Get the function entry of RaiseException caller */
