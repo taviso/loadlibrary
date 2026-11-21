@@ -538,19 +538,6 @@ PEXCEPTION_ROUTINE RtlVirtualUnwind(
     /* Get a pointer to the unwind info */
     UnwindInfo = RVA(ImageBase, FunctionEntry->UnwindData);
 
-    /* Check for chained info */
-    if (UnwindInfo->Flags & UNW_FLAG_CHAININFO) {
-        //UNIMPLEMENTED_DBGBREAK();
-
-        /* See https://docs.microsoft.com/en-us/cpp/build/chained-unwind-info-structures */
-        FunctionEntry = (PRUNTIME_FUNCTION) &(UnwindInfo->UnwindCode[(UnwindInfo->CountOfCodes + 1) & ~1]);
-        UnwindInfo = RVA(ImageBase, FunctionEntry->UnwindData);
-    }
-
-    /* The language specific handler data follows the unwind info */
-    LanguageHandler = ALIGN_UP_POINTER_BY(&UnwindInfo->UnwindCode[UnwindInfo->CountOfCodes], sizeof(ULONG));
-    *HandlerData = (LanguageHandler + 1);
-
     /* Calculate relative offset to function start */
     CodeOffset = ControlPc - FunctionEntry->BeginAddress;
 
@@ -564,7 +551,9 @@ PEXCEPTION_ROUTINE RtlVirtualUnwind(
         }
     }
 
-    /* Skip all Ops with an offset greater than the current Offset */
+    /* Process this record before following its chained parent. Parent
+     * records describe already-executed prologues, so all their ops apply. */
+UnwindRecord:
     i = 0;
     while ((i < UnwindInfo->CountOfCodes) &&
            (UnwindInfo->UnwindCode[i].CodeOffset > CodeOffset)) {
@@ -656,6 +645,13 @@ PEXCEPTION_ROUTINE RtlVirtualUnwind(
         }
     }
 
+    if (UnwindInfo->Flags & UNW_FLAG_CHAININFO) {
+        FunctionEntry = (PRUNTIME_FUNCTION) &UnwindInfo->UnwindCode[(UnwindInfo->CountOfCodes + 1) & ~1];
+        UnwindInfo = RVA(ImageBase, FunctionEntry->UnwindData);
+        CodeOffset = (ULONG_PTR)-1;
+        goto UnwindRecord;
+    }
+
     /* Unwind is finished, pop new Rip from Stack */
     if (Context->Rsp != 0) {
         Context->Rip = *(DWORD64 *) Context->Rsp;
@@ -666,6 +662,8 @@ PEXCEPTION_ROUTINE RtlVirtualUnwind(
 
     /* Check if we have a handler and return it */
     if (UnwindInfo->Flags & (UNW_FLAG_EHANDLER | UNW_FLAG_UHANDLER)) {
+        LanguageHandler = ALIGN_UP_POINTER_BY(&UnwindInfo->UnwindCode[UnwindInfo->CountOfCodes], sizeof(ULONG));
+        *HandlerData = LanguageHandler + 1;
         return RVA(ImageBase, *LanguageHandler);
     }
 
