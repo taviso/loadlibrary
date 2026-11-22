@@ -20,3 +20,6 @@ mpcache-*
 /engine/**/*.id[012]
 /engine/**/*.nam
 /engine/**/*.til
+
+# x64 engine dir
+/engine/x64/
