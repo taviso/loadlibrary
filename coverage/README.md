@@ -161,7 +161,7 @@ On some Linux kernels, Pin 4.4's 32-bit tool stops before the client starts
 with `INS_SyscallType: Unknown system call instruction`. The kernel setting
 `abi.vsyscall32` controls whether it maps the 32-bit vDSO into 32-bit processes:
 `1` enables it and `0` disables it. Disabling it allowed the x86 coverage run
-to complete on the native Linux VM. The x64 tool does not need it.
+to complete. The x64 tool does not need it.
 
 Run the following from the repository root. The
 subshell saves the current setting and restores it when Pin finishes, even if

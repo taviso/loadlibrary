@@ -288,6 +288,7 @@ The closest analogy would be ndiswrapper but for userspace.
 ## Further Examples
 
 * [avscript](https://github.com/taviso/avscript) - Loading another antivirus engine, demonstrates hooking and patching.
+* [BDClient](https://github.com/cube0x8/BDClient) - Loading the self-contained Bitdefender Total Security Threat Scanner, demonstrates granular custom instrumentation and harnessing.
 
 ## License
 
