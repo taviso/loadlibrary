@@ -130,6 +130,38 @@ BOOL __noinline InstrumentationCallback(PVOID ImageStart, SIZE_T ImageSize)
 
 int main(int argc, char **argv, char **envp)
 {
+    bool EnablePua = false;
+    bool DisableAntispyware = false;
+    int FirstFile = 1;
+
+    for (; FirstFile < argc; ++FirstFile) {
+        if (strcmp(argv[FirstFile], "--enable-pua") == 0) {
+            EnablePua = true;
+        } else if (strcmp(argv[FirstFile], "--disable-antispyware") == 0) {
+            DisableAntispyware = true;
+        } else if (strcmp(argv[FirstFile], "--help") == 0) {
+            fprintf(stdout, "usage: %s [--enable-pua] [--disable-antispyware] [--] filenames...\n", argv[0]);
+            return 0;
+        } else if (strcmp(argv[FirstFile], "--") == 0) {
+            ++FirstFile;
+            break;
+        } else if (argv[FirstFile][0] == '-') {
+            fprintf(stderr, "unknown option: %s\n", argv[FirstFile]);
+            return 1;
+        } else {
+            break;
+        }
+    }
+
+    if (EnablePua && DisableAntispyware) {
+        fprintf(stderr, "--enable-pua requires antispyware scanning\n");
+        return 1;
+    }
+    if (FirstFile == argc) {
+        fprintf(stderr, "usage: %s [--enable-pua] [--disable-antispyware] [--] filenames...\n", argv[0]);
+        return 1;
+    }
+
     struct pe_image image = { .name = ENGINE_DLL };
     PIMAGE_DOS_HEADER DosHeader;
     PIMAGE_NT_HEADERS PeHeader;
@@ -229,11 +261,12 @@ int main(int argc, char **argv, char **envp)
 
     BootParams.ClientVersion = BOOTENGINE_PARAMS_VERSION;
     BootParams.Attributes    = BOOT_ATTR_NORMAL;
+    BootParams.PUAProtection = EnablePua ? 1 : 0;
     BootParams.SignatureLocation = SIGNATURE_DIR;
     BootParams.ProductName = L"Legitimate Antivirus";
     EngineConfig.QuarantineLocation = L"quarantine";
     EngineConfig.Inclusions = L"*.*";
-    EngineConfig.EngineFlags = 1 << 1;
+    EngineConfig.EngineFlags = ENGINE_UNPACK | (DisableAntispyware ? 0 : ENGINE_ENABLEANTISPYWARE);
     BootParams.EngineInfo = &EngineInfo;
     BootParams.EngineConfig = &EngineConfig;
     KernelHandle = NULL;
@@ -256,23 +289,19 @@ int main(int argc, char **argv, char **envp)
     ScanDescriptor.GetSize       = GetStreamSize;
     ScanDescriptor.GetName       = GetStreamName;
 
-    if (argc < 2) {
-        LogMessage("usage: %s [filenames...]", *argv);
-        return 1;
-    }
-
     // Enable Instrumentation.
     InstrumentationCallback(image.image, image.size);
 
-    for (char *filename = *++argv; *argv; ++argv) {
-        ScanDescriptor.UserPtr = fopen(*argv, "r");
+    for (int i = FirstFile; i < argc; ++i) {
+        char *filename = argv[i];
+        ScanDescriptor.UserPtr = fopen(filename, "r");
 
         if (ScanDescriptor.UserPtr == NULL) {
-            LogMessage("failed to open file %s", *argv);
+            LogMessage("failed to open file %s", filename);
             return 1;
         }
 
-        LogMessage("Scanning %s...", *argv);
+        LogMessage("Scanning %s...", filename);
 
         if (__rsignal(&KernelHandle, RSIG_SCAN_STREAMBUFFER, &ScanParams, sizeof ScanParams) != 0) {
             LogMessage("__rsignal(RSIG_SCAN_STREAMBUFFER) returned failure, file unreadable?");

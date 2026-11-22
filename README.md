@@ -168,14 +168,23 @@ Product Version Number          : 1.1.13701.0
 
 ### Running
 
-The 32-bit mpengine loader is `build/x86/mpclient`; it accepts filenames to scan as
-a parameter.
+The 32-bit mpengine loader is `build/x86/mpclient`, and the 64-bit loader is
+`build/x64/mpclient_x64`. Both accept filenames to scan.
 
 ```
 $ ./build/x86/mpclient netsky.exe
 main(): Scanning netsky.exe...
 EngineScanCallback(): Scanning input
 EngineScanCallback(): Threat Worm:Win32/Netsky.P@mm identified.
+```
+
+Antispyware scanning is enabled by default. Use `--enable-pua` to report
+potentially unwanted applications, or `--disable-antispyware` to disable
+the antispyware engine. These options cannot be used together. Put options
+before filenames; use `--` before a filename that starts with `-`.
+
+```
+$ ./build/x64/mpclient_x64 --enable-pua suspicious.exe
 ```
 
 There are some other sample tools, `mpstreamfuzz` and `mpscript`.
