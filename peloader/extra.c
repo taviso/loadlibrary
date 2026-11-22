@@ -28,7 +28,7 @@
 #include "ntoskernel.h"
 #include "util.h"
 
-#define MAX_EXTRA_EXPORTS 65535
+#define MAX_EXTRA_EXPORTS 200000
 
 struct wrap_export extra_exports[MAX_EXTRA_EXPORTS];
 extern struct hsearch_data extraexports;

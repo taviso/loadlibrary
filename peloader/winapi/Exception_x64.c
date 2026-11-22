@@ -710,7 +710,8 @@ RtlRestoreContext(PCONTEXT pContext, PEXCEPTION_RECORD pExceptionRecord) {
                 MSContextPtrs[RTL_RESTORE_CONTEXT] = previous;
                 pContext->Rip = (DWORD64) RestoreExecutionPoint;
             }
-        } else if (pExceptionRecord->ExceptionCode != MSVC_CPP_EXCEPTION) {
+        } else if (pExceptionRecord->ExceptionCode != MSVC_CPP_EXCEPTION &&
+                   pExceptionRecord->ExceptionCode != STATUS_UNWIND) {
             // TODO: implement this
             __debugbreak();
         }
@@ -893,20 +894,18 @@ BOOL RtlUnwindInternal(
     return FALSE;
 }
 
-STATIC WINAPI
-
-BOOL RtlUnwindEx(
+STATIC BOOL RtlUnwindFromCaller(
         PVOID TargetFrame,
         PVOID TargetIp,
         PEXCEPTION_RECORD ExceptionRecord,
         PVOID ReturnValue,
-        PCONTEXT ContextRecord,
-        struct _UNWIND_HISTORY_TABLE *HistoryTable) {
-    EXCEPTION_RECORD LocalExceptionRecord;
+        struct _UNWIND_HISTORY_TABLE *HistoryTable,
+        uintptr_t ControlPc,
+        uintptr_t CallerRbp,
+        uintptr_t CallerRsp) {
+    EXCEPTION_RECORD LocalExceptionRecord = {0};
     ucontext_t Context;
     CONTEXT MSContext = {0};
-
-    uintptr_t ControlPc;
 
     // Save current registers
     CAPTURE_FLOATING_CONTEXT(&MSContext);
@@ -915,58 +914,52 @@ BOOL RtlUnwindEx(
     }
     nix_2_ms_context_swap(&Context, &MSContext);
 
-    /*
-     * Get the return address of the current (RaiseException) function.
-     * ControlPc will point to the body of some DLL's function,
-     * which called RaiseException.
-     */
-    ControlPc = (uintptr_t) __builtin_return_address(0);
-    /*
-     * Now, we have to manually unwind the context to the previous call (VCRUTIMEVXX!_CxxThrowException),
-     * since we do not have a RUNTIME_FUNCTION available for the current (RaiseException)
-     * function, and then we cannot use RtlVirtualUnwind on it.
-     * After we unwound to the previous frame, we call DispatchContext and we should be
-     * able to loop back starting from it.
-     */
-    uintptr_t rbp = ((uintptr_t *) (__builtin_frame_address(0)))[0];
-    uintptr_t rsp = (uintptr_t) (__builtin_frame_address(0)) + 0x8 + 0x8; // Find rsp + 0x8 + 0x8 (rsi + rdi maybe?)
-
-    MSContext.Rsp = (DWORD64) rsp;
-    MSContext.Rbp = (DWORD64) rbp;
+    /* Start from the engine frame that called the exported unwind routine. */
+    MSContext.Rsp = (DWORD64) CallerRsp;
+    MSContext.Rbp = (DWORD64) CallerRbp;
     MSContext.Rip = (DWORD64) ControlPc;
 
     /* Check if we have an exception record */
     if (ExceptionRecord == NULL) {
         /* No exception record was passed, so set up a local one */
         LocalExceptionRecord.ExceptionCode = STATUS_UNWIND;
-        LocalExceptionRecord.ExceptionAddress = (PVOID) ContextRecord->Rip;
-        LocalExceptionRecord.ExceptionRecord = NULL;
-        LocalExceptionRecord.NumberParameters = 0;
+        LocalExceptionRecord.ExceptionAddress = (PVOID) ControlPc;
         ExceptionRecord = &LocalExceptionRecord;
     }
 
     /* Call the internal function */
-    RtlUnwindInternal(TargetFrame,
-                      TargetIp,
-                      ExceptionRecord,
-                      ReturnValue,
-                      &MSContext,
-                      HistoryTable,
-                      UNW_FLAG_UHANDLER);
+    return RtlUnwindInternal(TargetFrame,
+                             TargetIp,
+                             ExceptionRecord,
+                             ReturnValue,
+                             &MSContext,
+                             HistoryTable,
+                             UNW_FLAG_UHANDLER);
+}
+
+STATIC WINAPI BOOL __attribute__((noinline)) RtlUnwindEx(
+        PVOID TargetFrame,
+        PVOID TargetIp,
+        PEXCEPTION_RECORD ExceptionRecord,
+        PVOID ReturnValue,
+        PCONTEXT ContextRecord,
+        struct _UNWIND_HISTORY_TABLE *HistoryTable) {
+    uintptr_t Frame = (uintptr_t) __builtin_frame_address(0);
+    (void) ContextRecord;
+    return RtlUnwindFromCaller(TargetFrame, TargetIp, ExceptionRecord, ReturnValue,
+                               HistoryTable, (uintptr_t) __builtin_return_address(0),
+                               *(uintptr_t *) Frame, Frame + 2 * sizeof(uintptr_t));
 }
 
 
-STATIC WINAPI void RtlUnwind(PEXCEPTION_FRAME TargetFrame, PVOID TargetIp, PEXCEPTION_RECORD ExceptionRecord, PVOID ReturnValue)
+STATIC WINAPI void __attribute__((noinline)) RtlUnwind(
+        PEXCEPTION_FRAME TargetFrame, PVOID TargetIp,
+        PEXCEPTION_RECORD ExceptionRecord, PVOID ReturnValue)
 {
-    CONTEXT Context;
- 
-    RtlUnwindEx(TargetFrame,
-                TargetIp,
-                ExceptionRecord,
-                ReturnValue,
-                &Context,
-                NULL);
-    return;
+    uintptr_t Frame = (uintptr_t) __builtin_frame_address(0);
+    RtlUnwindFromCaller(TargetFrame, TargetIp, ExceptionRecord, ReturnValue,
+                        NULL, (uintptr_t) __builtin_return_address(0),
+                        *(uintptr_t *) Frame, Frame + 2 * sizeof(uintptr_t));
 }
 
 STATIC WINAPI
