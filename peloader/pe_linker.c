@@ -34,12 +34,14 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <err.h>
+#include <asm/prctl.h>
 
 #include "winnt_types.h"
 #include "pe_linker.h"
 #include "ntoskernel.h"
 #include "util.h"
 #include "log.h"
+#include "hook.h"
 
 struct pe_exports {
         char *dll;
@@ -49,6 +51,8 @@ struct pe_exports {
 
 static struct pe_exports *pe_exports;
 static int num_pe_exports;
+static struct pe_image linked_image;
+static bool image_is_linked;
 PKUSER_SHARED_DATA SharedUserData;
 
 #define DRIVER_NAME "pelinker"
@@ -179,7 +183,7 @@ static void *get_dll_init(char *name)
  * Find and validate the coff header
  *
  */
-static int check_nt_hdr(IMAGE_NT_HEADERS *nt_hdr)
+int check_nt_hdr(IMAGE_NT_HEADERS *nt_hdr)
 {
         int i;
         WORD attr;
@@ -194,21 +198,21 @@ static int check_nt_hdr(IMAGE_NT_HEADERS *nt_hdr)
 
         opt_hdr = &nt_hdr->OptionalHeader;
 
-        if (opt_hdr->Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC) {
-                ERROR("kernel is 32-bit, but Windows driver is not 32-bit;"
-                      "bad magic: %04X", opt_hdr->Magic);
+        if (opt_hdr->Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC &&
+        opt_hdr->Magic != IMAGE_NT_OPTIONAL_HDR64_MAGIC) {
+                ERROR("bad magic: %04X", opt_hdr->Magic);
                 return -EINVAL;
         }
 
         /* Validate the image for the current architecture. */
-        if (nt_hdr->FileHeader.Machine != IMAGE_FILE_MACHINE_I386) {
-                ERROR("kernel is 32-bit, but Windows driver is not 32-bit;"
-                      " (PE signature is %04X)", nt_hdr->FileHeader.Machine);
+        if (nt_hdr->FileHeader.Machine != IMAGE_FILE_MACHINE_I386 &&
+        nt_hdr->FileHeader.Machine != IMAGE_FILE_MACHINE_AMD64) {
+                ERROR(" (PE signature %04X not supported)", nt_hdr->FileHeader.Machine);
                 return -EINVAL;
         }
 
         /* Must have attributes */
-        attr = IMAGE_FILE_EXECUTABLE_IMAGE | IMAGE_FILE_32BIT_MACHINE;
+        attr = IMAGE_FILE_EXECUTABLE_IMAGE;
 
         if ((nt_hdr->FileHeader.Characteristics & attr) != attr)
                 return -EINVAL;
@@ -247,7 +251,21 @@ static int check_nt_hdr(IMAGE_NT_HEADERS *nt_hdr)
         return -EINVAL;
 }
 
-static int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
+static void WINAPI ordinal_import_stub(void)
+{
+        warnx("function at %p attempted to call a symbol imported by ordinal", __builtin_return_address(0));
+        __debugbreak();
+        abort();
+}
+
+static void WINAPI unknown_symbol_stub(void)
+{
+        warnx("function at %p attempted to call an unknown symbol", __builtin_return_address(0));
+        __debugbreak();
+        abort();
+}
+
+int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
 {
         ULONG_PTR *lookup_tbl, *address_tbl;
         char *symname = NULL;
@@ -255,34 +273,21 @@ static int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
         int ret = 0;
         generic_func adr;
 
-        void ordinal_import_stub(void)
-        {
-            warnx("function at %p attempted to call a symbol imported by ordinal", __builtin_return_address(0));
-            __debugbreak();
-        }
-
-        void unknown_symbol_stub(void)
-        {
-            warnx("function at %p attempted to call an unknown symbol", __builtin_return_address(0));
-            __debugbreak();
-        }
-
         lookup_tbl = RVA2VA(image, dirent->u.OriginalFirstThunk, ULONG_PTR *);
         address_tbl = RVA2VA(image, dirent->FirstThunk, ULONG_PTR *);
 
         for (i = 0; lookup_tbl[i]; i++) {
                 if (IMAGE_SNAP_BY_ORDINAL(lookup_tbl[i])) {
                         ERROR("ordinal import not supported: %llu", (uint64_t)lookup_tbl[i]);
-                        address_tbl[i] = (ULONG) ordinal_import_stub;
+                        address_tbl[i] = (ULONG_PTR) ordinal_import_stub;
                         continue;
                 }
                 else {
                         symname = RVA2VA(image, ((lookup_tbl[i] & ~IMAGE_ORDINAL_FLAG) + 2), char *);
                 }
-
                 if (get_export(symname, &adr) < 0) {
                         ERROR("unknown symbol: %s:%s", dll, symname);
-                        address_tbl[i] = (ULONG) unknown_symbol_stub;
+                        address_tbl[i] = (ULONG_PTR) unknown_symbol_stub;
                         continue;
                 } else {
                         //DBGLINKER("found symbol: %s:%s: addr: %p, rva = %llu",
@@ -294,7 +299,7 @@ static int import(void *image, IMAGE_IMPORT_DESCRIPTOR *dirent, char *dll)
         return 0;
 }
 
-static int read_exports(struct pe_image *pe)
+int read_exports(struct pe_image *pe)
 {
         IMAGE_EXPORT_DIRECTORY *export_dir_table;
         int i;
@@ -348,7 +353,7 @@ static int read_exports(struct pe_image *pe)
         return 0;
 }
 
-static int fixup_imports(void *image, IMAGE_NT_HEADERS *nt_hdr)
+int fixup_imports(void *image, IMAGE_NT_HEADERS *nt_hdr)
 {
         int i;
         char *name;
@@ -527,10 +532,27 @@ static int fix_pe_image(struct pe_image *pe)
         return 0;
 }
 
+const struct pe_image *pe_find_image_by_address(const void *address)
+{
+        uintptr_t pc = (uintptr_t) address;
+        uintptr_t base = (uintptr_t) linked_image.image;
+
+        if (!image_is_linked || pc < base || pc - base >= linked_image.size)
+                return NULL;
+
+        return &linked_image;
+}
+
 int link_pe_images(struct pe_image *pe_image, unsigned short n)
 {
         int i;
         struct pe_image *pe;
+
+        /* The loader's exports, TLS and exception state describe one image. */
+        if (!pe_image || n != 1)
+                return -EINVAL;
+        if (image_is_linked)
+                return -EBUSY;
 
         for (i = 0; i < n; i++) {
                 IMAGE_DOS_HEADER *dos_hdr;
@@ -538,7 +560,7 @@ int link_pe_images(struct pe_image *pe_image, unsigned short n)
                 dos_hdr = pe->image;
 
                 if (pe->size < sizeof(IMAGE_DOS_HEADER)) {
-                        TRACE1("image too small: %d", pe->size);
+                        TRACE1("image too small: %zu", pe->size);
                         return -EINVAL;
                 }
 
@@ -601,6 +623,8 @@ int link_pe_images(struct pe_image *pe_image, unsigned short n)
                 }
         }
 
+        linked_image = pe_image[0];
+        image_is_linked = true;
         return 0;
 }
 
@@ -618,6 +642,12 @@ bool pe_load_library(const char *filename, void **image, size_t *size)
     *image  = MAP_FAILED;
     *size   = 0;
     fd      = -1;
+
+    if (image_is_linked) {
+        errno = EBUSY;
+        l_error("an image is already linked");
+        return false;
+    }
 
     if ((fd = open(filename, O_RDONLY)) < 0) {
         l_error("failed to open pe library %s, %m", filename);
@@ -665,6 +695,30 @@ error:
     return false;
 }
 
+// Unmap and unlink a dll
+bool pe_unload_library(struct pe_image pe)
+{
+    const struct pe_image *mapped = image_is_linked ? &linked_image : &pe;
+
+    if (image_is_linked && pe.image != linked_image.image)
+        return false;
+
+    if (munmap(mapped->image, mapped->size) != 0)
+        return false;
+
+    if (image_is_linked) {
+        image_is_linked = false;
+        memset(&linked_image, 0, sizeof linked_image);
+    }
+
+    // Search PE exports
+    free(pe_exports);
+    pe_exports = NULL;
+    num_pe_exports = 0;
+
+    return true;
+}
+
 bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
 {
     static EXCEPTION_FRAME ExceptionFrame;
@@ -690,6 +744,9 @@ bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
         .limit_in_pages     = 0,
         .seg_not_present    = 0,
         .useable            = 1,
+#ifdef __x86_64__
+        .lm                 = 1,
+#endif
     };
 
     if (ExceptionHandler) {
@@ -701,12 +758,20 @@ bool setup_nt_threadinfo(PEXCEPTION_HANDLER ExceptionHandler)
         ThreadEnvironment.Tib.ExceptionList = &ExceptionFrame;
     }
 
-    if (syscall(__NR_set_thread_area, &pebdescriptor) != 0) {
+#ifdef __x86_64__
+    long set_tib_syscall_result = syscall(__NR_arch_prctl, ARCH_SET_GS, &ThreadEnvironment);
+#else
+    long set_tib_syscall_result = syscall(__NR_set_thread_area, &pebdescriptor);
+#endif
+    if (set_tib_syscall_result != 0) {
+        int error = errno;
+        l_error("Failed to set the thread area. Error: %u", error);
         return false;
     }
-
+#ifndef __x86_64__
     // Install descriptor
     asm("mov %[segment], %%fs" :: [segment] "r"(pebdescriptor.entry_number*8+3));
+#endif
 
     return true;
 }

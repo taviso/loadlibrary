@@ -57,7 +57,7 @@ const char footer[] = {
     0,                  // String terminator
 };
 
-DWORD (* __rsignal)(PHANDLE KernelHandle, DWORD Code, PVOID Params, DWORD Size);
+DWORD (MPENGINE_CALL * __rsignal)(PHANDLE KernelHandle, DWORD Code, PVOID Params, DWORD Size);
 
 double JavaScriptLog(const char *nptr, char **endptr)
 {
@@ -68,18 +68,18 @@ double JavaScriptLog(const char *nptr, char **endptr)
     return strtod(nptr, endptr);
 }
 
-static DWORD EngineScanCallback(PSCANSTRUCT Scan)
+static DWORD MPENGINE_CALL EngineScanCallback(PSCANSTRUCT Scan)
 {
     return 0;
 }
 
-static DWORD ReadStream(PVOID this, QWORD Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
+static DWORD MPENGINE_CALL ReadStream(PVOID this, QWORD Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
 {
     memcpy(Buffer, this + Offset, *SizeRead = MIN(strlen(this+Offset), Size));
     return TRUE;
 }
 
-static DWORD GetStreamSize(PVOID this, PQWORD FileSize)
+static DWORD MPENGINE_CALL GetStreamSize(PVOID this, PQWORD FileSize)
 {
     *FileSize = strlen(this);
     return TRUE;

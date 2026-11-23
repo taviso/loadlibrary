@@ -1,6 +1,7 @@
 #ifndef __SCANREPLY_H
 #define __SCANREPLY_H
 #pragma once
+#include "mpengine_abi.h"
 #pragma pack(push, 1)
 
 // These are just guesses based on observed behaviour.
@@ -23,7 +24,9 @@ typedef struct _SCANSTRUCT {
     DWORD Flags;
     PCHAR FileName;
     CHAR  VirusName[28];
+#ifndef __x86_64__
     DWORD field_28;
+#endif
     DWORD field_2C;
     DWORD field_30;
     DWORD field_34;
@@ -33,24 +36,37 @@ typedef struct _SCANSTRUCT {
     DWORD field_44;
     DWORD field_48;
     DWORD field_4C;
+#ifdef __x86_64__
+    ULONG64 FileSize;
+    ULONG64 UserPtr;
+    DWORD field_60;
+    DWORD field_64;
+#else
     DWORD FileSize;
     DWORD field_54;
     DWORD UserPtr;
     DWORD field_5C;
+#endif
     PCHAR MaybeFileName2;
     PWCHAR StreamName1;
     PWCHAR StreamName2;
     DWORD field_6C;
-    DWORD ThreatId;             // Can be passed back to GetThreatInfo
+    DWORD ThreatId; // Can be passed back to GetThreatInfo
 } SCANSTRUCT, *PSCANSTRUCT;
 
+// SCAN_REPLY uses native alignment; x64 mpengine reads field_C at offset 0x18.
+#pragma pack(pop)
+
 typedef struct _SCAN_REPLY {
-    DWORD   (*EngineScanCallback)(PSCANSTRUCT this);
-    DWORD   field_4;
-    DWORD   UserPtr;
-    DWORD   field_C;
+    DWORD     (MPENGINE_CALL *EngineScanCallback)(PSCANSTRUCT this);
+    DWORD     field_4;
+#ifdef __x86_64__
+    ULONG64   UserPtr;
+#else
+    DWORD     UserPtr;
+#endif
+    DWORD     field_C;
 } SCAN_REPLY, *PSCAN_REPLY;
 
-#pragma pack(pop)
 #endif // __SCANREPLY_H
 

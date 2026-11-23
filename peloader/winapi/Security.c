@@ -12,11 +12,32 @@
 #include "winexports.h"
 #include "util.h"
 
-BOOL WINAPI LookupPrivilegeValueW(PVOID lpSystemName, PVOID lpName, PVOID lpLuid)
-{
+BOOL WINAPI LookupPrivilegeValueW(PVOID lpSystemName, PVOID lpName, PVOID lpLuid) {
     DebugLog("%p, %p, %p", lpSystemName, lpName, lpLuid);
 
     return FALSE;
 }
 
 DECLARE_CRT_EXPORT("LookupPrivilegeValueW", LookupPrivilegeValueW);
+
+STATIC BOOL WINAPI InitializeSecurityDescriptor(
+  PVOID pSecurityDescriptor,
+  DWORD                dwRevision
+){
+    DebugLog("Returning success from InitializeSecurityDescriptor");
+    return 1;
+};
+
+STATIC BOOL WINAPI SetSecurityDescriptorDacl(
+  PVOID pSecurityDescriptor,
+  BOOL  bDaclPresent,
+  PVOID pDacl,
+  BOOL                 bDaclDefaulted
+){
+
+    DebugLog("Returning success from SetSecurityDescriptorDacl");
+    return 1;
+};
+
+DECLARE_CRT_EXPORT("InitializeSecurityDescriptor", InitializeSecurityDescriptor);
+DECLARE_CRT_EXPORT("SetSecurityDescriptorDacl", SetSecurityDescriptorDacl);

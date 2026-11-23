@@ -67,34 +67,84 @@ of this code is accessible to remote attackers.
 
 ### Building
 
-To build the test client, simply type `make`.
+The x64 build depends on submodules (including Zydis's nested dependency):
 
 ```
-$ make
+git submodule update --init --recursive
 ```
+
+To build both clients:
+
+```
+$ make all
+```
+
+To build one client:
+
+```
+$ make mpclient
+$ make mpclient_x64
+```
+
+The resulting programs are `build/x86/mpclient` and
+`build/x64/mpclient_x64`. Run them from the repository root so their relative
+engine paths resolve correctly. The x86 build uses the original hook library
+and libdisasm; x64 uses Zydis and subhook. `make debug` builds separate
+unoptimized binaries under `build/debug/`. `make clean` removes `build/`.
+
+To build the x86 and x64 coverage tools and the corpus distillation utility,
+unpack an Intel Pin kit into `coverage/`, install the extra dependencies listed
+in the [coverage README](coverage/README.md#dependencies), and run this from the
+repository root:
+
+```
+$ make coverage
+```
+
+The tools are placed under `build/x86/coverage/` and `build/x64/coverage/`;
+`build/coverage/coverage_parse_min` is shared by both. See the
+[coverage README](coverage/README.md) for usage.
+
 
 ### Dependencies
 
-*Note that the `.i686` or `:i386` suffixes are important, we need the 32bit libraries to use the 32bit dll.*
+*The x86 client needs 32-bit development libraries; use the `.i686`, `:i386`,
+or `-i386` variants where indicated.*
 
-| Fedora / RedHat       | Ubuntu / Debian                     | Comment                      |
-| --------------------- | ----------------------------------- |:---------------------------- |
-| `glibc-devel.i686`    | `libc6-dev:i386` / `libc6-dev-i386` | Name varies with version.    |
-| `libgcc.i686`         | `gcc-multilib`                      |                              |
-| `readline-devel.i686` | `libreadline-dev:i386`              | Optional, used in mpscript.  |
-| `cabextract`          | `cabextract`                        | Used to extract definitions. |
+| Fedora / RedHat       | Ubuntu / Debian                     | Comment                                    |
+| --------------------- | ----------------------------------- |:------------------------------------------ |
+| `gcc`, `gcc-c++`, `make` | `build-essential`                 | C/C++ compilers and Make.                  |
+| `git`                 | `git`                               | Fetches the x64 submodules.                |
+| `glibc-devel.i686`    | `libc6-dev:i386` / `libc6-dev-i386` | 32-bit C headers; name varies by version.  |
+| `libgcc.i686`         | `gcc-multilib`                      | 32-bit C compiler support.                 |
+| `cmake`               | `cmake`                             | Builds the x64 hook dependencies.          |
+| `readline-devel.i686` | `libreadline-dev:i386`              | Optional, used in mpscript.                |
+| `cabextract`          | `cabextract`                        | Used to extract definitions.               |
 
-You will need to download the 32-bit antimalware update file from this page:
+To install the client dependencies on Ubuntu:
+
+```
+sudo apt install build-essential git gcc-multilib cmake cabextract
+```
+
+The x64 client loads `engine/x64/mpengine.dll`; put the corresponding 64-bit engine
+and definitions in `engine/x64/`.
+
+You will need to download the 32 (and 64) bit antimalware update file from this page:
 
 * https://www.microsoft.com/security/portal/definitions/adl.aspx#manual
 
-This should be a direct link to the right file:
+This should be a direct link to the right x86/32 file:
 
 * https://go.microsoft.com/fwlink/?LinkID=121721&arch=x86
 
+And this one to the x86/64 file:
+
+* https://go.microsoft.com/fwlink/?LinkID=121721&arch=x64
+
 This will download a file called `mpam-fe.exe`, which is a cabinet file that
 can be extracted with `cabextract`. Extract the files into the `engine`
-directory:
+directory for x86/32, or into the `engine/x64` directory for x86/64:
 
 ```
 $ cabextract mpam-fe.exe
@@ -118,14 +168,23 @@ Product Version Number          : 1.1.13701.0
 
 ### Running
 
-The main mpengine loader is called `mpclient`, it accepts filenames to scan as
-a parameter.
+The 32-bit mpengine loader is `build/x86/mpclient`, and the 64-bit loader is
+`build/x64/mpclient_x64`. Both accept filenames to scan.
 
 ```
-$ ./mpclient netsky.exe
+$ ./build/x86/mpclient netsky.exe
 main(): Scanning netsky.exe...
 EngineScanCallback(): Scanning input
 EngineScanCallback(): Threat Worm:Win32/Netsky.P@mm identified.
+```
+
+Antispyware scanning is enabled by default. Use `--enable-pua` to report
+potentially unwanted applications, or `--disable-antispyware` to disable
+the antispyware engine. These options cannot be used together. Put options
+before filenames; use `--` before a filename that starts with `-`.
+
+```
+$ ./build/x64/mpclient_x64 --enable-pua suspicious.exe
 ```
 
 There are some other sample tools, `mpstreamfuzz` and `mpscript`.
@@ -156,7 +215,7 @@ When you run mpclient under gdb, it will detect a debugger and print the
 commands you need to enter to teach gdb about the symbols:
 
 ```
-$ gdb -q ./mpclient
+$ gdb -q ./build/x86/mpclient
 (gdb) r testfile.txt
 Starting program: mpclient
 main(): GDB: add-symbol-file engine/mpengine.dll 0xf6af4008+0x1000
@@ -238,6 +297,7 @@ The closest analogy would be ndiswrapper but for userspace.
 ## Further Examples
 
 * [avscript](https://github.com/taviso/avscript) - Loading another antivirus engine, demonstrates hooking and patching.
+* [BDClient](https://github.com/cube0x8/BDClient) - Loading the self-contained Bitdefender Total Security Threat Scanner, demonstrates granular custom instrumentation and harnessing.
 
 ## License
 

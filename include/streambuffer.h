@@ -1,6 +1,7 @@
 #ifndef __STREAMBUFFER_H
 #define __STREAMBUFFER_H
 #pragma once
+#include "mpengine_abi.h"
 #pragma pack(push, 1)
 
 enum {
@@ -92,21 +93,26 @@ enum {
 };
 
 typedef struct _STREAMBUFFER_DESCRIPTOR {
-    PVOID  UserPtr;
-    DWORD  (* Read)(PVOID this, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead);
-    DWORD  (* Write)(PVOID this, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD TotalWritten);
-    DWORD  (* GetSize)(PVOID this, uint64_t *FileSize);
-    DWORD  (* SetSize)(PVOID this, uint64_t *FileSize);
-    PWCHAR (* GetName)(PVOID this);
-    DWORD  (* SetAttributes)(PVOID this, DWORD Attribute, PVOID Data, DWORD DataSize);
-    DWORD  (* GetAttributes)(PVOID this, DWORD Attribute, PVOID Data, DWORD DataSize, PDWORD DataSizeWritten);
+    FILE   *UserPtr;
+    DWORD  (MPENGINE_CALL *Read)(PVOID context, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead);
+    DWORD  (* Write)(FILE *fp, uint64_t Offset, PVOID Buffer, DWORD Size, PDWORD TotalWritten);
+    DWORD  (MPENGINE_CALL *GetSize)(PVOID context, uint64_t *FileSize);
+    DWORD  (* SetSize)(FILE *fp, uint64_t *FileSize);
+    PWCHAR (MPENGINE_CALL *GetName)(PVOID context);
+    DWORD  (* SetAttributes)(FILE *fp, DWORD Attribute, PVOID Data, DWORD DataSize);
+    DWORD  (* GetAttributes)(FILE *fp, DWORD Attribute, PVOID Data, DWORD DataSize, PDWORD DataSizeWritten);
 } STREAMBUFFER_DESCRIPTOR, *PSTREAMBUFFER_DESCRIPTOR;
 
 typedef struct _SCANSTREAM_PARAMS {
-    PSTREAMBUFFER_DESCRIPTOR    Descriptor;
-    PSCAN_REPLY                 ScanReply;
-    DWORD                       UnknownB;
-    DWORD                       UnknownC;
+    PSTREAMBUFFER_DESCRIPTOR      Descriptor;
+    PSCAN_REPLY                   ScanReply;
+#ifdef __x86_64__
+    ULONG64                       UnknownB;
+    ULONG64                       UnknownC;
+#else
+    DWORD                         UnknownB;
+    DWORD                         UnknownC;
+#endif
 } SCANSTREAM_PARAMS, *PSCANSTREAM_PARAMS;
 
 #pragma pack(pop)

@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ucontext.h>
 
 #include "log.h"
 #include "winnt_types.h"
@@ -64,3 +65,26 @@ bool IsGdbPresent()
     return result;
 }
 
+#ifdef __x86_64__
+void nix_2_ms_context_swap(ucontext_t *pNixContext, CONTEXT *pMSContext) {
+    // General purpose registers
+    pMSContext->Rax = pNixContext->uc_mcontext.gregs[REG_RAX];
+    pMSContext->Rcx = pNixContext->uc_mcontext.gregs[REG_RCX];
+    pMSContext->Rdx = pNixContext->uc_mcontext.gregs[REG_RDX];
+    pMSContext->Rbx = pNixContext->uc_mcontext.gregs[REG_RBX];
+    pMSContext->Rsp = pNixContext->uc_mcontext.gregs[REG_RSP];
+    pMSContext->Rbp = pNixContext->uc_mcontext.gregs[REG_RBP];
+    pMSContext->Rsi = pNixContext->uc_mcontext.gregs[REG_RSI];
+    pMSContext->Rdi = pNixContext->uc_mcontext.gregs[REG_RDI];
+    pMSContext->Rip = pNixContext->uc_mcontext.gregs[REG_RIP];
+    pMSContext->R8 = pNixContext->uc_mcontext.gregs[REG_R8];
+    pMSContext->R9 = pNixContext->uc_mcontext.gregs[REG_R9];
+    pMSContext->R10 = pNixContext->uc_mcontext.gregs[REG_R10];
+    pMSContext->R11 = pNixContext->uc_mcontext.gregs[REG_R11];
+    pMSContext->R12 = pNixContext->uc_mcontext.gregs[REG_R12];
+    pMSContext->R13 = pNixContext->uc_mcontext.gregs[REG_R13];
+    pMSContext->R14 = pNixContext->uc_mcontext.gregs[REG_R14];
+    pMSContext->R15 = pNixContext->uc_mcontext.gregs[REG_R15];
+
+}
+#endif

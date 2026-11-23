@@ -17,21 +17,20 @@
 
 
 typedef struct _KEY_VALUE_BASIC_INFORMATION {
-  ULONG TitleIndex;
-  ULONG Type;
-  ULONG NameLength;
-  WCHAR Name[1];
+    ULONG TitleIndex;
+    ULONG Type;
+    ULONG NameLength;
+    WCHAR Name[1];
 } KEY_VALUE_BASIC_INFORMATION, *PKEY_VALUE_BASIC_INFORMATION;
 
 typedef struct _KEY_VALUE_PARTIAL_INFORMATION {
-  ULONG TitleIndex;
-  ULONG Type;
-  ULONG DataLength;
-  UCHAR Data[1];
+    ULONG TitleIndex;
+    ULONG Type;
+    ULONG DataLength;
+    UCHAR Data[1];
 } KEY_VALUE_PARTIAL_INFORMATION, *PKEY_VALUE_PARTIAL_INFORMATION;
 
-STATIC LONG WINAPI RegOpenKeyExW(HANDLE hKey, PVOID lpSubKey, DWORD ulOptions, DWORD samDesired, PHANDLE phkResult)
-{
+STATIC LONG WINAPI RegOpenKeyExW(HANDLE hKey, PVOID lpSubKey, DWORD ulOptions, DWORD samDesired, PHANDLE phkResult) {
     LONG Result = -1;
     char *ansikey = CreateAnsiFromWide(lpSubKey);
 
@@ -54,39 +53,59 @@ STATIC LONG WINAPI RegOpenKeyExW(HANDLE hKey, PVOID lpSubKey, DWORD ulOptions, D
     return Result;
 }
 
-STATIC LONG WINAPI RegCloseKey(HANDLE hKey)
-{
+STATIC LONG WINAPI RegCloseKey(HANDLE hKey) {
     DebugLog("%p");
     return 0;
 }
 
 STATIC LONG WINAPI RegQueryInfoKeyW(
-  HANDLE   hKey,
-  PWCHAR   lpClass,
-  PDWORD   lpcClass,
-  PDWORD   lpReserved,
-  PDWORD   lpcSubKeys,
-  PDWORD   lpcMaxSubKeyLen,
-  PDWORD   lpcMaxClassLen,
-  PDWORD   lpcValues,
-  PDWORD   lpcMaxValueNameLen,
-  PDWORD   lpcMaxValueLen,
-  PDWORD   lpcbSecurityDescriptor,
-  PVOID    lpftLastWriteTime)
-{
-    DebugLog("");
+        HANDLE hKey,
+        PWCHAR lpClass,
+        PDWORD lpcClass,
+        PDWORD lpReserved,
+        PDWORD lpcSubKeys,
+        PDWORD lpcMaxSubKeyLen,
+        PDWORD lpcMaxClassLen,
+        PDWORD lpcValues,
+        PDWORD lpcMaxValueNameLen,
+        PDWORD lpcMaxValueLen,
+        PDWORD lpcbSecurityDescriptor,
+        PVOID lpftLastWriteTime) {
+    DebugLog("%p %p %p %p %p %p %p %p %p %p %p %p", hKey, lpClass, lpcClass, lpReserved, lpcSubKeys, lpcMaxSubKeyLen, lpcMaxClassLen, lpcValues, lpcMaxValueNameLen, lpcMaxValueLen, lpcbSecurityDescriptor, lpftLastWriteTime);
 
+#ifdef __x86_64__
+    if (lpClass || lpcClass || lpReserved || lpcSubKeys || lpcMaxSubKeyLen || lpcMaxClassLen || lpftLastWriteTime) {
+        DebugLog("NOT SUPPORTED");
+        return -1;
+    }
+#else
     if (lpClass || lpcClass || lpReserved || lpcSubKeys || lpcMaxSubKeyLen || lpcMaxClassLen || lpcMaxValueLen || lpcbSecurityDescriptor || lpftLastWriteTime) {
         DebugLog("NOT SUPPORTED");
         return -1;
     }
+#endif
 
-    switch ((DWORD) hKey) {
+    switch ((uintptr_t) hKey) {
         case 'REG0':
+#ifdef __x86_64__
+            *lpcValues = 0xc;
+            *lpcMaxValueNameLen = 0x1b;
+            break;
+#endif
         case 'REG1':
+#ifdef __x86_64__
+            *lpcValues = 0xb;
+            *lpcMaxValueNameLen = 0x26;
+            break;
+#endif
         case 'REG2':
+#ifdef __x86_64__
+            *lpcValues = 0x4;
+            *lpcMaxValueNameLen = 0x11;
+#else
             *lpcValues = 1;
             *lpcMaxValueNameLen = 1024;
+#endif
             break;
         default:
             DebugLog("NOT SUPPROTED KEY");
@@ -97,12 +116,12 @@ STATIC LONG WINAPI RegQueryInfoKeyW(
 }
 
 STATIC NTSTATUS WINAPI NtEnumerateValueKey(
-  HANDLE                      KeyHandle,
-  ULONG                       Index,
-  DWORD                       KeyValueInformationClass,
-  PKEY_VALUE_BASIC_INFORMATION KeyValueInformation,
-  ULONG                       Length,
-  PULONG                      ResultLength
+        HANDLE KeyHandle,
+        ULONG Index,
+        DWORD KeyValueInformationClass,
+        PKEY_VALUE_BASIC_INFORMATION KeyValueInformation,
+        ULONG Length,
+        PULONG ResultLength
 ) {
     DebugLog("%p, %u, %u, %p, %u, %p", KeyHandle, Index, KeyValueInformationClass, KeyValueInformation, Length, ResultLength);
 
@@ -111,21 +130,21 @@ STATIC NTSTATUS WINAPI NtEnumerateValueKey(
         return -1;
     }
 
-    switch ((DWORD) KeyHandle) {
+    switch ((uintptr_t) KeyHandle) {
         case 'REG1':
-            KeyValueInformation->Type       = REG_SZ;
+            KeyValueInformation->Type = REG_SZ;
             KeyValueInformation->NameLength = sizeof(L"Common AppDatz") - 2;
             memcpy(&KeyValueInformation->Name[0], L"Common AppData", KeyValueInformation->NameLength);
             *ResultLength = sizeof(KEY_VALUE_BASIC_INFORMATION) + KeyValueInformation->NameLength;
             break;
         case 'REG0':
-            KeyValueInformation->Type       = REG_SZ;
+            KeyValueInformation->Type = REG_SZ;
             KeyValueInformation->NameLength = sizeof(L"Common AppDatz") - 2;
             memcpy(&KeyValueInformation->Name[0], L"Common AppData", KeyValueInformation->NameLength);
             *ResultLength = sizeof(KEY_VALUE_BASIC_INFORMATION) + KeyValueInformation->NameLength;
             break;
         case 'REG2':
-            KeyValueInformation->Type       = REG_SZ;
+            KeyValueInformation->Type = REG_SZ;
             KeyValueInformation->NameLength = sizeof(L"Common AppDatz") - 2;
             memcpy(&KeyValueInformation->Name[0], L"Common AppData", KeyValueInformation->NameLength);
             *ResultLength = sizeof(KEY_VALUE_BASIC_INFORMATION) + KeyValueInformation->NameLength;
@@ -139,14 +158,13 @@ STATIC NTSTATUS WINAPI NtEnumerateValueKey(
 }
 
 STATIC NTSTATUS WINAPI NtQueryValueKey(
- HANDLE                      KeyHandle,
- PVOID                       ValueName,
- DWORD                       KeyValueInformationClass,
- PKEY_VALUE_PARTIAL_INFORMATION KeyValueInformation,
- ULONG                       Length,
- PULONG                      ResultLength
-)
-{
+        HANDLE KeyHandle,
+        PVOID ValueName,
+        DWORD KeyValueInformationClass,
+        PKEY_VALUE_PARTIAL_INFORMATION KeyValueInformation,
+        ULONG Length,
+        PULONG ResultLength
+) {
     DebugLog("%p, %p, %u, %u, %u, %p", KeyHandle, ValueName, KeyValueInformationClass, KeyValueInformation, Length, ResultLength);
 
     if (KeyValueInformationClass != 2) {
@@ -154,7 +172,7 @@ STATIC NTSTATUS WINAPI NtQueryValueKey(
         return -1;
     }
 
-    switch ((DWORD) KeyHandle) {
+    switch ((uintptr_t) KeyHandle) {
         case 'REG1':
             KeyValueInformation->Type = REG_SZ;
             KeyValueInformation->DataLength = sizeof(L"Common AppData") - 2;
@@ -181,18 +199,19 @@ STATIC NTSTATUS WINAPI NtQueryValueKey(
     return 0;
 }
 
-STATIC LONG WINAPI RegCreateKeyExW(HANDLE hKey, PVOID lpSubKey, DWORD Reserved, PVOID lpClass, DWORD dwOptions, PVOID samDesired, PVOID lpSecurityAttributes, PVOID phkResult, PDWORD lpdwDisposition)
-{
+STATIC LONG WINAPI
+RegCreateKeyExW(HANDLE hKey, PVOID lpSubKey, DWORD Reserved, PVOID lpClass, DWORD dwOptions, PVOID samDesired,
+                PVOID lpSecurityAttributes, PVOID phkResult, PDWORD lpdwDisposition) {
     DebugLog("%p, %p, %#x, %p, %#x, %p, %p, %p, %p",
-             hKey,
-             lpSubKey,
-             Reserved,
-             lpClass,
-             dwOptions,
-             samDesired,
-             lpSecurityAttributes,
-             phkResult,
-             lpdwDisposition);
+            hKey,
+            lpSubKey,
+            Reserved,
+            lpClass,
+            dwOptions,
+            samDesired,
+            lpSecurityAttributes,
+            phkResult,
+            lpdwDisposition);
     return 0;
 }
 
@@ -208,11 +227,43 @@ STATIC NTSTATUS WINAPI RegQueryValueExW(HANDLE hKey,
 }
 
 
+STATIC DWORD WINAPI RegGetValueA(
+  PVOID   hkey,
+  LPCSTR  lpSubKey,
+  LPCSTR  lpValue,
+  DWORD   dwFlags,
+  LPDWORD pdwType,
+  PVOID   pvData,
+  LPDWORD pcbData
+){
+    DebugLog(lpValue);
+    if (pvData != NULL && !strcmp(lpValue, "CurrentVersion") && *pcbData >= 4){
+        strcpy(pvData, "6.3");
+        *pcbData=4;
+        return 0;
+    }
+    char* prod_name="Windows Server 2022 Standard";
+    size_t prod_name_len=strlen(prod_name);
+    if (pvData != NULL && !strcmp(lpValue, "ProductName") && *pcbData >= prod_name_len){
+        strcpy(pvData, prod_name);
+        *pcbData=prod_name_len;
+        return 0;
+    }
+
+    return 1;
+}
+
 DECLARE_CRT_EXPORT("RegOpenKeyExW", RegOpenKeyExW);
+
 DECLARE_CRT_EXPORT("RegCloseKey", RegCloseKey);
+
 DECLARE_CRT_EXPORT("RegQueryInfoKeyW", RegQueryInfoKeyW);
+
 DECLARE_CRT_EXPORT("NtEnumerateValueKey", NtEnumerateValueKey);
+
 DECLARE_CRT_EXPORT("NtQueryValueKey", NtQueryValueKey);
+
 DECLARE_CRT_EXPORT("RegCreateKeyExW", RegCreateKeyExW);
 DECLARE_CRT_EXPORT("RegQueryValueExW", RegQueryValueExW);
 
+DECLARE_CRT_EXPORT("RegGetValueA", RegGetValueA);

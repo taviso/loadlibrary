@@ -15,8 +15,7 @@
 STATIC NTSTATUS WINAPI NtSetInformationProcess(HANDLE ProcessHandle,
                                                PROCESS_INFORMATION_CLASS ProcessInformationClass,
                                                PVOID ProcessInformation,
-                                               ULONG ProcessInformationLength)
-{
+                                               ULONG ProcessInformationLength) {
     DebugLog("%p", ProcessHandle);
     return 0;
 }
@@ -77,3 +76,4 @@ DECLARE_CRT_EXPORT("NtSetInformationProcess", NtSetInformationProcess);
 DECLARE_CRT_EXPORT("OpenProcessToken", OpenProcessToken);
 DECLARE_CRT_EXPORT("GetExitCodeProcess", GetExitCodeProcess);
 DECLARE_CRT_EXPORT("QueryFullProcessImageNameW", QueryFullProcessImageNameW);
+

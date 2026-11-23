@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -24,9 +23,21 @@ typedef struct {
     uint32_t  count;        // Number of times I've been here
 } execution_record_t;
 
-VOID PIN_FAST_ANALYSIS_CALL instrument_basic_block(ADDRINT address, UINT32 size)
+static execution_record_t zero, *hblock = &zero;
+
+static int compare_execution_record(const void *a, const void *b)
 {
-    static execution_record_t zero, *hblock = &zero;
+    const execution_record_t *x = a, *y = b;
+    return (x->address > y->address) - (x->address < y->address);
+}
+
+static void __attribute__((constructor)) init_blocks(void)
+{
+    tree_create(&blocks, compare_execution_record, free);
+}
+
+void PIN_FAST_ANALYSIS_CALL instrument_basic_block(uintptr_t address, uint32_t size)
+{
     void **data;
 
     execution_record_t *record, block = {
@@ -34,17 +45,6 @@ VOID PIN_FAST_ANALYSIS_CALL instrument_basic_block(ADDRINT address, UINT32 size)
         .size    = size,
         .count   = 0,
     };
-
-    void __attribute__((constructor)) init()
-    {
-        int __attribute__ ((pure)) compare(const void *a, const void *b)
-        {
-            const execution_record_t *x = a, *y = b;
-            return x->address - y->address;
-        }
-
-        tree_create(&blocks, compare, free);
-    }
 
     // Is this a call to my hottest block?
     if (hblock->address == address) {
@@ -73,49 +73,58 @@ VOID PIN_FAST_ANALYSIS_CALL instrument_basic_block(ADDRINT address, UINT32 size)
 static const char kCoverageReport[] = "coverage.txt";
 static const char kCoverageVariable[] = "COVERAGE_REPORT_FILE";
 
-VOID instrument_fini_callback(INT32 code, VOID *v)
+typedef struct {
+    unsigned instructions;
+    unsigned blockcount;
+    unsigned totalinstructions;
+    unsigned totalblocks;
+    const execution_record_t *hblock;
+} coverage_stats_t;
+
+static void calculate_block_stats(const void *v, void *context)
 {
-    unsigned instructions = 0;
-    unsigned blockcount = 0;
-    unsigned totalinstructions = 0;
-    unsigned totalblocks = 0;
-    const execution_record_t *hblock = NULL;
+    const execution_record_t *d = v;
+    coverage_stats_t *stats = context;
+
+    stats->blockcount++;
+    stats->instructions += d->size;
+    stats->totalblocks += d->count;
+    stats->totalinstructions += d->size * d->count;
+
+    if (stats->hblock == NULL || stats->hblock->count < d->count)
+        stats->hblock = d;
+}
+
+static void print_basic_blocks(const void *v, void *context)
+{
+    const execution_record_t *record = v;
+    FILE *output = context;
+    fprintf(output, "%#010" PRIxPTR "\n", record->address);
+}
+
+void instrument_fini_callback(int32_t code, void *v)
+{
+    coverage_stats_t stats = {0};
     FILE *output  = fopen(getenv(kCoverageVariable)
                             ? getenv(kCoverageVariable)
                             : kCoverageReport, "wx");
 
-    void calculate_block_stats(const void *v) {
-        const execution_record_t *d = v;
-        blockcount++;
-        instructions += d->size;
-        totalblocks += d->count;
-        totalinstructions += d->size * d->count;
-
-        if (hblock == NULL || hblock->count < d->count)
-            hblock = d;
-    }
-
-    void print_basic_blocks(const void *v) {
-        register uintptr_t address = ((const execution_record_t *)(v))->address;
-        fprintf(output, "%#010" PRIxPTR "\n", address);
-    }
-
     if (output != NULL) {
-        tree_walk(blocks, print_basic_blocks);
+        tree_walk(blocks, print_basic_blocks, output);
     }
 
-    tree_walk(blocks, calculate_block_stats);
+    tree_walk(blocks, calculate_block_stats, &stats);
 
     fprintf(stderr, "\n\n----- COVERAGE ANALYSIS -----\n");
-    fprintf(stderr, "\t%10u Unique Instructions Executed\n", instructions);
-    fprintf(stderr, "\t%10u Unique Basic Blocks Executed\n", blockcount);
-    fprintf(stderr, "\t%10u Total Instructions Executed\n", totalinstructions);
-    fprintf(stderr, "\t%10u Total Basic Blocks Executed\n", totalblocks);
+    fprintf(stderr, "\t%10u Unique Instructions Executed\n", stats.instructions);
+    fprintf(stderr, "\t%10u Unique Basic Blocks Executed\n", stats.blockcount);
+    fprintf(stderr, "\t%10u Total Instructions Executed\n", stats.totalinstructions);
+    fprintf(stderr, "\t%10u Total Basic Blocks Executed\n", stats.totalblocks);
 
-    if (hblock) {
-        fprintf(stderr, "\tHottest Basic Block (%#018" PRIxPTR ")\n", hblock->address);
-        fprintf(stderr, "\t\t%10u Executes\n", hblock->count);
-        fprintf(stderr, "\t\t%10u Instructions\n", hblock->size);
+    if (stats.hblock) {
+        fprintf(stderr, "\tHottest Basic Block (%#018" PRIxPTR ")\n", stats.hblock->address);
+        fprintf(stderr, "\t\t%10u Executes\n", stats.hblock->count);
+        fprintf(stderr, "\t\t%10zu Instructions\n", stats.hblock->size);
     }
 
     tree_destroy(blocks);

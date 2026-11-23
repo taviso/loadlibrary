@@ -19,12 +19,29 @@
 # Yes, this is insane. However, it actually works.
 #
 
-awk 'BEGIN { printf ".macro symbol name, address\n.set \\name, \\address\n.func \\name\n.endfunc\n.endm\n" }
+awk -v base="$1" '
+    BEGIN {
+        print ".macro symbol name, address"
+        print ".set \\name, \\address"
+        print ".func \\name"
+        print ".endfunc"
+        print ".endm"
+    }
 
     /Publics by Value/,/Program entry point/ {
+        if ($1 !~ /^[[:xdigit:]]+:[[:xdigit:]]+$/)
+            next
 
-        if (gsub(/^ ....:/,"'${1}'+0x")) {
-            gsub(/[\"/^}{\[\]$?:@()><`\'\''|~,=!+&*-]/, "_",$2);
-            printf "symbol %s,%s\n",$2,$1
-        }
-}' | as -o ${2} -gstabs+ --32
+        split($1, address, ":")
+        name = $2
+        gsub(/[^[:alnum:]_]/, "_", name)
+        if (name == "")
+            next
+        if (name ~ /^[[:digit:]]/)
+            name = "_" name
+        if (++seen[name] > 1)
+            name = name "_" seen[name]
+
+        printf "symbol %s,%s+0x%s\n", name, base, address[2]
+    }
+' | as -o "$2" -gstabs+ -W --32

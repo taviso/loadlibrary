@@ -1,18 +1,19 @@
-CFLAGS  = -O3 -march=native -ggdb3 -m32 -std=gnu99 -fshort-wchar -Wno-multichar -Iinclude -mstackrealign
-CPPFLAGS=-DNDEBUG -D_GNU_SOURCE -I.
-LDFLAGS = $(CFLAGS) -m32 -lm
+# Compatibility entry points; the top-level Makefile owns all build artifacts.
+ARCH ?= x64
+ifeq ($(ARCH),x86)
+LOADER_TARGET := peloader
+else ifeq ($(ARCH),x64)
+LOADER_TARGET := peloader_x64
+else
+$(error Supported target architectures: x86 or x64)
+endif
 
-.PHONY: clean
+.PHONY: all debug clean
+all:
+	$(MAKE) -C .. $(LOADER_TARGET)
 
-# This glob matches all the winapi exports we provide.
-WINAPI  = $(patsubst %.c,%.o,$(wildcard winapi/*.c))
-
-TARGETS=libpeloader.a
-
-all: $(TARGETS)
-
-libpeloader.a: $(WINAPI) winstrings.o pe_linker.o crt.o log.o util.o extra.o
-	$(AR) $(ARFLAGS) $@ $^
+debug:
+	$(MAKE) -C .. BUILD_DIR=build/debug BUILD_MODE=debug $(LOADER_TARGET)
 
 clean:
-	rm -f a.out core *.o core.* vgcore.* gmon.out winapi/*.o $(TARGETS)
+	$(MAKE) -C .. clean

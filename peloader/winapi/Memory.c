@@ -24,8 +24,7 @@
 
 #define MEM_RELEASE 0x8000
 
-STATIC PVOID WINAPI VirtualAlloc(PVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect)
-{
+STATIC PVOID WINAPI VirtualAlloc(PVOID lpAddress, SIZE_T dwSize, DWORD flAllocationType, DWORD flProtect) {
     if (flAllocationType & ~(MEM_COMMIT | MEM_RESERVE)) {
         DebugLog("flAllocationType %#x not implemnted", flAllocationType);
         return NULL;
@@ -43,27 +42,41 @@ STATIC PVOID WINAPI VirtualAlloc(PVOID lpAddress, SIZE_T dwSize, DWORD flAllocat
     return NULL;
 }
 
-STATIC BOOL WINAPI VirtualProtect(PVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpflOldProtect)
-{
+STATIC BOOL WINAPI VirtualProtect(PVOID lpAddress, SIZE_T dwSize, DWORD flNewProtect, PDWORD lpflOldProtect) {
     if (flNewProtect != PAGE_READONLY) {
         DebugLog("unimplemented VirtualProtect() request, %#x", flNewProtect);
     }
     return TRUE;
 }
 
-STATIC BOOL WINAPI VirtualUnlock(PVOID lpAddress, SIZE_T dwSize)
-{
+STATIC BOOL WINAPI VirtualUnlock(PVOID lpAddress, SIZE_T dwSize) {
     return TRUE;
 }
 
-STATIC BOOL WINAPI VirtualFree(PVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType)
-{
+STATIC BOOL WINAPI VirtualFree(PVOID lpAddress, SIZE_T dwSize, DWORD dwFreeType) {
     if (dwFreeType == MEM_RELEASE)
         code_free(lpAddress);
     return TRUE;
 }
 
+STATIC BOOL WINAPI GlobalMemoryStatusEx(LPMEMORYSTATUSEX lpBuffer) {
+    lpBuffer->dwMemoryLoad = 40;
+    lpBuffer->ullTotalPhys = 2147483648;
+    lpBuffer->ullAvailPhys = 2147483648;
+    lpBuffer->ullTotalPageFile = 2147483648;
+    lpBuffer->ullAvailPageFile = 2147483648;
+    lpBuffer->ullTotalVirtual = 2147483648;
+    lpBuffer->ullAvailVirtual = 2147483648;
+    lpBuffer->ullAvailExtendedVirtual = 0;
+    return true;
+}
+
 DECLARE_CRT_EXPORT("VirtualAlloc", VirtualAlloc);
+
 DECLARE_CRT_EXPORT("VirtualProtect", VirtualProtect);
+
 DECLARE_CRT_EXPORT("VirtualUnlock", VirtualUnlock);
+
 DECLARE_CRT_EXPORT("VirtualFree", VirtualFree);
+
+DECLARE_CRT_EXPORT("GlobalMemoryStatusEx", GlobalMemoryStatusEx);

@@ -1,13 +1,14 @@
 #ifndef __INSTRUMENT_H
 #define __INSTRUMENT_H
-VOID instrument_basic_block(ADDRINT address, UINT32 size);
+#include <stdint.h>
+void instrument_basic_block(uintptr_t address, uint32_t size);
 
-VOID instrument_repz_cmps_pre(ADDRINT address, ADDRINT count, UINT32 width);
-VOID instrument_repz_cmps_post(ADDRINT address, ADDRINT count, UINT32 width);
+void instrument_repz_cmps_pre(uintptr_t address, uintptr_t count, uint32_t width);
+void instrument_repz_cmps_post(uintptr_t address, uintptr_t count, uint32_t width);
 
-VOID instrument_cmp_reg_imm(ADDRINT address, ADDRINT reg, UINT32 imm);
+void instrument_cmp_reg_imm(uintptr_t address, uintptr_t reg, uint32_t imm);
 
-VOID instrument_fini_callback(INT32 code, VOID *v);
+void instrument_fini_callback(int32_t code, void *v);
 #else
 #warning instrument.h multiple inclusion
 #endif

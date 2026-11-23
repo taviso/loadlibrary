@@ -21,8 +21,7 @@
 #define FILE_TYPE_REMOTE 0x8000
 #define FILE_TYPE_UNKNOWN 0x0000
 
-STATIC HANDLE WINAPI GetStdHandle(DWORD nStdHandle)
-{
+STATIC HANDLE WINAPI GetStdHandle(DWORD nStdHandle) {
     DebugLog("%d", nStdHandle);
 
     switch (nStdHandle) {
@@ -37,12 +36,12 @@ STATIC HANDLE WINAPI GetStdHandle(DWORD nStdHandle)
     return INVALID_HANDLE_VALUE;
 }
 
-STATIC DWORD WINAPI GetFileType(HANDLE hFile)
-{
+STATIC DWORD WINAPI GetFileType(HANDLE hFile) {
     DebugLog("%p", hFile);
 
     return FILE_TYPE_CHAR;
 }
 
 DECLARE_CRT_EXPORT("GetStdHandle", GetStdHandle);
+
 DECLARE_CRT_EXPORT("GetFileType", GetFileType);

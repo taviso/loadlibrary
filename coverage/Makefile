@@ -1,42 +1,76 @@
-PIN_ROOT = $(CURDIR)/$(wildcard pin-*-gcc-linux)
-CONFIG_ROOT = $(PIN_ROOT)/source/tools/Config
-PIN = $(PIN_ROOT)/pin
-TARGET = ia32
-KIT = 1
+.DEFAULT_GOAL := all
 
-include $(PIN_ROOT)/source/tools/Config/makefile.config
+BUILD_DIR ?= ../build
+BUILD_DIR := $(abspath $(BUILD_DIR))
+PIN_ROOT ?= $(firstword $(wildcard $(CURDIR)/pin-*-gcc-linux))
 
-CXXFLAGS = -Wall -O3 -fno-stack-protector -fpermissive -march=native
 CFLAGS = -O3 -fomit-frame-pointer -Wall -DNDEBUG -fno-stack-protector -fPIC -march=native
+CXXFLAGS = -Wall -O3 -fno-stack-protector -fpermissive -march=native
 LDFLAGS = -Wl,-O1 -Wl,--as-needed
 
-# I dont need these default targets
+.PHONY: all x86 x64 tool clean
+all: x86 x64 $(BUILD_DIR)/coverage/coverage_parse_min
+
+x86:
+	+$(MAKE) COVERAGE_ARCH=x86 tool
+
+x64:
+	+$(MAKE) COVERAGE_ARCH=x64 tool
+
+$(BUILD_DIR)/coverage/coverage_parse_min: coverage_parse_min.c Makefile
+	@mkdir -p $(@D)
+	$(CC) -std=gnu99 $(CFLAGS) $(LDFLAGS) $(shell pkg-config glib-2.0 --cflags) -o $@ $< $(shell pkg-config glib-2.0 --libs)
+
+clean:
+	rm -rf $(BUILD_DIR)/x86/coverage $(BUILD_DIR)/x64/coverage $(BUILD_DIR)/coverage
+
+ifneq ($(COVERAGE_ARCH),)
+ifeq ($(COVERAGE_ARCH),x86)
+override TARGET := ia32
+else ifeq ($(COVERAGE_ARCH),x64)
+override TARGET := intel64
+else
+$(error Supported COVERAGE_ARCH values: x86 or x64)
+endif
+
+ifeq ($(PIN_ROOT),)
+$(error No Pin kit found under coverage/; set PIN_ROOT to its directory)
+endif
+
+CONFIG_ROOT := $(PIN_ROOT)/source/tools/Config
+KIT := 1
+include $(CONFIG_ROOT)/makefile.config
+
+# Pin's configuration provides the compiler, linker, and architecture flags.
+# Its default targets are not needed by this small standalone pintool.
 dir:
 libs:
 objects:
 dlls:
 apps:
-libs:
 
-tools: deepcover.so
-	@echo \#!/bin/sh > pin
-	@echo exec $(PIN_ROOT)/pin \$$\@ >> pin
-	@chmod +x pin
+OUT := $(BUILD_DIR)/$(COVERAGE_ARCH)/coverage
+OBJS := $(OUT)/tree.o $(OUT)/deepcover.o $(OUT)/instrument.o
 
-OBJS = tree.o deepcover.o instrument.o
+tool: $(OUT)/deepcover.so $(OUT)/pin
 
-%.o : %.cpp
-	$(CXX) $(COMP_OBJ) $@ $(CXXFLAGS) $(TOOL_CXXFLAGS) $<
+$(OUT):
+	@mkdir -p $@
 
-%.o : %.c
-	$(CC) $(COMP_OBJ) $@ $(CFLAGS) $(TOOL_CFLAGS) $<
+$(OUT)/%.o: %.cpp Makefile | $(OUT)
+	$(TOOL_CXX) $(COMP_OBJ) $@ $(CXXFLAGS) $(TOOL_CXXFLAGS) $<
 
-deepcover.so : $(OBJS)
-	$(CXX) $(LINK_EXE) $@ $(LDFLAGS) $(TOOL_LDFLAGS) $(OBJS) $(TOOL_LPATHS) $(TOOL_LIBS) -static-libgcc -static-libstdc++
+$(OUT)/%.o: %.c Makefile | $(OUT)
+	$(TOOL_CC) $(COMP_OBJ) $@ $(CFLAGS) $(TOOL_CFLAGS) $<
 
-coverage_parse_min: coverage_parse_min.c
-	gcc -std=gnu99 $(CFLAGS) $(LDFLAGS) $(shell pkg-config glib-2.0 --cflags) -o $@ $<  $(shell pkg-config glib-2.0 --libs)
+$(OUT)/tree.o: tree.h
+$(OUT)/instrument.o: instrument.h tree.h
+$(OUT)/deepcover.o: instrument.h tree.h blacklist.h
 
-clean:
-	rm -f *.o deepcover.so core *.core pin *.log blocks.txt coverage.txt summary.txt
-	rm -f coverage_parse_min
+$(OUT)/deepcover.so: $(OBJS)
+	$(TOOL_LINKER) $(LINK_EXE) $@ $(LDFLAGS) $(TOOL_LDFLAGS) $(OBJS) $(TOOL_LPATHS) $(TOOL_LIBS) -static-libgcc -static-libstdc++
+
+$(OUT)/pin: Makefile | $(OUT)
+	@printf '#!/bin/sh\nexec "$(PIN_ROOT)/pin" "$$@"\n' > $@
+	@chmod +x $@
+endif

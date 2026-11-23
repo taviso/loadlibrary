@@ -51,6 +51,16 @@
 #include "streambuffer.h"
 #include "openscan.h"
 
+#ifdef __x86_64__
+#define ENGINE_DLL "engine/x64/mpengine.dll"
+#define ENGINE_MAP "engine/x64/mpengine.map"
+#define SIGNATURE_DIR L"engine\\x64"
+#else
+#define ENGINE_DLL "engine/mpengine.dll"
+#define ENGINE_MAP "engine/mpengine.map"
+#define SIGNATURE_DIR L"engine"
+#endif
+
 // Any usage limits to prevent bugs disrupting system.
 const struct rlimit kUsageLimits[] = {
     [RLIMIT_FSIZE]  = { .rlim_cur = 0x20000000, .rlim_max = 0x20000000 },
@@ -59,9 +69,9 @@ const struct rlimit kUsageLimits[] = {
     [RLIMIT_NOFILE] = { .rlim_cur = 32,         .rlim_max = 32 },
 };
 
-DWORD (* __rsignal)(PHANDLE KernelHandle, DWORD Code, PVOID Params, DWORD Size);
+DWORD (MPENGINE_CALL * __rsignal)(PHANDLE KernelHandle, DWORD Code, PVOID Params, DWORD Size);
 
-static DWORD EngineScanCallback(PSCANSTRUCT Scan)
+static DWORD MPENGINE_CALL EngineScanCallback(PSCANSTRUCT Scan)
 {
     if (Scan->Flags & SCAN_MEMBERNAME) {
         LogMessage("Scanning archive member %s", Scan->VirusName);
@@ -91,21 +101,21 @@ static DWORD EngineScanCallback(PSCANSTRUCT Scan)
     return 0;
 }
 
-static DWORD ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
+static DWORD MPENGINE_CALL ReadStream(PVOID this, ULONGLONG Offset, PVOID Buffer, DWORD Size, PDWORD SizeRead)
 {
     fseek(this, Offset, SEEK_SET);
     *SizeRead = fread(Buffer, 1, Size, this);
     return TRUE;
 }
 
-static DWORD GetStreamSize(PVOID this, PULONGLONG FileSize)
+static DWORD MPENGINE_CALL GetStreamSize(PVOID this, PULONGLONG FileSize)
 {
     fseek(this, 0, SEEK_END);
     *FileSize = ftell(this);
     return TRUE;
 }
 
-static PWCHAR GetStreamName(PVOID this)
+static PWCHAR MPENGINE_CALL GetStreamName(PVOID this)
 {
     return L"input";
 }
@@ -120,6 +130,39 @@ BOOL __noinline InstrumentationCallback(PVOID ImageStart, SIZE_T ImageSize)
 
 int main(int argc, char **argv, char **envp)
 {
+    bool EnablePua = false;
+    bool DisableAntispyware = false;
+    int FirstFile = 1;
+
+    for (; FirstFile < argc; ++FirstFile) {
+        if (strcmp(argv[FirstFile], "--enable-pua") == 0) {
+            EnablePua = true;
+        } else if (strcmp(argv[FirstFile], "--disable-antispyware") == 0) {
+            DisableAntispyware = true;
+        } else if (strcmp(argv[FirstFile], "--help") == 0) {
+            fprintf(stdout, "usage: %s [--enable-pua] [--disable-antispyware] [--] filenames...\n", argv[0]);
+            return 0;
+        } else if (strcmp(argv[FirstFile], "--") == 0) {
+            ++FirstFile;
+            break;
+        } else if (argv[FirstFile][0] == '-') {
+            fprintf(stderr, "unknown option: %s\n", argv[FirstFile]);
+            return 1;
+        } else {
+            break;
+        }
+    }
+
+    if (EnablePua && DisableAntispyware) {
+        fprintf(stderr, "--enable-pua requires antispyware scanning\n");
+        return 1;
+    }
+    if (FirstFile == argc) {
+        fprintf(stderr, "usage: %s [--enable-pua] [--disable-antispyware] [--] filenames...\n", argv[0]);
+        return 1;
+    }
+
+    struct pe_image image = { .name = ENGINE_DLL };
     PIMAGE_DOS_HEADER DosHeader;
     PIMAGE_NT_HEADERS PeHeader;
     HANDLE KernelHandle;
@@ -130,10 +173,6 @@ int main(int argc, char **argv, char **envp)
     ENGINE_INFO EngineInfo;
     DWORD Result;
     ENGINE_CONFIG EngineConfig;
-    struct pe_image image = {
-        .entry  = NULL,
-        .name   = "engine/mpengine.dll",
-    };
 
     // Load the mpengine module.
     if (pe_load_library(image.name, &image.image, &image.size) == false) {
@@ -142,14 +181,19 @@ int main(int argc, char **argv, char **envp)
     }
 
     // Handle relocations, imports, etc.
-    link_pe_images(&image, 1);
+    int LinkResult = link_pe_images(&image, 1);
+    if (LinkResult != 0) {
+        LogMessage("Failed to link %s: %d", image.name, LinkResult);
+        pe_unload_library(image);
+        return 1;
+    }
 
     // Fetch the headers to get base offsets.
     DosHeader   = (PIMAGE_DOS_HEADER) image.image;
     PeHeader    = (PIMAGE_NT_HEADERS)(image.image + DosHeader->e_lfanew);
 
     // Load any additional exports.
-    if (!process_extra_exports(image.image, PeHeader->OptionalHeader.BaseOfCode, "engine/mpengine.map")) {
+    if (!process_extra_exports(image.image, PeHeader->OptionalHeader.BaseOfCode, ENGINE_MAP)) {
 #ifndef NDEBUG
         LogMessage("The map file wasn't found, symbols wont be available");
 #endif
@@ -164,7 +208,7 @@ int main(int argc, char **argv, char **envp)
                        image.image,
                        PeHeader->OptionalHeader.BaseOfCode,
                        getpid(),
-                       "engine/mpengine.map");
+                       ENGINE_MAP);
             LogMessage("GDB: add-symbol-file symbols_%d.o 0", getpid());
             __debugbreak();
         }
@@ -174,6 +218,7 @@ int main(int argc, char **argv, char **envp)
         errx(EXIT_FAILURE, "Failed to resolve mpengine entrypoint");
     }
 
+#ifndef __x86_64__
     EXCEPTION_DISPOSITION ExceptionHandler(struct _EXCEPTION_RECORD *ExceptionRecord,
             struct _EXCEPTION_FRAME *EstablisherFrame,
             struct _CONTEXT *ContextRecord,
@@ -182,13 +227,16 @@ int main(int argc, char **argv, char **envp)
         LogMessage("Toplevel Exception Handler Caught Exception");
         abort();
     }
+#endif
 
     VOID ResourceExhaustedHandler(int Signal)
     {
         errx(EXIT_FAILURE, "Resource Limits Exhausted, Signal %s", strsignal(Signal));
     }
 
+#ifndef __x86_64__
     setup_nt_threadinfo(ExceptionHandler);
+#endif
 
     // Call DllMain()
     image.entry((PVOID) 'MPEN', DLL_PROCESS_ATTACH, NULL);
@@ -213,11 +261,12 @@ int main(int argc, char **argv, char **envp)
 
     BootParams.ClientVersion = BOOTENGINE_PARAMS_VERSION;
     BootParams.Attributes    = BOOT_ATTR_NORMAL;
-    BootParams.SignatureLocation = L"engine";
+    BootParams.PUAProtection = EnablePua ? 1 : 0;
+    BootParams.SignatureLocation = SIGNATURE_DIR;
     BootParams.ProductName = L"Legitimate Antivirus";
     EngineConfig.QuarantineLocation = L"quarantine";
     EngineConfig.Inclusions = L"*.*";
-    EngineConfig.EngineFlags = 1 << 1;
+    EngineConfig.EngineFlags = ENGINE_UNPACK | (DisableAntispyware ? 0 : ENGINE_ENABLEANTISPYWARE);
     BootParams.EngineInfo = &EngineInfo;
     BootParams.EngineConfig = &EngineConfig;
     KernelHandle = NULL;
@@ -240,23 +289,19 @@ int main(int argc, char **argv, char **envp)
     ScanDescriptor.GetSize       = GetStreamSize;
     ScanDescriptor.GetName       = GetStreamName;
 
-    if (argc < 2) {
-        LogMessage("usage: %s [filenames...]", *argv);
-        return 1;
-    }
-
     // Enable Instrumentation.
     InstrumentationCallback(image.image, image.size);
 
-    for (char *filename = *++argv; *argv; ++argv) {
-        ScanDescriptor.UserPtr = fopen(*argv, "r");
+    for (int i = FirstFile; i < argc; ++i) {
+        char *filename = argv[i];
+        ScanDescriptor.UserPtr = fopen(filename, "r");
 
         if (ScanDescriptor.UserPtr == NULL) {
-            LogMessage("failed to open file %s", *argv);
+            LogMessage("failed to open file %s", filename);
             return 1;
         }
 
-        LogMessage("Scanning %s...", *argv);
+        LogMessage("Scanning %s...", filename);
 
         if (__rsignal(&KernelHandle, RSIG_SCAN_STREAMBUFFER, &ScanParams, sizeof ScanParams) != 0) {
             LogMessage("__rsignal(RSIG_SCAN_STREAMBUFFER) returned failure, file unreadable?");

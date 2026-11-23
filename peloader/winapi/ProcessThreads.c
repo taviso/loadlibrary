@@ -17,46 +17,38 @@
 #include "util.h"
 #include "winstrings.h"
 
-static PVOID WINAPI CreateThreadpoolTimer(PVOID pfnti, PVOID pv, PVOID pcbe)
-{
+static PVOID WINAPI CreateThreadpoolTimer(PVOID pfnti, PVOID pv, PVOID pcbe) {
     // DebugLog("%p, %p, %p", pfnti, pv, pcbe);
     return (PVOID) 'POOL';
 }
 
-static VOID WINAPI InitializeSRWLock(PVOID SRWLock)
-{
+static VOID WINAPI InitializeSRWLock(PVOID SRWLock) {
     DebugLog("%p", SRWLock);
 }
 
-static VOID WINAPI SetThreadpoolTimer(PVOID pti, PVOID pftDueTime, DWORD msPeriod, DWORD msWindowLength)
-{
+static VOID WINAPI SetThreadpoolTimer(PVOID pti, PVOID pftDueTime, DWORD msPeriod, DWORD msWindowLength) {
     DebugLog("%p, %p, %u, %u", pti, pftDueTime, msPeriod, msWindowLength);
 }
 
-static VOID WINAPI WaitForThreadpoolTimerCallbacks(PVOID pti, BOOL fCancelPendingCallbacks)
-{
+static VOID WINAPI WaitForThreadpoolTimerCallbacks(PVOID pti, BOOL fCancelPendingCallbacks) {
     DebugLog("%p, %u", pti, fCancelPendingCallbacks);
 }
 
-static VOID WINAPI CloseThreadpoolTimer(PVOID pti)
-{
+static VOID WINAPI CloseThreadpoolTimer(PVOID pti) {
     DebugLog("%p", pti);
 }
 
-static LONG InterlockedDecrement(PULONG Addend)
-{
+static LONG WINAPI InterlockedDecrement(PULONG Addend) {
     DebugLog("%p", Addend);
     return --*Addend;
 }
 
-static LONG InterlockedIncrement(PULONG Addend)
-{
+static LONG WINAPI InterlockedIncrement(PULONG Addend) {
     DebugLog("%p", Addend);
     return ++*Addend;
 }
 
-static LONG InterlockedCompareExchange(PULONG Destination, LONG Exchange, LONG Comparand)
-{
+static LONG WINAPI InterlockedCompareExchange(PULONG Destination, LONG Exchange, LONG Comparand) {
     DebugLog("%p", Destination);
     if (*Destination == Comparand) {
         *Destination = Exchange;
@@ -64,8 +56,8 @@ static LONG InterlockedCompareExchange(PULONG Destination, LONG Exchange, LONG C
     return *Destination;
 }
 
-static HANDLE WINAPI CreateSemaphoreW(PVOID lpSemaphoreAttributes, LONG lInitialCount, LONG lMaximumCount, PWCHAR lpName)
-{
+static HANDLE WINAPI
+CreateSemaphoreW(PVOID lpSemaphoreAttributes, LONG lInitialCount, LONG lMaximumCount, PWCHAR lpName) {
     char *name;
 #ifndef NDEBUG
     name = CreateAnsiFromWide(lpName);
@@ -77,13 +69,11 @@ static HANDLE WINAPI CreateSemaphoreW(PVOID lpSemaphoreAttributes, LONG lInitial
     return (HANDLE) 'SEMA';
 }
 
-static HANDLE WINAPI GetCurrentProcess(VOID)
-{
+static HANDLE WINAPI GetCurrentProcess(VOID) {
     return (HANDLE) -1;
 }
 
-static HANDLE WINAPI GetCurrentThread(VOID)
-{
+static HANDLE WINAPI GetCurrentThread(VOID) {
     return (HANDLE) -1;
 }
 
@@ -118,7 +108,9 @@ static DWORD ThreadCount;
 static void RunSyntheticThread(PSYNTHETIC_THREAD Thread)
 {
     uintptr_t *ParentStorage;
+#ifndef __x86_64__
     PVOID ExceptionList;
+#endif
 
     // Every thread gets its own (initially empty) TLS slots. Slot zero is the
     // static TLS block of the image, which we have to share.
@@ -127,7 +119,9 @@ static void RunSyntheticThread(PSYNTHETIC_THREAD Thread)
     memset(&LocalStorage[1], 0, sizeof LocalStorage - sizeof LocalStorage[0]);
 
     // Save the SEH chain, the thread may leave frames behind if it exits early.
+#ifndef __x86_64__
     asm volatile("mov %%fs:0, %[list]" : [list] "=r"(ExceptionList));
+#endif
 
     Thread->Parent = CurrentThread;
     CurrentThread  = Thread;
@@ -143,13 +137,15 @@ static void RunSyntheticThread(PSYNTHETIC_THREAD Thread)
     // Thread is exiting, run any FLS callbacks for slots it used.
     for (int i = 1; i < ARRAY_SIZE(LocalStorage); i++) {
         if (FlsCallbacks[i] && LocalStorage[i]) {
-            FlsCallbacks[i]((PVOID) LocalStorage[i]);
+            ((void (WINAPI *)(PVOID)) FlsCallbacks[i])((PVOID) LocalStorage[i]);
         }
     }
 
     CurrentThread = Thread->Parent;
 
+#ifndef __x86_64__
     asm volatile("mov %[list], %%fs:0" :: [list] "r"(ExceptionList));
+#endif
 
     memcpy(LocalStorage, ParentStorage, sizeof LocalStorage);
     free(ParentStorage);
@@ -245,45 +241,38 @@ static DWORD WINAPI GetCurrentThreadId(VOID)
     return getpid();
 }
 
-static DWORD WINAPI GetCurrentProcessId(VOID)
-{
+static DWORD WINAPI GetCurrentProcessId(VOID) {
     return getpid();
 }
 
-static BOOL WINAPI RegisterWaitForSingleObject(PHANDLE phNewWaitObject, HANDLE hObject, PVOID Callback, PVOID Context, ULONG dwMilliseconds, ULONG dwFlags)
-{
+static BOOL WINAPI RegisterWaitForSingleObject(PHANDLE phNewWaitObject, HANDLE hObject, PVOID Callback, PVOID Context,
+                                               ULONG dwMilliseconds, ULONG dwFlags) {
     DebugLog("");
     return TRUE;
 }
 
-static VOID WINAPI AcquireSRWLockExclusive(PVOID SRWLock)
-{
+static VOID WINAPI AcquireSRWLockExclusive(PVOID SRWLock) {
     DebugLog("%p", SRWLock);
 }
 
-static VOID WINAPI AcquireSRWLockShared(PVOID SRWLock)
-{
+static VOID WINAPI AcquireSRWLockShared(PVOID SRWLock) {
     DebugLog("%p", SRWLock);
 }
 
-static VOID WINAPI ReleaseSRWLockExclusive(PVOID SRWLock)
-{
+static VOID WINAPI ReleaseSRWLockExclusive(PVOID SRWLock) {
     DebugLog("%p", SRWLock);
 }
 
-static VOID WINAPI ReleaseSRWLockShared(PVOID SRWLock)
-{
+static VOID WINAPI ReleaseSRWLockShared(PVOID SRWLock) {
     DebugLog("%p", SRWLock);
 }
 
-static HANDLE WINAPI CreateMutexW(PVOID lpMutexAttributes, BOOL bInitialOwner, PWCHAR lpName)
-{
+static HANDLE WINAPI CreateMutexW(PVOID lpMutexAttributes, BOOL bInitialOwner, PWCHAR lpName) {
     DebugLog("%p, %u, %p");
     return INVALID_HANDLE_VALUE;
 }
 
-static DWORD WINAPI WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
-{
+static DWORD WINAPI WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds) {
     DebugLog("%p, %u", hHandle, dwMilliseconds);
 
     // Threads always run to completion in CreateThread().
@@ -310,8 +299,7 @@ static BOOL WINAPI CreateTimerQueueTimer(PHANDLE phNewTimer,
                                          PVOID Parameter,
                                          DWORD DueTime,
                                          DWORD Period,
-                                         ULONG Flags)
-{
+                                         ULONG Flags) {
     DebugLog("");
     return TRUE;
 }
@@ -320,26 +308,22 @@ static BOOL WINAPI GetThreadTimes(HANDLE hThread,
                                   PFILETIME lpCreationTime,
                                   PFILETIME lpExitTime,
                                   PFILETIME lpKernelTime,
-                                  PFILETIME lpUserTime)
-{
+                                  PFILETIME lpUserTime) {
     DebugLog("");
     return TRUE;
 }
 
-static ULONG WINAPI RtlNtStatusToDosError(NTSTATUS Status)
-{
+static ULONG WINAPI RtlNtStatusToDosError(NTSTATUS Status) {
     DebugLog("%#x", Status);
     return 5;
 }
 
-static BOOL WINAPI SetThreadToken(PHANDLE Thread, HANDLE Token)
-{
+static BOOL WINAPI SetThreadToken(PHANDLE Thread, HANDLE Token) {
     DebugLog("");
     return FALSE;
 }
 
-static BOOL WINAPI ProcessIdToSessionId(DWORD dwProcessId, DWORD *pSessionId)
-{
+static BOOL WINAPI ProcessIdToSessionId(DWORD dwProcessId, DWORD *pSessionId) {
     DebugLog("");
     return FALSE;
 }
@@ -394,10 +378,15 @@ DECLARE_CRT_EXPORT("InitOnceExecuteOnce", InitOnceExecuteOnce);
 DECLARE_CRT_EXPORT("InitOnceBeginInitialize", InitOnceBeginInitialize);
 DECLARE_CRT_EXPORT("InitOnceComplete", InitOnceComplete);
 DECLARE_CRT_EXPORT("RtlNtStatusToDosError", RtlNtStatusToDosError);
+
 DECLARE_CRT_EXPORT("GetThreadTimes", GetThreadTimes);
+
 DECLARE_CRT_EXPORT("GetCurrentThread", GetCurrentThread);
+
 DECLARE_CRT_EXPORT("CreateTimerQueueTimer", CreateTimerQueueTimer);
+
 DECLARE_CRT_EXPORT("RegisterWaitForSingleObject", RegisterWaitForSingleObject);
+
 DECLARE_CRT_EXPORT("WaitForSingleObject", WaitForSingleObject);
 DECLARE_CRT_EXPORT("WaitForSingleObjectEx", WaitForSingleObjectEx);
 DECLARE_CRT_EXPORT("CreateThread", CreateThread);
@@ -406,19 +395,35 @@ DECLARE_CRT_EXPORT("ExitThread", ExitThread);
 DECLARE_CRT_EXPORT("FreeLibraryAndExitThread", FreeLibraryAndExitThread);
 DECLARE_CRT_EXPORT("GetExitCodeThread", GetExitCodeThread);
 DECLARE_CRT_EXPORT("GetCurrentProcess", GetCurrentProcess);
+
 DECLARE_CRT_EXPORT("LsaNtStatusToWinError", LsaNtStatusToWinError);
+
 DECLARE_CRT_EXPORT("SetThreadToken", SetThreadToken);
+
 DECLARE_CRT_EXPORT("InterlockedDecrement", InterlockedDecrement);
+
 DECLARE_CRT_EXPORT("InterlockedIncrement", InterlockedIncrement);
+
 DECLARE_CRT_EXPORT("InterlockedCompareExchange", InterlockedCompareExchange);
+
 DECLARE_CRT_EXPORT("CreateSemaphoreW", CreateSemaphoreW);
+
 DECLARE_CRT_EXPORT("AcquireSRWLockExclusive", AcquireSRWLockExclusive);
+
 DECLARE_CRT_EXPORT("AcquireSRWLockShared", AcquireSRWLockShared);
+
 DECLARE_CRT_EXPORT("InitializeSRWLock", InitializeSRWLock);
+
 DECLARE_CRT_EXPORT("ReleaseSRWLockExclusive", ReleaseSRWLockExclusive);
+
 DECLARE_CRT_EXPORT("ReleaseSRWLockShared", ReleaseSRWLockShared);
+
 DECLARE_CRT_EXPORT("SetThreadpoolTimer", SetThreadpoolTimer);
+
 DECLARE_CRT_EXPORT("WaitForThreadpoolTimerCallbacks", WaitForThreadpoolTimerCallbacks);
+
 DECLARE_CRT_EXPORT("GetCurrentThreadId", GetCurrentThreadId);
+
 DECLARE_CRT_EXPORT("GetCurrentProcessId", GetCurrentProcessId);
+
 DECLARE_CRT_EXPORT("ProcessIdToSessionId", ProcessIdToSessionId);

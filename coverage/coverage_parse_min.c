@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 // This utility will try to parse coverage logs of the form <block>:<input> and
 // output a minimal set cover.
@@ -55,12 +56,13 @@ static gint block_size_compare(gconstpointer a, gconstpointer b)
 
 static gint address_compare(gconstpointer a, gconstpointer b, gpointer user)
 {
-    return GPOINTER_TO_SIZE(a) - GPOINTER_TO_SIZE(b);
+    guintptr left = GPOINTER_TO_SIZE(a), right = GPOINTER_TO_SIZE(b);
+    return (left > right) - (left < right);
 }
 
 static gboolean dump_minimised_tree(gpointer key, gpointer value, gpointer data)
 {
-    g_print("%#010x:%s", GPOINTER_TO_SIZE(key), value);
+    g_print("%#010" PRIxPTR ":%s", (uintptr_t) key, (char *) value);
     return false;
 }
 

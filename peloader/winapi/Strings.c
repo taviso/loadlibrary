@@ -69,8 +69,9 @@ STATIC int WINAPI MultiByteToWideChar(UINT CodePage,
     return i;
 }
 
-STATIC int WINAPI WideCharToMultiByte(UINT CodePage, DWORD dwFlags, PVOID lpWideCharStr, int cchWideChar, PVOID lpMultiByteStr, int cbMultiByte, PVOID lpDefaultChar, PVOID lpUsedDefaultChar)
-{
+STATIC int WINAPI
+WideCharToMultiByte(UINT CodePage, DWORD dwFlags, PVOID lpWideCharStr, int cchWideChar, PVOID lpMultiByteStr,
+                    int cbMultiByte, PVOID lpDefaultChar, PVOID lpUsedDefaultChar) {
     char *ansi = NULL;
 
     DebugLog("%u, %#x, %p, %d, %p, %d, %p, %p", CodePage, dwFlags, lpWideCharStr, cchWideChar, lpMultiByteStr, cbMultiByte, lpDefaultChar, lpUsedDefaultChar);
@@ -106,11 +107,12 @@ STATIC int WINAPI WideCharToMultiByte(UINT CodePage, DWORD dwFlags, PVOID lpWide
     return 0;
 }
 
-STATIC BOOL WINAPI GetStringTypeA(DWORD locale, DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc, PUSHORT lpCharType)
-{
+STATIC BOOL WINAPI GetStringTypeA(DWORD locale, DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc, PUSHORT lpCharType) {
     DebugLog("%u, %u, %p, %d, %p", locale, dwInfoType, lpSrcStr, cchSrc, lpCharType);
 
-    memset(lpCharType, 1, cchSrc * sizeof(USHORT));
+    if (cchSrc>0) 
+	    memset(lpCharType, 1, cchSrc * sizeof(USHORT));
+    else exit(1);
 
     return FALSE;
 }
@@ -119,17 +121,20 @@ STATIC BOOL WINAPI GetStringTypeExA(DWORD locale, DWORD dwInfoType, PUSHORT lpSr
 {
     DebugLog("%u, %u, %p, %d, %p", locale, dwInfoType, lpSrcStr, cchSrc, lpCharType);
 
-    memset(lpCharType, 1, cchSrc * sizeof(USHORT));
+    if (cchSrc>0) 
+    	memset(lpCharType, 1, cchSrc * sizeof(USHORT));
+    else exit(1);
 
     return TRUE;
 }
 
 
-STATIC BOOL WINAPI GetStringTypeW(DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc, PUSHORT lpCharType)
-{
+STATIC BOOL WINAPI GetStringTypeW(DWORD dwInfoType, PUSHORT lpSrcStr, int cchSrc, PUSHORT lpCharType) {
     DebugLog("%u, %p, %d, %p", dwInfoType, lpSrcStr, cchSrc, lpCharType);
 
-    memset(lpCharType, 1, cchSrc * sizeof(USHORT));
+    if (cchSrc>0) 
+    	memset(lpCharType, 1, cchSrc * sizeof(USHORT));
+    else exit(1);
 
     return FALSE;
 }
@@ -138,7 +143,9 @@ STATIC BOOL WINAPI GetStringTypeExW(DWORD locale, DWORD dwInfoType, PUSHORT lpSr
 {
     DebugLog("%u, %p, %d, %p", dwInfoType, lpSrcStr, cchSrc, lpCharType);
 
-    memset(lpCharType, 1, cchSrc * sizeof(USHORT));
+    if (cchSrc>0) 
+    	memset(lpCharType, 1, cchSrc * sizeof(USHORT));
+    else exit(1);
 
     return TRUE;
 }
@@ -150,8 +157,7 @@ STATIC VOID WINAPI RtlInitUnicodeString(PUNICODE_STRING DestinationString, PWCHA
     DestinationString->Buffer = SourceString;
 }
 
-STATIC PVOID WINAPI UuidFromStringW(PUSHORT StringUuid, PBYTE Uuid)
-{
+STATIC PVOID WINAPI UuidFromStringW(PUSHORT StringUuid, PBYTE Uuid) {
     int i;
 
     DebugLog("%S, %p", StringUuid, Uuid);
@@ -163,8 +169,7 @@ STATIC PVOID WINAPI UuidFromStringW(PUSHORT StringUuid, PBYTE Uuid)
     return 0;
 }
 
-STATIC INT WINAPI UuidCreate(PBYTE Uuid)
-{
+STATIC INT WINAPI UuidCreate(PBYTE Uuid) {
     int i;
 
     DebugLog("%p", Uuid);
@@ -175,10 +180,6 @@ STATIC INT WINAPI UuidCreate(PBYTE Uuid)
 
     return 0;
 }
-
-#define CSTR_LESS_THAN    1
-#define CSTR_EQUAL        2
-#define CSTR_GREATER_THAN 3
 
 STATIC INT WINAPI CompareStringOrdinal(PVOID lpString1,
                                        INT cchCount1,
@@ -253,14 +254,24 @@ static BOOL WINAPI ConvertStringSecurityDescriptorToSecurityDescriptorW(PUSHORT 
 }
 
 DECLARE_CRT_EXPORT("MultiByteToWideChar", MultiByteToWideChar);
+
 DECLARE_CRT_EXPORT("WideCharToMultiByte", WideCharToMultiByte);
+
 DECLARE_CRT_EXPORT("GetStringTypeA", GetStringTypeA);
+
 DECLARE_CRT_EXPORT("GetStringTypeExA", GetStringTypeExA);
+
 DECLARE_CRT_EXPORT("GetStringTypeW", GetStringTypeW);
+
 DECLARE_CRT_EXPORT("GetStringTypeExW", GetStringTypeExW);
+
 DECLARE_CRT_EXPORT("RtlInitUnicodeString", RtlInitUnicodeString);
+
 DECLARE_CRT_EXPORT("UuidFromStringW", UuidFromStringW);
+
 DECLARE_CRT_EXPORT("UuidCreate", UuidCreate);
+
 DECLARE_CRT_EXPORT("CompareStringOrdinal", CompareStringOrdinal);
+
 DECLARE_CRT_EXPORT("ConvertStringSecurityDescriptorToSecurityDescriptorW", ConvertStringSecurityDescriptorToSecurityDescriptorW);
 

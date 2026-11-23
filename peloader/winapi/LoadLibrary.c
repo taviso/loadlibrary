@@ -21,8 +21,7 @@ static LONG WINAPI GetCurrentPackageId(uint32_t bufferLength, BYTE buffer)
     return 15700L;
 }
 
-static HANDLE WINAPI LoadLibraryExW(PVOID lpFileName, HANDLE hFile, DWORD dwFlags)
-{
+static HANDLE WINAPI LoadLibraryExW(PVOID lpFileName, HANDLE hFile, DWORD dwFlags) {
     char *name = CreateAnsiFromWide(lpFileName);
 
     DebugLog("%p [%s], %p, %#x", lpFileName, name, hFile, dwFlags);
@@ -32,18 +31,17 @@ static HANDLE WINAPI LoadLibraryExW(PVOID lpFileName, HANDLE hFile, DWORD dwFlag
     return (HANDLE) 'LOAD';
 }
 
-static HANDLE WINAPI LoadLibraryW(PVOID lpFileName)
-{
+static HANDLE WINAPI LoadLibraryW(PVOID lpFileName) {
     DebugLog("%p", lpFileName);
 
     return (HANDLE) 'LOAD';
 }
 
-static PVOID WINAPI GetProcAddress(HANDLE hModule, PCHAR lpProcName)
-{
-    ENTRY key = { lpProcName }, *item;
+static PVOID WINAPI GetProcAddress(HANDLE hModule, PCHAR lpProcName) {
+    ENTRY key = {lpProcName}, *item;
 
-    assert(hModule == (HANDLE) NULL || hModule == (HANDLE) 'LOAD' || hModule == (HANDLE) 'MPEN' || hModule == (HANDLE) 'VERS' || hModule == (HANDLE) 'KERN');
+    assert(hModule == (HANDLE) NULL || hModule == (HANDLE) 'LOAD' || hModule == (HANDLE) 'MPEN' ||
+           hModule == (HANDLE) 'VERS' || hModule == (HANDLE) 'KERN');
 
     if (hsearch_r(key, FIND, &item, &crtexports)) {
         return item->data;
@@ -54,8 +52,7 @@ static PVOID WINAPI GetProcAddress(HANDLE hModule, PCHAR lpProcName)
     return NULL;
 }
 
-static HANDLE WINAPI GetModuleHandleW(PVOID lpModuleName)
-{
+static HANDLE WINAPI GetModuleHandleW(PVOID lpModuleName) {
     char *name = CreateAnsiFromWide(lpModuleName);
 
     DebugLog("%p [%s]", lpModuleName, name);
@@ -79,6 +76,87 @@ static HANDLE WINAPI GetModuleHandleW(PVOID lpModuleName)
     return (HANDLE) NULL;
 }
 
+static DWORD WINAPI GetModuleFileNameA(HANDLE hModule, PCHAR lpFilename, DWORD nSize) {
+    DebugLog("%p, %p, %u", hModule, lpFilename, nSize);
+
+    strncpy(lpFilename, "C:\\dummy\\fakename.exe", nSize);
+
+    return strlen(lpFilename);
+}
+
+static DWORD WINAPI GetModuleFileNameW(HANDLE hModule, PWCHAR lpFilename, DWORD nSize) {
+    DebugLog("%p, %p, %u", hModule, lpFilename, nSize);
+
+    if (nSize > strlen("C:\\dummy\\fakename.exe")) {
+        memcpy(lpFilename, L"C:\\dummy\\fakename.exe", sizeof(L"C:\\dummy\\fakename.exe"));
+    }
+
+    return strlen("C:\\dummy\\fakename.exe");
+}
+
+static HANDLE WINAPI GetModuleHandleA(PCHAR lpModuleName) {
+    DebugLog("%p [%s]", lpModuleName, lpModuleName);
+
+    return (HANDLE) NULL;
+}
+
+static BOOL WINAPI GetModuleHandleExA(DWORD dwFlags,
+                                      LPCSTR lpModuleName,
+                                      HMODULE *phModule) {
+    DebugLog("%p [%s]", lpModuleName, lpModuleName);
+
+    if (lpModuleName && memcmp(lpModuleName, "mpengine.dll", sizeof("mpengine.dll")) == 0)
+        *phModule = (HANDLE) 'MPEN';
+
+    if (lpModuleName && memcmp(lpModuleName, "bcrypt.dll", sizeof("bcrypt.dll")) == 0)
+        *phModule = (HANDLE) 'LOAD';
+
+    if (lpModuleName && memcmp(lpModuleName, "KERNEL32.DLL", sizeof("KERNEL32.DLL")) == 0)
+        *phModule = (HANDLE) 'KERN';
+
+    if (lpModuleName && memcmp(lpModuleName, "kernel32.dll", sizeof("kernel32.dll")) == 0)
+        *phModule = (HANDLE) 'KERN';
+
+    if (lpModuleName && memcmp(lpModuleName, "version.dll", sizeof("version.dll")) == 0)
+        *phModule = (HANDLE) 'VERS';
+
+    if (lpModuleName && memcmp(lpModuleName, "ntdll.dll", sizeof("ntdll.dll")) == 0)
+        *phModule = (HANDLE) 'NTDL';
+
+    *phModule = (HANDLE) NULL;
+    return true;
+}
+
+#ifdef __x86_64__
+static BOOL WINAPI GetModuleHandleExW(DWORD dwFlags,
+                                      LPCWSTR lpModuleName,
+                                      HMODULE *phModule) {
+    DebugLog("%p flags: %x", lpModuleName, dwFlags);
+    DebugLog("This is probably not handled correctly...");
+    if (dwFlags & 4){ // GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS
+	DebugLog("GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS");
+    	uintptr_t ptr_val=(uintptr_t)lpModuleName;
+	DebugLog("%llx, %llx", ptr_val, ptr_val & 0x75a000000);
+        if ((ptr_val & 0x75a000000) == 0x75a000000){
+            *phModule = (HANDLE) 'MPEN';
+            return true;
+        }else{
+	    DebugLog("Can't resolve address: %p", lpModuleName);
+            *phModule = (HANDLE) 'LOAD';
+            return true;
+	    exit(1);
+	}
+    }else{
+        char *a_name = CreateAnsiFromWide(lpModuleName);
+        BOOL result = GetModuleHandleExA(dwFlags, a_name, phModule);
+        free(a_name);
+        return result;
+    }
+    *phModule = (HANDLE) NULL;
+    return true;
+}
+
+#else
 #define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS 0x00000004
 #define ERROR_MOD_NOT_FOUND 126
 
@@ -102,45 +180,29 @@ static BOOL WINAPI GetModuleHandleExW(DWORD dwFlags, PVOID lpModuleName, HANDLE 
     return TRUE;
 }
 
-static DWORD WINAPI GetModuleFileNameA(HANDLE hModule, PCHAR lpFilename, DWORD nSize)
-{
-    DebugLog("%p, %p, %u", hModule, lpFilename, nSize);
+#endif
 
-    strncpy(lpFilename, "C:\\dummy\\fakename.exe", nSize);
-
-    return strlen(lpFilename);
-}
-
-static DWORD WINAPI GetModuleFileNameW(HANDLE hModule, PWCHAR lpFilename, DWORD nSize)
-{
-    DebugLog("%p, %p, %u", hModule, lpFilename, nSize);
-
-    if (nSize > strlen("C:\\dummy\\fakename.exe")) {
-        memcpy(lpFilename, L"C:\\dummy\\fakename.exe", sizeof(L"C:\\dummy\\fakename.exe"));
-    }
-
-    return strlen("C:\\dummy\\fakename.exe");
-}
-
-static HANDLE WINAPI GetModuleHandleA(PCHAR lpModuleName)
-{
-    DebugLog("%p [%s]", lpModuleName, lpModuleName);
-
-    return (HANDLE) NULL;
-}
-
-static VOID WINAPI FreeLibrary(PVOID hLibModule)
-{
+static VOID WINAPI FreeLibrary(PVOID hLibModule) {
     DebugLog("FreeLibrary(%p)", hLibModule);
 }
 
 DECLARE_CRT_EXPORT("GetCurrentPackageId", GetCurrentPackageId);
 DECLARE_CRT_EXPORT("FreeLibrary", FreeLibrary);
+
 DECLARE_CRT_EXPORT("LoadLibraryExW", LoadLibraryExW);
+
 DECLARE_CRT_EXPORT("LoadLibraryW", LoadLibraryW);
+
 DECLARE_CRT_EXPORT("GetProcAddress", GetProcAddress);
+
 DECLARE_CRT_EXPORT("GetModuleHandleW", GetModuleHandleW);
-DECLARE_CRT_EXPORT("GetModuleHandleExW", GetModuleHandleExW);
+
 DECLARE_CRT_EXPORT("GetModuleHandleA", GetModuleHandleA);
+
 DECLARE_CRT_EXPORT("GetModuleFileNameA", GetModuleFileNameA);
+
 DECLARE_CRT_EXPORT("GetModuleFileNameW", GetModuleFileNameW);
+
+DECLARE_CRT_EXPORT("GetModuleHandleExA", GetModuleHandleExA);
+
+DECLARE_CRT_EXPORT("GetModuleHandleExW", GetModuleHandleExW);

@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -27,7 +28,7 @@
 #include "ntoskernel.h"
 #include "util.h"
 
-#define MAX_EXTRA_EXPORTS 65535
+#define MAX_EXTRA_EXPORTS 200000
 
 struct wrap_export extra_exports[MAX_EXTRA_EXPORTS];
 extern struct hsearch_data extraexports;
@@ -52,7 +53,7 @@ bool process_extra_exports(void *imagebase, size_t base, const char *filename)
     hcreate_r(MAX_EXTRA_EXPORTS, &extraexports);
 
     while (!feof(exports)) {
-        if (fscanf(exports, "%*X:%X %m[^\n]", &address, &name) == 2) {
+        if (fscanf(exports, "%*X:%" SCNxPTR " %m[^\n]", &address, &name) == 2) {
             ENTRY e, *ep;
             e.key   = name;
             e.data  = (void *)((uintptr_t)(imagebase) + address + base);

@@ -5,8 +5,21 @@
 *.vdm
 *.exe
 mpclient
+mpclient_x64
 avscript
 eicar.com
 .gradle/
 .idea/
+mpcache-*
 .vscode/
+/build/
+
+# Local IDA databases and their temporary components.
+/engine/**/*.idb
+/engine/**/*.i64
+/engine/**/*.id[012]
+/engine/**/*.nam
+/engine/**/*.til
+
+# x64 engine dir
+/engine/x64/

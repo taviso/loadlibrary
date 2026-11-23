@@ -18,9 +18,9 @@
 
 #include "strings.h"
 
-char *string_from_wchar(void *wcharbuf, size_t len)
+char *string_from_wchar(const void *wcharbuf, size_t len)
 {
-    uint16_t *inbuf = wcharbuf;
+    const uint16_t *inbuf = wcharbuf;
     uint8_t *outbuf = NULL;
     void *buf;
     size_t count    = 0;
@@ -52,7 +52,7 @@ size_t CountWideChars(const void *wcharbuf)
 
     return i;
 }
-char * CreateAnsiFromWide(void *wcharbuf)
+char * CreateAnsiFromWide(const void *wcharbuf)
 {
     return string_from_wchar(wcharbuf, CountWideChars(wcharbuf) * 2);
 }
